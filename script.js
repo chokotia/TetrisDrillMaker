@@ -42,11 +42,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     startButton.addEventListener("click", () => {
-      const width = parseInt(widthSlider.value, 10);
-      const height = parseInt(heightSlider.value, 10);
-      createBoard(width, height);
-      showScreen(gameScreen);
+        const width = parseInt(widthSlider.value, 10);
+        const height = parseInt(heightSlider.value, 10);
+        const blockCount = parseInt(blockCountSlider.value, 10); // ブロック数を取得
+        createBoard(width, height, blockCount); // ブロック数を渡して盤面生成
+        showScreen(gameScreen);
     });
+
+    // 既存の "次へ" ボタンのイベントリスナーを修正
+    nextButton.addEventListener("click", () => {
+        console.log("次の盤面を生成します");
+
+        const width = parseInt(widthSlider.value, 10);  // 現在の幅設定を取得
+        const height = parseInt(heightSlider.value, 10);  // 現在の高さ設定を取得
+        const blockCount = parseInt(blockCountSlider.value, 10);  // 現在のブロック数設定を取得
+
+        // 新しい盤面を生成
+        createBoard(width, height, blockCount);
+    });
+
     settingsButton.addEventListener("click", () => showScreen(settingsScreen));
     backToTitleButtons.forEach(btn =>
       btn.addEventListener("click", () => showScreen(titleScreen))
@@ -86,33 +100,54 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    function createBoard(width, height) {
+    function placeRandomBlocks(board, width, height, blockCount) {
+        const cells = Array.from(board.children);
+    
+        // 各列の最下部からブロックを詰めていく
+        const columnIndices = Array.from({ length: width }, (_, i) => i); // 列インデックスを生成
+        const placedBlocks = new Set();
+    
+        for (let i = 0; i < blockCount; i++) {
+            let column;
+            do {
+                column = columnIndices[Math.floor(Math.random() * columnIndices.length)];
+            } while (placedBlocks.has(`${column}-${i}`)); // 重複しないようにチェック
+    
+            // 指定された列の最下部を見つける
+            for (let row = height - 1; row >= 0; row--) {
+                const index = row * width + column;
+                if (!cells[index].classList.contains("block")) {
+                    cells[index].classList.add("block");
+                    placedBlocks.add(`${column}-${i}`);
+                    break;
+                }
+            }
+        }
+    }
+    
+    function createBoard(width, height, blockCount = 0) {
         const board = document.getElementById("board");
-        
-        // グリッド全体の幅と高さを計算（gapの影響を考慮）
-        const gapSize = (width - 1) * 2 + (height - 1) * 2; // gapは1px
-        const totalWidth = width * CELL_SIZE + gapSize;
-        const totalHeight = height * CELL_SIZE + gapSize;
-        
+    
         // スタイルを適用
-        board.style.width = `${totalWidth}px`;
-        board.style.height = `${totalHeight}px`;
         board.style.setProperty("--width", width);
         board.style.setProperty("--height", height);
-      
+    
         // 既存のマスを削除
         while (board.firstChild) {
-          board.removeChild(board.firstChild);
+            board.removeChild(board.firstChild);
         }
-      
+    
         // マスを作成
         for (let i = 0; i < width * height; i++) {
-          const cell = document.createElement("div");
-          cell.style.width = `${CELL_SIZE}px`;
-          cell.style.height = `${CELL_SIZE}px`;
-          board.appendChild(cell);
+            const cell = document.createElement("div");
+            cell.style.width = `${CELL_SIZE}px`;
+            cell.style.height = `${CELL_SIZE}px`;
+            board.appendChild(cell);
         }
-      }
+    
+        // 設定されたブロック数分ランダム配置
+        placeRandomBlocks(board, width, height, blockCount);
+    }
 
     loadSettings();
 });

@@ -23,12 +23,10 @@
       <label for="width">盤面の幅 (3-10):</label>
       <input id="width" type="range" min="3" max="10" value="5">
       <span id="width-value">5</span>
-      <div class="tooltip">幅を調整してリアルタイムでプレビューします。</div>
       <br>
       <label for="height">盤面の高さ (6-10):</label>
       <input id="height" type="range" min="6" max="10" value="6">
       <span id="height-value">6</span>
-      <div class="tooltip">高さを調整してリアルタイムでプレビューします。</div>
       <br>
       <label>除外するミノ:</label>
       <div id="exclude-minos">
@@ -44,12 +42,10 @@
       <label for="next-count">ネクスト個数 (2-5):</label>
       <input id="next-count" type="range" min="2" max="5" value="3">
       <span id="next-count-value">3</span>
-      <div class="tooltip">ネクストの数を設定してください。</div>
       <br>
-      <label for="block-count">初期ブロック数 (0-3):</label>
-      <input id="block-count" type="range" min="0" max="3" value="1">
-      <span id="block-count-value">1</span>
-      <div class="tooltip">初期盤面に配置するブロック数を調整します。</div>
+      <label for="block-count">ランダム初期配置ブロック数 (0-30):</label>
+      <input id="block-count" type="range" min="0" max="30" value="0">
+      <span id="block-count-value">10</span>
       <br>
       <button id="save-settings">保存</button>
       <button id="back-to-title">戻る</button>

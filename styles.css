@@ -54,3 +54,7 @@ button:hover {
   background-color: #555;
   border: 1px solid #444;
 }
+
+#board .block {
+  background-color: #b0c4de;
+}
