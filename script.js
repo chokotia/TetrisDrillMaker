@@ -148,6 +148,82 @@ document.addEventListener("DOMContentLoaded", () => {
         // 設定されたブロック数分ランダム配置
         placeRandomBlocks(board, width, height, blockCount);
     }
+    
+    function getRandomMino(excludeMinos) {
+        const allMinos = ["I", "O", "T", "S", "Z", "J", "L"];
+        const availableMinos = allMinos.filter(mino => !excludeMinos.includes(mino));
+        return availableMinos[Math.floor(Math.random() * availableMinos.length)];
+      }
+      
+    function drawMino(minoType, container) {
+        const minoShapes = {
+          I: [[1, 1, 1, 1]],
+          O: [[1, 1], [1, 1]],
+          T: [[0, 1, 0], [1, 1, 1]],
+          S: [[0, 1, 1], [1, 1, 0]],
+          Z: [[1, 1, 0], [0, 1, 1]],
+          J: [[1, 0, 0], [1, 1, 1]],
+          L: [[0, 0, 1], [1, 1, 1]],
+        };
+    
+        const shape = minoShapes[minoType];
+        const minoElement = document.createElement("div");
+        minoElement.classList.add("next-piece");
+        minoElement.style.display = "grid";
+        minoElement.style.gridTemplateColumns = `repeat(${shape[0].length}, 1fr)`;
+    
+        shape.forEach(row => {
+          row.forEach(cell => {
+            const cellElement = document.createElement("div");
+            if (cell) {
+              cellElement.classList.add("block");
+            }
+            minoElement.appendChild(cellElement);
+          });
+        });
+    
+        container.appendChild(minoElement);
+      }
+    
+      function updateNextPieces(nextCount, excludeMinos) {
+        const nextContainer = document.getElementById("next");
+        nextContainer.innerHTML = ""; // 現在の表示をクリア
+    
+        for (let i = 0; i < nextCount; i++) {
+          const randomMino = getRandomMino(excludeMinos);
+    
+          if (randomMino) {
+            const nextPieceContainer = document.createElement("div");
+            nextPieceContainer.classList.add("next-piece-container");
+    
+            drawMino(randomMino, nextPieceContainer);
+            nextContainer.appendChild(nextPieceContainer);
+          } else {
+            console.error("除外ミノの設定で表示できるミノがありません！");
+            break;
+          }
+        }
+      }
+    
+      nextButton.addEventListener("click", () => {
+        const nextCount = parseInt(document.getElementById("next-count").value, 10);
+        const excludeMinos = Array.from(
+          document.querySelectorAll("#exclude-minos input:checked")
+        ).map(input => input.value);
+    
+        // ネクストを更新
+        updateNextPieces(nextCount, excludeMinos);
+    
+        console.log("ネクストが更新されました！");
+      });
 
+      // 設定に基づきネクストを更新
+      document.getElementById("start-game").addEventListener("click", () => {
+        const nextCount = parseInt(document.getElementById("next-count").value, 10);
+        const excludeMinos = Array.from(document.querySelectorAll("#exclude-minos input:checked")).map(input => input.value);
+      
+        updateNextPieces(nextCount, excludeMinos);
+      });
+      
     loadSettings();
 });

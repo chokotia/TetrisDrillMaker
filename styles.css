@@ -39,6 +39,8 @@ button:hover {
   display: flex;
   flex-direction: row;
   justify-content: center;
+  align-items: flex-start; /* ネクストと盤面の位置を調整 */
+  gap: 20px; /* ネクストと盤面の間のスペース */
 }
 
 #board {
@@ -57,4 +59,40 @@ button:hover {
 
 #board .block {
   background-color: #b0c4de;
+}
+
+#next {
+  display: flex;
+  flex-direction: column;
+  gap: 5px; /* ネクスト間のスペースを縮小 */
+  padding: 5px;
+  background-color: #222;
+  border: 2px solid #ccc;
+  width: 80px; /* ネクスト表示の固定幅を調整 */
+}
+
+.next-piece-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #333;
+  width: 100%;
+  height: 40px; /* 各ネクスト枠の高さを縮小 */
+  border: 1px solid #555;
+}
+
+.next-piece {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4列のグリッド */
+  gap: 1px; /* セル間の間隔 */
+}
+
+.next-piece div {
+  width: 10px;
+  height: 10px;
+  background-color: transparent;
+}
+
+.next-piece .block {
+  background-color: #ffcc00;
 }
