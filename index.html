@@ -22,6 +22,8 @@
         <!-- 設定画面 -->
         <div id="settings-screen" class="screen hidden">
             <h2>設定</h2>
+            <h3>生成する問題</h3>
+
             <label for="width">盤面の幅 (3-10):</label>
             <input id="width" type="range" min="3" max="10" value="5">
             <span id="width-value">5</span>
@@ -49,6 +51,13 @@
             <input id="block-count" type="range" min="0" max="30" value="0">
             <span id="block-count-value">10</span>
             <br>
+            <h3>ショートカット設定</h3>
+            <label for="next-problem-key">次へ:</label>
+            <input id="next-problem-key" type="text" maxlength="1" value="n">
+            <br>
+            <label for="back-to-title-key">タイトルに戻る:</label>
+            <input id="back-to-title-key" type="text" maxlength="1" value="t">
+            <br>
             <button id="back-to-title">戻る</button>
         </div>
 
@@ -60,8 +69,8 @@
                     <div id="next"></div>
                 </div>
             </div>
-            <button id="next-problem">次へ</button>
-            <button id="back-to-title-from-game">タイトルに戻る</button>
+            <!-- <button id="next-problem">次へ</button>
+            <button id="back-to-title-from-game">タイトルに戻る</button> -->
         </div>
     </div>
     <script src="script.js"></script>
