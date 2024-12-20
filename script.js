@@ -34,6 +34,7 @@ const domElements = {
 function initializeApp() {
   setupEventListeners();
   loadSettings();
+  setupGestureControls();
 }
 
 function setupEventListeners() {
@@ -250,6 +251,37 @@ function drawMino(minoType, container) {
   });
 
   container.appendChild(minoElement);
+}
+
+function setupGestureControls() {
+  const boardContainer = document.getElementById("board-container");
+  const board = document.getElementById("board");
+  const hammer = new Hammer(boardContainer);
+
+  // スワイプジェスチャーの方向を有効化
+  hammer.get("swipe").set({ direction: Hammer.DIRECTION_ALL });
+
+  let isBoardVisible = true; // ボードの表示状態
+
+  // 右スワイプで次の問題に進む
+  hammer.on("swiperight", () => {
+    console.log("Swiped right: Generating next board");
+    startGame(); // 既存の「次へ」機能を呼び出す
+  });
+
+  // 上スワイプでタイトル画面に戻る
+  hammer.on("swipeup", () => {
+    console.log("Swiped up: Returning to title");
+    saveSettings(getSettings()); // 設定を保存
+    showScreen(domElements.titleScreen); // タイトル画面に戻る
+  });
+
+  // ボードをタップして表示・非表示を切り替える
+  hammer.on("tap", () => {
+    isBoardVisible = !isBoardVisible;
+    board.style.visibility = isBoardVisible ? "visible" : "hidden"; // 表示状態を切り替え
+    console.log(`Board is now ${isBoardVisible ? "visible" : "hidden"}`);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", initializeApp);
