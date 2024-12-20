@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetris Practice App</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- タイトル画面 -->
+    <div id="title-screen" class="screen">
+      <h1>テトリス練習アプリ</h1>
+      <p>このアプリでは、テトリスの部分盤面とネクストをランダムに生成し、効率的に練習できます。</p>
+      <p>"スタート" ボタンを押して練習を開始するか、"設定" ボタンでカスタマイズしてください。</p>
+      <button id="start-game">スタート</button>
+      <button id="open-settings">設定</button>
+    </div>
+
+    <!-- 設定画面 -->
+    <div id="settings-screen" class="screen hidden">
+      <h2>設定</h2>
+      <label for="width">盤面の幅 (3-10):</label>
+      <input id="width" type="range" min="3" max="10" value="5">
+      <span id="width-value">5</span>
+      <div class="tooltip">幅を調整してリアルタイムでプレビューします。</div>
+      <br>
+      <label for="height">盤面の高さ (6-10):</label>
+      <input id="height" type="range" min="6" max="10" value="6">
+      <span id="height-value">6</span>
+      <div class="tooltip">高さを調整してリアルタイムでプレビューします。</div>
+      <br>
+      <label>除外するミノ:</label>
+      <div id="exclude-minos">
+        <label><input type="checkbox" value="I" checked> I</label>
+        <label><input type="checkbox" value="O" checked> O</label>
+        <label><input type="checkbox" value="T" checked> T</label>
+        <label><input type="checkbox" value="S" checked> S</label>
+        <label><input type="checkbox" value="Z" checked> Z</label>
+        <label><input type="checkbox" value="J" checked> J</label>
+        <label><input type="checkbox" value="L" checked> L</label>
+      </div>
+      <br>
+      <label for="next-count">ネクスト個数 (2-5):</label>
+      <input id="next-count" type="range" min="2" max="5" value="3">
+      <span id="next-count-value">3</span>
+      <div class="tooltip">ネクストの数を設定してください。</div>
+      <br>
+      <label for="block-count">初期ブロック数 (0-3):</label>
+      <input id="block-count" type="range" min="0" max="3" value="1">
+      <span id="block-count-value">1</span>
+      <div class="tooltip">初期盤面に配置するブロック数を調整します。</div>
+      <br>
+      <button id="save-settings">保存</button>
+      <button id="back-to-title">戻る</button>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="game-screen" class="screen hidden">
+      <div id="board-container">
+        <div id="board"></div>
+        <div id="next-container">
+          <h3>ネクスト</h3>
+          <div id="next"></div>
+        </div>
+      </div>
+      <button id="next-problem">次へ</button>
+      <button id="back-to-title-from-game">タイトルに戻る</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
