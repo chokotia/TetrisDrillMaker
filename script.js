@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const settingsButton = document.getElementById("open-settings");
     const backToTitleButtons = document.querySelectorAll("#back-to-title, #back-to-title-from-game");
 
-    const saveSettingsButton = document.getElementById("save-settings");
     const nextButton = document.getElementById("next-problem");
 
     const widthSlider = document.getElementById("width");
@@ -62,21 +61,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     settingsButton.addEventListener("click", () => showScreen(settingsScreen));
-    backToTitleButtons.forEach(btn =>
-      btn.addEventListener("click", () => showScreen(titleScreen))
-    );
 
-    // Save settings
-    saveSettingsButton.addEventListener("click", () => {
-      const settings = {
-        width: widthSlider.value,
-        height: heightSlider.value,
-        nextCount: nextCountSlider.value,
-        blockCount: blockCountSlider.value,
-      };
-      localStorage.setItem("tetrisSettings", JSON.stringify(settings));
-      alert("設定が保存されました");
-    });
+    backToTitleButtons.forEach(btn =>
+      btn.addEventListener("click", () => {
+        const settings = {
+          width: widthSlider.value,
+          height: heightSlider.value,
+          nextCount: nextCountSlider.value,
+          blockCount: blockCountSlider.value,
+        };
+        localStorage.setItem("tetrisSettings", JSON.stringify(settings)); // 設定を保存
+        console.log("設定が自動保存されました");
+        showScreen(titleScreen); // タイトル画面に戻る
+      })
+    );
 
     // Generate game problem
     nextButton.addEventListener("click", () => {
