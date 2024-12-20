@@ -14,14 +14,6 @@ body {
   min-height: 100vh;
   padding: 20px;
 }
- 
-.screen {
-  /* display: none; */
-}
-
-.screen.active {
-  display: block;
-}
 
 button {
   margin: 10px;
@@ -51,19 +43,14 @@ button:hover {
 
 #board {
   background-color: #333;
-  width: 200px;
-  height: 400px;
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(20, 1fr);
+  grid-template-columns: repeat(var(--width), 1fr);
+  grid-template-rows: repeat(var(--height), 1fr);
+  gap: 1px;
   border: 2px solid #ccc;
 }
 
 #board div {
-  border: 1px solid #444;
   background-color: #555;
-}
-
-#next-container {
-  margin-left: 20px;
+  border: 1px solid #444;
 }
