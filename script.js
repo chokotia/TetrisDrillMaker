@@ -100,6 +100,20 @@ function startGame() {
   createBoard(width, height, blockCount);
   showScreen(domElements.gameScreen);
   updateNextPieces();
+
+  // 毎回autoを初期値に設定
+  setActionToAuto();
+}
+
+function setActionToAuto() {
+  const editOptionButtons = document.querySelectorAll(".edit-option");
+  editOptionButtons.forEach(b => b.classList.remove("selected"));
+  const autoButton = document.querySelector('.edit-option[data-action="auto"]');
+  if (autoButton) {
+    autoButton.classList.add("selected");
+  }
+  currentEditAction = "auto";
+  console.log("New problem => auto as default action.");
 }
 
 function getSettings() {
@@ -171,7 +185,7 @@ function createBoard(width, height, blockCount = 0) {
 
     // PC向けクリックイベント (既存)
     cell.addEventListener("click", () => {
-      if (!isEditMode || !currentEditAction) return;
+      if (!currentEditAction) return;
       handleEditCellClick(cell, i, width, height);
     });
 
@@ -331,27 +345,25 @@ function setupGestureControls() {
 document.addEventListener("DOMContentLoaded", initializeApp);
 
 function setupEditButton() {
-  const editToggleButton = document.getElementById("edit-toggle-button");
+
+  const blockButton = document.getElementById("block-button");
   const editPanel = document.getElementById("edit-panel");
 
-  editToggleButton.addEventListener("click", () => {
-    isEditMode = !isEditMode;
-    editPanel.classList.toggle("hidden", !isEditMode);
-
-    // 編集モードをOFFにした瞬間にも、もしAuto中ならリセットする
-    if (!isEditMode) {
-      resetAutoCells();
-    }
+  blockButton.addEventListener("click", () => {
+    isPanelOpen = !isPanelOpen;
+    editPanel.classList.toggle("hidden", !isPanelOpen);
+    // パネルを閉じても currentEditAction は維持
   });
 
   const editOptionButtons = document.querySelectorAll(".edit-option");
   editOptionButtons.forEach(btn => {
     btn.addEventListener("click", () => {
-      // いったん全ボタンの .selected を解除
+      // 一度全ての .selected を外して
       editOptionButtons.forEach(b => b.classList.remove("selected"));
+      // 自分だけ選択
       btn.classList.add("selected");
 
-      // もしautoCellsが途中状態ならリセット
+      // もし autoCellsが途中状態ならリセット
       if (autoCells.length > 0) {
         resetAutoCells();
       }
@@ -362,18 +374,32 @@ function setupEditButton() {
     });
   });
 
-  // ★ クリアボタンの取得＆イベント
+  // クリアボタン関連
   const clearButton = document.getElementById("clear-board");
   clearButton.addEventListener("click", () => {
-    resetToInitialBoard(); // 編集内容だけ消して初期状態に戻す
+    resetToInitialBoard();
   });
+
+  // ▼▼▼ ここが追記部分：最初から Auto ボタンが選択された状態にする ▼▼▼
+  // 1. Autoボタンを取得
+  const autoButton = document.querySelector('.edit-option[data-action="auto"]');
+  if (autoButton) {
+    // 2. 全ボタンの .selected を外す
+    editOptionButtons.forEach(b => b.classList.remove("selected"));
+    // 3. Auto ボタンに .selected を付ける
+    autoButton.classList.add("selected");
+    // 4. currentEditAction を "auto" にセット
+    currentEditAction = "auto";
+    console.log("Default action set to auto.");
+  }
 }
 
 
 // 既存のコードの最下部か、適宜場所を見つけて追加してください
 // =============================================
 // 編集モードの変数
-let isEditMode = false;          // 編集モードON/OFF
+let isPanelOpen = false; // 新規: パネルが開いているかどうか
+
 let currentEditAction = null;    // "I"/"L"/"O"/"Z"/"T"/"J"/"S"/"gray"/"delete"/"auto"
 
 // 自動置換用の一時的な白色セルを記録する配列
@@ -609,13 +635,13 @@ function setupMobileDragForBoard(boardContainer, board) {
   });
 
   hammer.on("panstart", (e) => {
-    if (!isEditMode || !currentEditAction) return;
+    if (!currentEditAction) return;
     isDragging = false; // panstart 時点ではまだ移動していない
     // ただし指を置いた時点でマウスダウン相当
   });
 
   hammer.on("panmove", (e) => {
-    if (!isEditMode || !currentEditAction) return;
+    if (!currentEditAction) return;
     isDragging = true; // 実際に動き始めたらドラッグ扱い
 
     paintCellUnderPointer(e, board);
@@ -674,20 +700,25 @@ function resetToInitialBoard() {
 
 function setupOutsideClickToCloseEditPanel() {
   const editPanel = document.getElementById("edit-panel");
-  const editToggleButton = document.getElementById("edit-toggle-button");
+  const blockButton = document.getElementById("block-button");
+
 
   // ドキュメント全体のクリックを監視
   document.addEventListener("click", (evt) => {
     // 1. 「編集モード中」かつ「パネルが表示されている状態」のときだけ判定
-    if (isEditMode && !editPanel.classList.contains("hidden")) {
+    if (isPanelOpen && !editPanel.classList.contains("hidden")) {
+
       // 2. クリックされた要素がパネル自身 or その子孫 でもなく
       //    かつ editToggleButton でもなければ、パネルを隠す
       const isClickInsidePanel = evt.target.closest("#edit-panel");
-      const isClickOnEditButton = (evt.target === editToggleButton);
+      const isClickOnBlockButton = (evt.target === blockButton);
 
-      if (!isClickInsidePanel && !isClickOnEditButton) {
+
+      if (!isClickInsidePanel && !isClickOnBlockButton ) {
         // パネルを閉じる（hiddenクラスを付与）
         editPanel.classList.add("hidden");
+        isPanelOpen = false;
+
         // ただし isEditMode は true のままにして、選択中ミノを継続可能に
         console.log("Clicked outside edit-panel -> closing panel");
       }
