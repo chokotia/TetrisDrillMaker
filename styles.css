@@ -106,8 +106,8 @@ button:hover {
 /* 2つのボタンをまとめる要素を右上に配置 */
 #top-right-buttons {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  bottom: 5px;
+  left: 50px;
   display: flex;      /* 横並び */
   gap: 5px;           /* ボタンの間隔 */
 }
@@ -133,8 +133,8 @@ button:hover {
 /* 編集パネル */
 #edit-panel {
   position: absolute;
-  top: 40px;
-  right: 10px;
+  bottom: 40px;
+  left: 10px;
  
   flex-direction: column;
   gap: 4px;

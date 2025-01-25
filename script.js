@@ -49,6 +49,9 @@ function initializeApp() {
   loadSettings();
   setupGestureControls();
   setupEditButton();
+
+  setupOutsideClickToCloseEditPanel();
+
 }
 
 function setupEventListeners() {
@@ -666,4 +669,28 @@ function resetToInitialBoard() {
     }
   });
   console.log("Cleared all edits. Now only initial-block remain.");
+}
+
+
+function setupOutsideClickToCloseEditPanel() {
+  const editPanel = document.getElementById("edit-panel");
+  const editToggleButton = document.getElementById("edit-toggle-button");
+
+  // ドキュメント全体のクリックを監視
+  document.addEventListener("click", (evt) => {
+    // 1. 「編集モード中」かつ「パネルが表示されている状態」のときだけ判定
+    if (isEditMode && !editPanel.classList.contains("hidden")) {
+      // 2. クリックされた要素がパネル自身 or その子孫 でもなく
+      //    かつ editToggleButton でもなければ、パネルを隠す
+      const isClickInsidePanel = evt.target.closest("#edit-panel");
+      const isClickOnEditButton = (evt.target === editToggleButton);
+
+      if (!isClickInsidePanel && !isClickOnEditButton) {
+        // パネルを閉じる（hiddenクラスを付与）
+        editPanel.classList.add("hidden");
+        // ただし isEditMode は true のままにして、選択中ミノを継続可能に
+        console.log("Clicked outside edit-panel -> closing panel");
+      }
+    }
+  });
 }
