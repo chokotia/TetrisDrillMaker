@@ -72,10 +72,17 @@
             </div>
             
             <!-- 目立たないような「編集」ボタンを配置 -->
-            <button id="edit-toggle-button" class="edit-toggle">編集</button>
+            <!-- <button id="edit-toggle-button" class="edit-toggle">edit</button>
+            <button id="clear-board">clear</button> -->
+
+            <!-- 右上に配置するボタン用のラッパ要素 -->
+            <div id="top-right-buttons">
+                <button id="edit-toggle-button" class="edit-toggle">edit</button>
+                <button id="clear-board" class="edit-toggle">clear</button>
+            </div>
 
             <!-- 編集メニュー(初期は非表示) -->
-            <div id="edit-panel" class="edition hidden">
+            <div id="edit-panel" class="hidden">
             <button class="edit-option" data-action="I">I</button>
             <button class="edit-option" data-action="L">L</button>
             <button class="edit-option" data-action="O">O</button>
@@ -87,6 +94,8 @@
             <button class="edit-option" data-action="delete">del</button>
             <button class="edit-option" data-action="auto">Auto</button>
             </div>
+
+
         </div>
 
     </div>

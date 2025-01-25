@@ -358,6 +358,12 @@ function setupEditButton() {
       console.log("currentEditAction:", currentEditAction);
     });
   });
+
+  // ★ クリアボタンの取得＆イベント
+  const clearButton = document.getElementById("clear-board");
+  clearButton.addEventListener("click", () => {
+    resetToInitialBoard(); // 編集内容だけ消して初期状態に戻す
+  });
 }
 
 
@@ -644,3 +650,20 @@ function paintCellUnderPointer(e, board) {
   }
 }
 
+
+/**
+ * 「初期配置クラス(initial-block)」が付いていないマスをすべて消す
+ */
+function resetToInitialBoard() {
+  const cells = Array.from(domElements.board.children);
+  cells.forEach((cell) => {
+    // initial-blockクラスを持たない = 後から塗ったマスは消す
+    if (!cell.classList.contains("initial-block")) {
+      cell.style.backgroundColor = "";      // 背景色を戻す
+      cell.classList.remove("block");       // ブロッククラスを除去
+      // もし別のミノなどが付いているなら消す
+      // (今回は "initial-block" しか特別クラスがない想定なのでこれだけでOK)
+    }
+  });
+  console.log("Cleared all edits. Now only initial-block remain.");
+}

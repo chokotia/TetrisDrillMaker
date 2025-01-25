@@ -103,14 +103,31 @@ button:hover {
   /* background-color: #ffcc00; */
 }
 
-/* 「編集」ボタンを画面右上に小さく配置 */
-.edit-toggle {
+/* 2つのボタンをまとめる要素を右上に配置 */
+#top-right-buttons {
   position: absolute;
   top: 10px;
   right: 10px;
+  display: flex;      /* 横並び */
+  gap: 5px;           /* ボタンの間隔 */
+}
+
+
+/* 既存の .edit-toggle スタイルを共通化したいなら一括で書く */
+.edit-toggle {
   font-size: 12px;
   padding: 5px 8px;
   opacity: 0.7;
+  cursor: pointer;
+  border: none;
+  background-color: #007BFF;
+  color: white;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.edit-toggle:hover {
+  background-color: #0056b3;
 }
 
 /* 編集パネル */
