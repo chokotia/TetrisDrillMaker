@@ -3,6 +3,18 @@ const config = {
   CELL_SIZE: 30, // Cell size in pixels
 };
 
+// ミノとカラーの対応表を作る
+const minoColors = {
+  S: "rgb(89,177,1)",
+  Z: "rgb(215,15,55)",
+  L: "rgb(227,91,2)",
+  J: "rgb(33,65,198)",
+  O: "rgb(227,159,2)",
+  T: "rgb(175,41,138)",
+  I: "rgb(15,155,215)"
+};
+
+
 // DOM Elements
 const domElements = {
   titleScreen: document.getElementById("title-screen"),
@@ -234,17 +246,23 @@ function drawMino(minoType, container) {
     ],
   };
 
+  // ミノ配列（2次元）を取得
   const shape = minoShapes[minoType];
+
+  // ミノの外枠要素
   const minoElement = document.createElement("div");
   minoElement.classList.add("next-piece");
   minoElement.style.display = "grid";
   minoElement.style.gridTemplateColumns = `repeat(${shape[0].length}, 1fr)`;
 
+  // shape をもとにセルを作り、該当セルだけ色を塗る
   shape.forEach((row) => {
     row.forEach((cell) => {
       const cellElement = document.createElement("div");
       if (cell) {
         cellElement.classList.add("block");
+        // ここでミノごとの色を適用（inline スタイルでもクラスでもOK）
+        cellElement.style.backgroundColor = minoColors[minoType];
       }
       minoElement.appendChild(cellElement);
     });
@@ -252,6 +270,7 @@ function drawMino(minoType, container) {
 
   container.appendChild(minoElement);
 }
+
 
 function setupGestureControls() {
   const boardContainer = document.getElementById("board-container");
