@@ -199,13 +199,16 @@ function placeRandomBlocks(board, width, height, blockCount) {
     for (let row = height - 1; row >= 0; row--) {
       const index = row * width + column;
       if (!cells[index].classList.contains("block")) {
-        cells[index].classList.add("block");
+       // 従来: cells[index].classList.add("block");
+       // 初期配置用のクラスを追加:
+        cells[index].classList.add("block", "initial-block");
         placedBlocks.add(`${column}-${i}`);
         break;
       }
     }
   }
 }
+
 
 function updateNextPieces() {
   const nextCount = parseInt(domElements.sliders.nextCount.value, 10);
@@ -415,6 +418,13 @@ function isSameColor(colorA, colorB) {
 }
 
 function handleEditCellClick(cell, index, width, height) {
+
+  // もし初期配置ブロッククラスが付いていれば編集不可
+  if (cell.classList.contains("initial-block")) {
+    console.log("This block is initial. Cannot edit or delete.");
+    return;
+  }
+
   const oldColor = cell.style.backgroundColor;
   if (currentEditAction === "delete") {
     paintCell(cell, "");
@@ -633,3 +643,4 @@ function paintCellUnderPointer(e, board) {
     }
   }
 }
+
