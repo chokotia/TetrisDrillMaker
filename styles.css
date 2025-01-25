@@ -6,17 +6,20 @@ body {
   color: #333;
 }
 
+/* 下部の固定領域(#bottom-bar)を覆わないよう、下に余白を確保 */
 #app {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* フッターがかぶらないように、下部にあらかじめ余白を作る */
+  padding-bottom: 80px;
   min-height: 100vh;
-  padding: 20px;
+  box-sizing: border-box;
 }
 
 #game-screen {
-  position: relative; /* これで子要素の絶対配置の基準になる */
+  position: relative; 
   width: 100%;
   height: 100%;
 }
@@ -45,8 +48,8 @@ button:hover {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: flex-start; /* ネクストと盤面の位置を調整 */
-  gap: 20px; /* ネクストと盤面の間のスペース */
+  align-items: flex-start;
+  gap: 20px;
 }
 
 #board {
@@ -70,11 +73,11 @@ button:hover {
 #next {
   display: flex;
   flex-direction: column;
-  gap: 5px; /* ネクスト間のスペースを縮小 */
+  gap: 5px;
   padding: 5px;
   background-color: #222;
   border: 2px solid #ccc;
-  width: 80px; /* ネクスト表示の固定幅を調整 */
+  width: 80px;
 }
 
 .next-piece-container {
@@ -83,14 +86,14 @@ button:hover {
   align-items: center;
   background-color: #333;
   width: 100%;
-  height: 40px; /* 各ネクスト枠の高さを縮小 */
+  height: 40px;
   border: 1px solid #555;
 }
 
 .next-piece {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4列のグリッド */
-  gap: 1px; /* セル間の間隔 */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
 }
 
 .next-piece div {
@@ -99,43 +102,13 @@ button:hover {
   background-color: transparent;
 }
 
-.next-piece .block {
-  /* background-color: #ffcc00; */
-}
-
-/* 2つのボタンをまとめる要素を右上に配置 */
-#top-right-buttons {
-  position: absolute;
-  bottom: 5px;
-  left: 50px;
-  display: flex;      /* 横並び */
-  gap: 5px;           /* ボタンの間隔 */
-}
-
-
-/* 既存の .edit-toggle スタイルを共通化したいなら一括で書く */
-.edit-toggle {
-  font-size: 12px;
-  padding: 5px 8px;
-  opacity: 0.7;
-  cursor: pointer;
-  border: none;
-  background-color: #007BFF;
-  color: white;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-.edit-toggle:hover {
-  background-color: #0056b3;
-}
+/* 古い #top-right-buttons のスタイルは削除 */
 
 /* 編集パネル */
 #edit-panel {
   position: absolute;
   bottom: 40px;
   left: 10px;
- 
   flex-direction: column;
   gap: 4px;
   background-color: rgba(80, 80, 80, 0.8);
@@ -144,10 +117,9 @@ button:hover {
 }
 
 #edit-panel.hidden {
-  display: none;  /* これなら #edit-panel + .hidden の組み合わせでより高い優先度 */
+  display: none;
 }
 
-/* 編集ボタン */
 .edit-option {
   font-size: 12px;
   padding: 4px;
@@ -155,8 +127,33 @@ button:hover {
   cursor: pointer;
 }
 
-/* 選択中のボタンを少し強調したい場合 */
+/* 選択中のボタンを少し強調 */
 .edit-option.selected {
   background-color: #ffbf00;
   color: #333;
+}
+
+/* ▼▼▼ 新しく下部固定用のフッター（#bottom-bar） ▼▼▼ */
+#bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  /* 背景色や高さをお好みで */
+  background-color: #333;
+  height: 50px;
+
+  display: flex;
+  justify-content: center; /* ボタンを中央寄せしたい場合 */
+  align-items: center;
+
+  /* 前面に重ねる(念のため) */
+  z-index: 999;
+}
+
+/* 下部バーのボタンに少し小さめのフォントや余白を設定したい場合 */
+#bottom-bar button {
+  font-size: 14px;
+  margin: 0 10px; 
+  padding: 6px 12px;
 }

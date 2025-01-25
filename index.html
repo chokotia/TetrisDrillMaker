@@ -2,104 +2,103 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tetris Practice App</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tetris Practice App</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
 </head>
 
 <body>
-    <div id="app">
-        <!-- タイトル画面 -->
-        <div id="title-screen" class="screen">
-            <h1>テトリス練習アプリ</h1>
-            <p>このアプリでは、テトリスの部分盤面とネクストをランダムに生成し、効率的に練習できます。</p>
-            <p>"スタート" ボタンを押して練習を開始するか、"設定" ボタンでカスタマイズしてください。</p>
-            <button id="start-game">スタート</button>
-            <button id="open-settings">設定</button>
-        </div>
+  <div id="app">
 
-        <!-- 設定画面 -->
-        <div id="settings-screen" class="screen hidden">
-            <h2>設定</h2>
-            <h3>生成する問題</h3>
-
-            <label for="width">盤面の幅 (3-10):</label>
-            <input id="width" type="range" min="3" max="10" value="5">
-            <span id="width-value">5</span>
-            <br>
-            <label for="height">盤面の高さ (6-10):</label>
-            <input id="height" type="range" min="6" max="10" value="6">
-            <span id="height-value">6</span>
-            <br>
-            <label>除外するミノ:</label>
-            <div id="exclude-minos">
-                <label><input type="checkbox" value="I"> I</label>
-                <label><input type="checkbox" value="O"> O</label>
-                <label><input type="checkbox" value="T"> T</label>
-                <label><input type="checkbox" value="S"> S</label>
-                <label><input type="checkbox" value="Z"> Z</label>
-                <label><input type="checkbox" value="J"> J</label>
-                <label><input type="checkbox" value="L"> L</label>
-            </div>
-            <br>
-            <label for="next-count">ネクスト個数 (2-10):</label>
-            <input id="next-count" type="range" min="2" max="10" value="5">
-            <span id="next-count-value">5</span>
-            <br>
-            <label for="block-count">ランダム初期配置ブロック数 (0-30):</label>
-            <input id="block-count" type="range" min="0" max="30" value="0">
-            <span id="block-count-value">10</span>
-            <br>
-            <h3>ショートカット設定</h3>
-            <label for="next-problem-key">次へ:</label>
-            <input id="next-problem-key" type="text" maxlength="1" value="n">
-            <br>
-            <label for="back-to-title-key">タイトルに戻る:</label>
-            <input id="back-to-title-key" type="text" maxlength="1" value="t">
-            <br>
-            <button id="back-to-title">戻る</button>
-        </div>
-
-        <!-- ゲーム画面 -->
-        <div id="game-screen" class="screen hidden">
-            <div id="board-container">
-                <div id="board"></div> <!-- 盤面が描画される場所 -->
-                <div id="next-container">
-                    <div id="next"></div>
-                </div>
-            </div>
-            
-            <!-- 目立たないような「編集」ボタンを配置 -->
-            <!-- <button id="edit-toggle-button" class="edit-toggle">edit</button>
-            <button id="clear-board">clear</button> -->
-
-            <!-- 右上に配置するボタン用のラッパ要素 -->
-            <div id="top-right-buttons">
-                <button id="block-button" class="edit-toggle">tools</button>
-                <button id="clear-board" class="edit-toggle">clear</button>
-            </div>
-
-            <!-- 編集メニュー(初期は非表示) -->
-            <div id="edit-panel" class="hidden">
-            <button class="edit-option" data-action="I">I</button>
-            <button class="edit-option" data-action="L">L</button>
-            <button class="edit-option" data-action="O">O</button>
-            <button class="edit-option" data-action="Z">Z</button>
-            <button class="edit-option" data-action="T">T</button>
-            <button class="edit-option" data-action="J">J</button>
-            <button class="edit-option" data-action="S">S</button>
-            <button class="edit-option" data-action="gray">gray</button>
-            <button class="edit-option" data-action="delete">del</button>
-            <button class="edit-option" data-action="auto">Auto</button>
-            </div>
-
-
-        </div>
-
+    <!-- タイトル画面 -->
+    <div id="title-screen" class="screen">
+      <h1>テトリス練習アプリ</h1>
+      <button id="start-game">スタート</button>
+      <button id="open-settings">設定</button>
     </div>
-    <script src="script.js"></script>
-</body>
 
+    <!-- 設定画面 -->
+    <div id="settings-screen" class="screen hidden">
+      <h2>設定</h2>
+      <h3>生成する問題</h3>
+      <label for="width">盤面の幅 (3-10):</label>
+      <input id="width" type="range" min="3" max="10" value="5">
+      <span id="width-value">5</span>
+      <br>
+
+      <label for="height">盤面の高さ (6-10):</label>
+      <input id="height" type="range" min="6" max="10" value="6">
+      <span id="height-value">6</span>
+      <br>
+
+      <label>除外するミノ:</label>
+      <div id="exclude-minos">
+        <label><input type="checkbox" value="I"> I</label>
+        <label><input type="checkbox" value="O"> O</label>
+        <label><input type="checkbox" value="T"> T</label>
+        <label><input type="checkbox" value="S"> S</label>
+        <label><input type="checkbox" value="Z"> Z</label>
+        <label><input type="checkbox" value="J"> J</label>
+        <label><input type="checkbox" value="L"> L</label>
+      </div>
+      <br>
+
+      <label for="next-count">ネクスト個数 (2-10):</label>
+      <input id="next-count" type="range" min="2" max="10" value="5">
+      <span id="next-count-value">5</span>
+      <br>
+
+      <label for="block-count">ランダム初期配置ブロック数 (0-30):</label>
+      <input id="block-count" type="range" min="0" max="30" value="0">
+      <span id="block-count-value">10</span>
+      <br>
+
+      <h3>ショートカット設定</h3>
+      <label for="next-problem-key">次へ:</label>
+      <input id="next-problem-key" type="text" maxlength="1" value="n">
+      <br>
+
+      <label for="back-to-title-key">タイトルに戻る:</label>
+      <input id="back-to-title-key" type="text" maxlength="1" value="t">
+      <br>
+
+      <button id="back-to-title">戻る</button>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="game-screen" class="screen hidden">
+      <div id="board-container">
+        <div id="board"></div> 
+        <div id="next-container">
+          <div id="next"></div>
+        </div>
+      </div>
+
+      <!-- 編集メニュー(初期は非表示) -->
+      <div id="edit-panel" class="hidden">
+        <button class="edit-option" data-action="I">I</button>
+        <button class="edit-option" data-action="L">L</button>
+        <button class="edit-option" data-action="O">O</button>
+        <button class="edit-option" data-action="Z">Z</button>
+        <button class="edit-option" data-action="T">T</button>
+        <button class="edit-option" data-action="J">J</button>
+        <button class="edit-option" data-action="S">S</button>
+        <button class="edit-option" data-action="gray">gray</button>
+        <button class="edit-option" data-action="delete">del</button>
+        <button class="edit-option" data-action="auto">Auto</button>
+      </div>
+
+    </div> <!-- /game-screen -->
+  </div> <!-- /app -->
+
+  <!-- ▼▼▼ ここが新たに下部に固定したバー ▼▼▼ -->
+  <div id="bottom-bar">
+    <button id="block-button" class="edit-toggle">tools</button>
+    <button id="clear-board" class="edit-toggle">clear</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
 </html>
