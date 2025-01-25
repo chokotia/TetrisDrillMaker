@@ -153,28 +153,36 @@ function getShortcuts() {
 
 function createBoard(width, height, blockCount = 0) {
   const board = domElements.board;
+  currentWidth = width;
+  currentHeight = height;
 
   board.style.setProperty("--width", width);
   board.style.setProperty("--height", height);
   board.innerHTML = "";
 
+  // セルを作成
   for (let i = 0; i < width * height; i++) {
     const cell = document.createElement("div");
     cell.style.width = `${config.CELL_SIZE}px`;
     cell.style.height = `${config.CELL_SIZE}px`;
 
-    // ▼ マスをクリックしたときの処理を追加
+    // PC向けクリックイベント (既存)
     cell.addEventListener("click", () => {
-      if (!isEditMode || !currentEditAction) return; // 編集モードでなければスルー
-
+      if (!isEditMode || !currentEditAction) return;
       handleEditCellClick(cell, i, width, height);
     });
 
     board.appendChild(cell);
   }
 
+  // Hammer.jsでドラッグ (pan) しながらマスを塗る機能をセットアップ
+  setupMobileDragForBoard(document.getElementById("board-container"), board);
+
+  // ランダムブロックなど既存の処理
   placeRandomBlocks(board, width, height, blockCount);
 }
+
+
 
 
 function placeRandomBlocks(board, width, height, blockCount) {
@@ -407,45 +415,32 @@ function isSameColor(colorA, colorB) {
 }
 
 function handleEditCellClick(cell, index, width, height) {
-  // いまセルに入っている色を取得
   const oldColor = cell.style.backgroundColor;
+  if (currentEditAction === "delete") {
+    paintCell(cell, "");
+    return;
+  }
+  if (currentEditAction === "auto") {
+    handleAutoReplace(cell, index, width, height);
+    return;
+  }
 
-  switch (currentEditAction) {
-    case "I":
-    case "L":
-    case "O":
-    case "Z":
-    case "T":
-    case "J":
-    case "S":
-    case "gray":
-      {
-        const newColor = minoColors[currentEditAction];
-        // もし現在の色と同じなら、塗り直し(消す)
-        if (isSameColor(oldColor, newColor)) {
-          paintCell(cell, ""); // 元の色に戻す
-        } else {
-          paintCell(cell, newColor);
-        }
-      }
-      break;
+  // ここで「同じ色なら削除」トグルか、常に上書きかを分岐
+  const newColor = minoColors[currentEditAction];
 
-    case "delete":
-      // 削除: 常に消す
+  if (isDragging) {
+    // ドラッグ中は常に塗る(上書き)
+    paintCell(cell, newColor);
+  } else {
+    // 単クリック扱いならトグル
+    if (isSameColor(oldColor, newColor)) {
       paintCell(cell, "");
-      break;
-
-    case "auto":
-      // 自動置換モードは 4マス塗り終わった時に判定するため、トグルではなく
-      // そのまま handleAutoReplace を呼ぶ
-      handleAutoReplace(cell, index, width, height);
-      break;
-
-    default:
-      // 何もしない
-      break;
+    } else {
+      paintCell(cell, newColor);
+    }
   }
 }
+
 
 function handleAutoReplace(cell, index, width, height) {
   // 1. すでにこの cell が背景色(#555等)でなければ、白を塗れない
@@ -584,3 +579,57 @@ function isSameShape(arr1, arr2) {
   return s1.every((p, i) => p.x === s2[i].x && p.y === s2[i].y);
 }
 
+let isDragging = false; // panmove や mousemove で移動があったらtrue
+
+function setupMobileDragForBoard(boardContainer, board) {
+  const hammer = new Hammer(boardContainer);
+
+  hammer.get("pan").set({
+    direction: Hammer.DIRECTION_ALL,
+    threshold: 1
+  });
+
+  hammer.on("panstart", (e) => {
+    if (!isEditMode || !currentEditAction) return;
+    isDragging = false; // panstart 時点ではまだ移動していない
+    // ただし指を置いた時点でマウスダウン相当
+  });
+
+  hammer.on("panmove", (e) => {
+    if (!isEditMode || !currentEditAction) return;
+    isDragging = true; // 実際に動き始めたらドラッグ扱い
+
+    paintCellUnderPointer(e, board);
+  });
+
+  hammer.on("panend", (e) => {
+    // pan操作終了
+    isDragging = false;
+  });
+
+  // 単タップは hammer.on("tap") でも拾えるが、
+  // 既に click イベントを使っているならそちらに任せてもいい
+}
+
+
+
+/**
+ * ドラッグやタップ時の座標 (e.center.x, e.center.y) にあるセルを探して塗る
+ */
+function paintCellUnderPointer(e, board) {
+  // Hammer.js イベントの座標は e.center.x / e.center.y に格納される
+  const x = e.center.x;
+  const y = e.center.y;
+
+  // pointer座標にある要素を取得
+  const target = document.elementFromPoint(x, y);
+
+  // もし board の子要素（つまり1つのマス）であれば処理
+  if (target && target.parentNode === board) {
+    // board.children の中で何番目か
+    const index = Array.from(board.children).indexOf(target);
+    if (index >= 0) {
+      handleEditCellClick(target, index, currentWidth, currentHeight);
+    }
+  }
+}
