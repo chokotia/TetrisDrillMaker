@@ -96,3 +96,44 @@ button:hover {
 .next-piece .block {
   /* background-color: #ffcc00; */
 }
+
+/* 「編集」ボタンを画面右上に小さく配置 */
+.edit-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 12px;
+  padding: 5px 8px;
+  opacity: 0.7;
+}
+
+/* 編集パネル */
+#edit-panel {
+  position: absolute;
+  top: 40px;
+  right: 10px;
+ 
+  flex-direction: column;
+  gap: 4px;
+  background-color: rgba(80, 80, 80, 0.8);
+  padding: 8px;
+  border: 1px solid #555;
+}
+
+#edit-panel.hidden {
+  display: none;  /* これなら #edit-panel + .hidden の組み合わせでより高い優先度 */
+}
+
+/* 編集ボタン */
+.edit-option {
+  font-size: 12px;
+  padding: 4px;
+  opacity: 0.9;
+  cursor: pointer;
+}
+
+/* 選択中のボタンを少し強調したい場合 */
+.edit-option.selected {
+  background-color: #ffbf00;
+  color: #333;
+}

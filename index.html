@@ -70,9 +70,25 @@
                     <div id="next"></div>
                 </div>
             </div>
-            <!-- <button id="next-problem">次へ</button>
-            <button id="back-to-title-from-game">タイトルに戻る</button> -->
+            
+            <!-- 目立たないような「編集」ボタンを配置 -->
+            <button id="edit-toggle-button" class="edit-toggle">編集</button>
+
+            <!-- 編集メニュー(初期は非表示) -->
+            <div id="edit-panel" class="edition hidden">
+            <button class="edit-option" data-action="I">I</button>
+            <button class="edit-option" data-action="L">L</button>
+            <button class="edit-option" data-action="O">O</button>
+            <button class="edit-option" data-action="Z">Z</button>
+            <button class="edit-option" data-action="T">T</button>
+            <button class="edit-option" data-action="J">J</button>
+            <button class="edit-option" data-action="S">S</button>
+            <button class="edit-option" data-action="gray">灰色</button>
+            <button class="edit-option" data-action="delete">削除</button>
+            <button class="edit-option" data-action="auto">Auto</button>
+            </div>
         </div>
+
     </div>
     <script src="script.js"></script>
 </body>
