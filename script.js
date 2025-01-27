@@ -16,7 +16,7 @@ const minoColors = {
   G: 'rgb(204,204,204)', // gray 用
 };
 
-// シード付き乱数 (Mulberry32) 以下は省略可...
+// シード付き乱数 (Mulberry32)
 function mulberry32(a) {
   return function () {
     let t = (a += 0x6d2b79f5);
@@ -39,10 +39,21 @@ let baseSeed = '';
 let currentProblemNumber = 1;
 let randomGenerator = null;
 
+// BootstrapのModalインスタンスを格納する変数
+let bsSettingsModal = null;
+
 function initializeApp() {
   baseSeed = generateBaseSeed();
   currentProblemNumber = 1;
   randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
+
+  // Bootstrapモーダルのインスタンス作成
+  bsSettingsModal = new bootstrap.Modal(
+    document.getElementById('settings-screen'),
+    {
+      // 必要に応じて backdrop:'static' などオプションを追加
+    }
+  );
 
   setupEventListeners();
   loadSettings();
@@ -77,7 +88,7 @@ function setupEventListeners() {
     }
   });
 
-  // 設定ボタン
+  // 設定ボタン -> モーダルを開く
   const settingsButton = document.getElementById('settings-button');
   if (settingsButton) {
     settingsButton.addEventListener('click', () => {
@@ -85,7 +96,7 @@ function setupEventListeners() {
     });
   }
 
-  // --- (1) 「保存して閉じる」ボタン ---
+  // 「保存して閉じる」ボタン
   const saveAndCloseBtn = document.getElementById('save-and-close-settings');
   if (saveAndCloseBtn) {
     saveAndCloseBtn.addEventListener('click', () => {
@@ -98,31 +109,18 @@ function setupEventListeners() {
     });
   }
 
-  // --- (2) 「×」ボタン (保存せず閉じる) ---
+  // 「×」ボタン (id="close-settings-without-save")
+  // data-bs-dismiss="modal"があるのでクリック時にモーダルは閉じるが、
+  // 追加の処理（保存せず閉じるなど）をしたい場合はここでハンドリングも可。
   const closeIconBtn = document.getElementById('close-settings-without-save');
   if (closeIconBtn) {
     closeIconBtn.addEventListener('click', () => {
-      closeSettingsOverlay(); // 保存しない
+      // ここでは特に何もせず閉じるだけ
+      console.log('設定を保存せず閉じました。');
     });
   }
 
-  // --- (3) モーダル外クリックで閉じる ---
-  const settingsScreen = document.getElementById('settings-screen');
-  const modalContent = document.getElementById('settings-modal-content');
-  if (settingsScreen && modalContent) {
-    // モーダルコンテンツ自体のクリックはイベントを外に伝播させない
-    modalContent.addEventListener('click', e => {
-      e.stopPropagation();
-    });
-    // オーバーレイ部分をクリックしたら閉じる(保存なし)
-    settingsScreen.addEventListener('click', e => {
-      if (e.target === settingsScreen) {
-        closeSettingsOverlay(); // 保存せず閉じる
-      }
-    });
-  }
-
-  // Auto/Del/Gray ボタン（以下はそのまま）
+  // Auto/Del/Gray ボタン
   const autoButton = document.getElementById('auto-button');
   if (autoButton) {
     autoButton.addEventListener('click', () => {
@@ -137,16 +135,14 @@ function setupEventListeners() {
   }
 }
 
-// モーダルを開く
+// Bootstrapモーダルを開く
 function openSettingsOverlay() {
-  const settingsScreen = document.getElementById('settings-screen');
-  settingsScreen.classList.remove('hidden');
+  bsSettingsModal.show();
 }
 
-// モーダルを閉じる
+// Bootstrapモーダルを閉じる
 function closeSettingsOverlay() {
-  const settingsScreen = document.getElementById('settings-screen');
-  settingsScreen.classList.add('hidden');
+  bsSettingsModal.hide();
 }
 
 function getSettings() {

@@ -36,9 +36,9 @@
   overflow: hidden;
 }
 
-/* 盤面コンテナ: align-items-start で高さをそろえないようにする */
+/* 盤面コンテナ */
 #board-container {
-  margin: 0; /* もしくは margin-top: 10px; など */
+  margin: 0;
 }
 
 /* テトリス盤面 */
@@ -54,8 +54,6 @@
 /* 盤面の1マス */
 #board div {
   background-color: #555;
-  /* もし border が太すぎる原因なら削除可
-     border: 1px solid #444; */
 }
 
 /* ブロック状態のマス */
@@ -92,32 +90,6 @@
   width: 10px;
   height: 10px;
   background-color: transparent;
-}
-
-/* モーダルオーバーレイ */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  /* 背景半透明 */
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 999; /* 最前面に */
-}
-
-/* モーダルコンテンツ */
-.modal-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 300px;
-  max-width: 90%;
-  padding: 20px;
-  background-color: #fff;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
 }
 
 /* 編集ボタンが選択されたときの強調表示 */

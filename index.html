@@ -92,47 +92,92 @@
         </div>
       </nav>
 
-      <!-- 設定画面: モーダル -->
-      <div id="settings-screen" class="modal-overlay hidden">
-        <!-- モーダル外クリック対策: この後 script.js で制御 -->
-        <div class="modal-content" id="settings-modal-content">
-          <!-- 右上に閉じる「×」ボタン -->
-          <button
-            type="button"
-            class="btn-close"
-            id="close-settings-without-save"
-            aria-label="Close"
-            style="position: absolute; top: 10px; right: 10px;"
-          ></button>
-
-          <h2>設定</h2>
-
-          <label for="width">盤面の幅 (3-10):</label>
-          <input id="width" type="range" min="3" max="10" value="5" />
-          <span id="width-value">5</span>
-          <br />
-
-          <label for="height">盤面の高さ (6-10):</label>
-          <input id="height" type="range" min="6" max="10" value="6" />
-          <span id="height-value">6</span>
-          <br />
-
-          <label for="next-count">ネクスト個数 (2-10):</label>
-          <input id="next-count" type="range" min="2" max="10" value="5" />
-          <span id="next-count-value">5</span>
-          <br />
-
-          <label for="block-count">ランダム初期配置ブロック数 (0-30):</label>
-          <input id="block-count" type="range" min="0" max="30" value="3" />
-          <span id="block-count-value">3</span>
-          <br />
-
-          <!-- ここを「保存して閉じる」ボタンに変更 -->
-          <button id="save-and-close-settings" class="btn btn-primary mt-2">
-            保存して閉じる
-          </button>
+      <!-- 設定画面: Bootstrapのモーダルを使用 -->
+      <div
+        class="modal fade"
+        id="settings-screen"
+        tabindex="-1"
+        aria-labelledby="settingsModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content" id="settings-modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="settingsModalLabel">設定</h5>
+              <!-- data-bs-dismiss="modal" をつけると、クリック時に閉じる動作が走る -->
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                id="close-settings-without-save"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="width" class="form-label">盤面の幅 (3-10):</label>
+                <input
+                  id="width"
+                  type="range"
+                  class="form-range"
+                  min="3"
+                  max="10"
+                  value="5"
+                />
+                <span id="width-value">5</span>
+              </div>
+              <div class="mb-3">
+                <label for="height" class="form-label"
+                  >盤面の高さ (6-10):</label
+                >
+                <input
+                  id="height"
+                  type="range"
+                  class="form-range"
+                  min="6"
+                  max="10"
+                  value="6"
+                />
+                <span id="height-value">6</span>
+              </div>
+              <div class="mb-3">
+                <label for="next-count" class="form-label"
+                  >ネクスト個数 (2-10):</label
+                >
+                <input
+                  id="next-count"
+                  type="range"
+                  class="form-range"
+                  min="2"
+                  max="10"
+                  value="5"
+                />
+                <span id="next-count-value">5</span>
+              </div>
+              <div class="mb-3">
+                <label for="block-count" class="form-label"
+                  >ランダム初期配置ブロック数 (0-30):</label
+                >
+                <input
+                  id="block-count"
+                  type="range"
+                  class="form-range"
+                  min="0"
+                  max="30"
+                  value="3"
+                />
+                <span id="block-count-value">3</span>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button id="save-and-close-settings" class="btn btn-primary">
+                保存して閉じる
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+      <!-- /モーダル ここまで -->
     </div>
 
     <script src="script.js"></script>
