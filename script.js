@@ -66,7 +66,7 @@ function createSeededGenerator(base, number) {
 }
 
 function setupEventListeners() {
-  // 各種スライダー
+  // スライダーの表示更新はそのまま
   ['width', 'height', 'next-count', 'block-count'].forEach(id => {
     const slider = document.getElementById(id);
     const output = document.getElementById(`${id}-value`);
@@ -77,7 +77,7 @@ function setupEventListeners() {
     }
   });
 
-  // 設定ボタン: オーバーレイを表示
+  // 設定ボタン
   const settingsButton = document.getElementById('settings-button');
   if (settingsButton) {
     settingsButton.addEventListener('click', () => {
@@ -85,16 +85,44 @@ function setupEventListeners() {
     });
   }
 
-  // 設定画面の「閉じる」ボタン
-  const closeSettingsButton = document.getElementById('close-settings');
-  if (closeSettingsButton) {
-    closeSettingsButton.addEventListener('click', () => {
+  // --- (1) 「保存して閉じる」ボタン ---
+  const saveAndCloseBtn = document.getElementById('save-and-close-settings');
+  if (saveAndCloseBtn) {
+    saveAndCloseBtn.addEventListener('click', () => {
+      // 設定を保存
       saveSettings(getSettings());
+      // ボードとNEXTの内容を再描画 (問題番号はそのまま)
+      generateProblem();
+      // モーダルを閉じる
       closeSettingsOverlay();
     });
   }
 
-  // Auto/Del ボタン
+  // --- (2) 「×」ボタン (保存せず閉じる) ---
+  const closeIconBtn = document.getElementById('close-settings-without-save');
+  if (closeIconBtn) {
+    closeIconBtn.addEventListener('click', () => {
+      closeSettingsOverlay(); // 保存しない
+    });
+  }
+
+  // --- (3) モーダル外クリックで閉じる ---
+  const settingsScreen = document.getElementById('settings-screen');
+  const modalContent = document.getElementById('settings-modal-content');
+  if (settingsScreen && modalContent) {
+    // モーダルコンテンツ自体のクリックはイベントを外に伝播させない
+    modalContent.addEventListener('click', e => {
+      e.stopPropagation();
+    });
+    // オーバーレイ部分をクリックしたら閉じる(保存なし)
+    settingsScreen.addEventListener('click', e => {
+      if (e.target === settingsScreen) {
+        closeSettingsOverlay(); // 保存せず閉じる
+      }
+    });
+  }
+
+  // Auto/Del/Gray ボタン（以下はそのまま）
   const autoButton = document.getElementById('auto-button');
   if (autoButton) {
     autoButton.addEventListener('click', () => {
@@ -109,11 +137,13 @@ function setupEventListeners() {
   }
 }
 
+// モーダルを開く
 function openSettingsOverlay() {
   const settingsScreen = document.getElementById('settings-screen');
   settingsScreen.classList.remove('hidden');
 }
 
+// モーダルを閉じる
 function closeSettingsOverlay() {
   const settingsScreen = document.getElementById('settings-screen');
   settingsScreen.classList.add('hidden');

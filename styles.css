@@ -31,8 +31,8 @@
   box-sizing: border-box;
   background-color: #f4f4f4;
   display: flex;
-  justify-content: center;  /* 横方向の中央寄せ */
-  align-items: center;      /* 縦方向の中央寄せ */
+  justify-content: center; /* 横方向の中央寄せ */
+  align-items: center; /* 縦方向の中央寄せ */
   overflow: hidden;
 }
 
@@ -47,7 +47,7 @@
   display: grid;
   grid-template-columns: repeat(var(--width), 1fr);
   grid-template-rows: repeat(var(--height), 1fr);
-  gap: 1px;  /* 1pxの隙間を線として表示 */
+  gap: 1px; /* 1pxの隙間を線として表示 */
   border: 2px solid #ccc; /* 全体枠 */
 }
 

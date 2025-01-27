@@ -40,8 +40,7 @@
             class="btn btn-outline-light d-flex align-items-center"
             type="button"
           >
-            <!-- Bootstrapのボタンアイコンを利用 -->
-            <i class="bi bi-gear" style="font-size: 1.2rem;"></i>
+            <i class="bi bi-gear" style="font-size: 1.2rem"></i>
           </button>
         </div>
       </nav>
@@ -52,10 +51,7 @@
           id="board-container"
           class="d-flex flex-row justify-content-center align-items-start"
         >
-          <!-- テトリス盤面 -->
           <div id="board"></div>
-
-          <!-- NEXT 全体の背景を塗るため、#next を背景つきコンテナとして扱う -->
           <div id="next" class="ms-3"></div>
         </div>
       </div>
@@ -63,7 +59,6 @@
       <!-- ボトムナビバー (編集用バー) -->
       <nav id="edit-nav" class="navbar navbar-dark bg-dark fixed-bottom">
         <div class="container-fluid">
-          <!-- Auto / Del / Gray ボタン群 -->
           <div class="btn-group" role="group" aria-label="Edit modes">
             <button
               id="auto-button"
@@ -87,8 +82,6 @@
               Gray
             </button>
           </div>
-
-          <!-- clear ボタン: 少し隙間をあけて表示 -->
           <button
             id="clear-board"
             class="btn btn-outline-light edit-toggle ms-3"
@@ -101,9 +94,18 @@
 
       <!-- 設定画面: モーダル -->
       <div id="settings-screen" class="modal-overlay hidden">
-        <div class="modal-content">
+        <!-- モーダル外クリック対策: この後 script.js で制御 -->
+        <div class="modal-content" id="settings-modal-content">
+          <!-- 右上に閉じる「×」ボタン -->
+          <button
+            type="button"
+            class="btn-close"
+            id="close-settings-without-save"
+            aria-label="Close"
+            style="position: absolute; top: 10px; right: 10px;"
+          ></button>
+
           <h2>設定</h2>
-          <h3>生成する問題</h3>
 
           <label for="width">盤面の幅 (3-10):</label>
           <input id="width" type="range" min="3" max="10" value="5" />
@@ -125,8 +127,9 @@
           <span id="block-count-value">3</span>
           <br />
 
-          <button id="close-settings" class="btn btn-primary mt-2">
-            閉じる
+          <!-- ここを「保存して閉じる」ボタンに変更 -->
+          <button id="save-and-close-settings" class="btn btn-primary mt-2">
+            保存して閉じる
           </button>
         </div>
       </div>
