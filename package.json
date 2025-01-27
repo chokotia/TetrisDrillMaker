@@ -1,0 +1,23 @@
+{
+  "name": "tetrisdrillmaker",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/chokotia/TetrisDrillMaker#readme",
+  "bugs": {
+    "url": "https://github.com/chokotia/TetrisDrillMaker/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chokotia/TetrisDrillMaker.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "script.js",
+  "scripts": {
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,html,css,scss}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2"
+  }
+}

@@ -1,93 +1,84 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f4;
-  color: #333;
-}
-
-/* 下部の固定領域(#bottom-bar)を覆わないよう、下に余白を確保 */
+/* 全体ラッパ */
 #app {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  /* フッターがかぶらないように、下部にあらかじめ余白を作る */
-  padding-bottom: 80px;
-  min-height: 100vh;
-  box-sizing: border-box;
-}
-
-#game-screen {
-  position: relative; 
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
 }
 
-button {
-  margin: 10px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  border: none;
-  background-color: #007BFF;
-  color: white;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
+/* 画面(ビュー)切り替え用の隠しクラス */
 .hidden {
   display: none;
 }
 
-#board-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 20px;
+/* ナビバー隠し用 */
+#title-bar.hidden {
+  display: none;
+}
+#edit-nav.hidden {
+  display: none;
 }
 
+/* 問題番号（ナビバー左端に表示） */
+.problem-counter {
+  font-size: 16px;
+}
+
+/* メインビュー */
+#main-view.screen {
+  padding-top: 56px;   /* 上部ナビバーの高さ分 */
+  padding-bottom: 56px;/* 下部ナビバーの高さ分 */
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  background-color: #f4f4f4;
+}
+
+/* 盤面コンテナ: align-items-start で高さをそろえないようにする */
+#board-container {
+  margin-top: 20px; /* 少し余白 */
+}
+
+/* テトリス盤面 */
 #board {
   background-color: #333;
   display: grid;
   grid-template-columns: repeat(var(--width), 1fr);
   grid-template-rows: repeat(var(--height), 1fr);
-  gap: 1px;
-  border: 2px solid #ccc;
+  gap: 1px;  /* 1pxの隙間を線として表示 */
+  border: 2px solid #ccc; /* 全体枠 */
 }
 
+/* 盤面の1マス */
 #board div {
   background-color: #555;
-  border: 1px solid #444;
+  /* もし border が太すぎる原因なら削除可
+     border: 1px solid #444; */
 }
 
+/* ブロック状態のマス */
 #board .block {
   background-color: #b0c4de;
 }
 
+/* NEXT コンテナ */
 #next {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 5px;
   background-color: #222;
-  border: 2px solid #ccc;
-  width: 80px;
+  padding: 10px;
+  border-radius: 4px;
 }
 
+/* NEXT の各ミノ表示 */
 .next-piece-container {
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: #333;
-  width: 100%;
+  width: 80px;
   height: 40px;
   border: 1px solid #555;
+  margin-bottom: 5px;
 }
 
 .next-piece {
@@ -102,58 +93,34 @@ button:hover {
   background-color: transparent;
 }
 
-/* 古い #top-right-buttons のスタイルは削除 */
-
-/* 編集パネル */
-#edit-panel {
-  position: absolute;
-  bottom: 40px;
-  left: 10px;
-  flex-direction: column;
-  gap: 4px;
-  background-color: rgba(80, 80, 80, 0.8);
-  padding: 8px;
-  border: 1px solid #555;
-}
-
-#edit-panel.hidden {
-  display: none;
-}
-
-.edit-option {
-  font-size: 12px;
-  padding: 4px;
-  opacity: 0.9;
-  cursor: pointer;
-}
-
-/* 選択中のボタンを少し強調 */
-.edit-option.selected {
-  background-color: #ffbf00;
-  color: #333;
-}
-
-/* ▼▼▼ 新しく下部固定用のフッター（#bottom-bar） ▼▼▼ */
-#bottom-bar {
+/* モーダルオーバーレイ */
+.modal-overlay {
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
   width: 100%;
-  /* 背景色や高さをお好みで */
-  background-color: #333;
-  height: 50px;
-
-  display: flex;
-  justify-content: center; /* ボタンを中央寄せしたい場合 */
-  align-items: center;
-
-  /* 前面に重ねる(念のため) */
-  z-index: 999;
+  height: 100%;
+  /* 背景半透明 */
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 999; /* 最前面に */
 }
 
-/* 下部バーのボタンに少し小さめのフォントや余白を設定したい場合 */
-#bottom-bar button {
-  font-size: 14px;
-  margin: 0 10px; 
-  padding: 6px 12px;
+/* モーダルコンテンツ */
+.modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  max-width: 90%;
+  padding: 20px;
+  background-color: #fff;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+
+/* 編集ボタンが選択されたときの強調表示 */
+.edit-option.selected {
+  background-color: #ffbf00 !important;
+  color: #333 !important;
 }

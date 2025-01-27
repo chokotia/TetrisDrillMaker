@@ -1,106 +1,137 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tetris Practice App</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tetris Practice App</title>
-  <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
-</head>
+    <!-- Bootstrap本体CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
 
-<body>
-  <div id="app">
+    <link rel="stylesheet" href="styles.css" />
 
-    <!-- タイトル画面 -->
-    <div id="title-screen" class="screen">
-      <h1>テトリス練習アプリ</h1>
-      <button id="start-game">スタート</button>
-      <button id="open-settings">設定</button>
-    </div>
+    <!-- Hammer.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
 
-    <!-- 設定画面 -->
-    <div id="settings-screen" class="screen hidden">
-      <h2>設定</h2>
-      <h3>生成する問題</h3>
-      <label for="width">盤面の幅 (3-10):</label>
-      <input id="width" type="range" min="3" max="10" value="5">
-      <span id="width-value">5</span>
-      <br>
+    <!-- Bootstrap本体JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+      defer
+    ></script>
+  </head>
 
-      <label for="height">盤面の高さ (6-10):</label>
-      <input id="height" type="range" min="6" max="10" value="6">
-      <span id="height-value">6</span>
-      <br>
+  <body>
+    <div id="app">
+      <nav id="title-bar" class="navbar navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+          <span id="current-problem" class="navbar-brand problem-counter"
+            >問題 #1</span
+          >
+          <button
+            id="settings-button"
+            class="btn btn-outline-light d-flex align-items-center"
+            type="button"
+          >
+            <!-- Bootstrapのボタンアイコンを利用 -->
+            <i class="bi bi-gear" style="font-size: 1.2rem;"></i>
+          </button>
+        </div>
+      </nav>
 
-      <label>除外するミノ:</label>
-      <div id="exclude-minos">
-        <label><input type="checkbox" value="I"> I</label>
-        <label><input type="checkbox" value="O"> O</label>
-        <label><input type="checkbox" value="T"> T</label>
-        <label><input type="checkbox" value="S"> S</label>
-        <label><input type="checkbox" value="Z"> Z</label>
-        <label><input type="checkbox" value="J"> J</label>
-        <label><input type="checkbox" value="L"> L</label>
-      </div>
-      <br>
+      <!-- メインビュー -->
+      <div id="main-view" class="screen">
+        <div
+          id="board-container"
+          class="d-flex flex-row justify-content-center align-items-start"
+        >
+          <!-- テトリス盤面 -->
+          <div id="board"></div>
 
-      <label for="next-count">ネクスト個数 (2-10):</label>
-      <input id="next-count" type="range" min="2" max="10" value="5">
-      <span id="next-count-value">5</span>
-      <br>
-
-      <label for="block-count">ランダム初期配置ブロック数 (0-30):</label>
-      <input id="block-count" type="range" min="0" max="30" value="0">
-      <span id="block-count-value">10</span>
-      <br>
-
-      <h3>ショートカット設定</h3>
-      <label for="next-problem-key">次へ:</label>
-      <input id="next-problem-key" type="text" maxlength="1" value="n">
-      <br>
-
-      <label for="back-to-title-key">タイトルに戻る:</label>
-      <input id="back-to-title-key" type="text" maxlength="1" value="t">
-      <br>
-
-      <button id="back-to-title">戻る</button>
-    </div>
-
-    <!-- ゲーム画面 -->
-    <div id="game-screen" class="screen hidden">
-      <div id="board-container">
-        <div id="board"></div> 
-        <div id="next-container">
-          <div id="next"></div>
+          <!-- NEXT 全体の背景を塗るため、#next を背景つきコンテナとして扱う -->
+          <div id="next" class="ms-3"></div>
         </div>
       </div>
 
-      <!-- 編集メニュー(初期は非表示) -->
-      <div id="edit-panel" class="hidden">
-        <button class="edit-option" data-action="I">I</button>
-        <button class="edit-option" data-action="L">L</button>
-        <button class="edit-option" data-action="O">O</button>
-        <button class="edit-option" data-action="Z">Z</button>
-        <button class="edit-option" data-action="T">T</button>
-        <button class="edit-option" data-action="J">J</button>
-        <button class="edit-option" data-action="S">S</button>
-        <button class="edit-option" data-action="gray">gray</button>
-        <button class="edit-option" data-action="delete">del</button>
-        <button class="edit-option" data-action="auto">Auto</button>
-      </div>
+      <!-- ボトムナビバー (編集用バー) -->
+      <nav id="edit-nav" class="navbar navbar-dark bg-dark fixed-bottom">
+        <div class="container-fluid">
+          <!-- Auto / Del / Gray ボタン群 -->
+          <div class="btn-group" role="group" aria-label="Edit modes">
+            <button
+              id="auto-button"
+              class="btn btn-secondary edit-option"
+              data-action="auto"
+            >
+              Auto
+            </button>
+            <button
+              id="del-button"
+              class="btn btn-secondary edit-option"
+              data-action="delete"
+            >
+              Del
+            </button>
+            <button
+              id="gray-button"
+              class="btn btn-secondary edit-option"
+              data-action="gray"
+            >
+              Gray
+            </button>
+          </div>
 
-      <!-- ▼▼▼ ここが新たに下部に固定したバー ▼▼▼ -->
-        <div id="bottom-bar">
-            <button id="block-button" class="edit-toggle">tools</button>
-            <button id="clear-board" class="edit-toggle">clear</button>
+          <!-- clear ボタン: 少し隙間をあけて表示 -->
+          <button
+            id="clear-board"
+            class="btn btn-outline-light edit-toggle ms-3"
+            type="button"
+          >
+            clear
+          </button>
         </div>
+      </nav>
 
+      <!-- 設定画面: モーダル -->
+      <div id="settings-screen" class="modal-overlay hidden">
+        <div class="modal-content">
+          <h2>設定</h2>
+          <h3>生成する問題</h3>
 
-    </div> <!-- /game-screen -->
-  </div> <!-- /app -->
+          <label for="width">盤面の幅 (3-10):</label>
+          <input id="width" type="range" min="3" max="10" value="5" />
+          <span id="width-value">5</span>
+          <br />
 
+          <label for="height">盤面の高さ (6-10):</label>
+          <input id="height" type="range" min="6" max="10" value="6" />
+          <span id="height-value">6</span>
+          <br />
 
-  <script src="script.js"></script>
-</body>
+          <label for="next-count">ネクスト個数 (2-10):</label>
+          <input id="next-count" type="range" min="2" max="10" value="5" />
+          <span id="next-count-value">5</span>
+          <br />
+
+          <label for="block-count">ランダム初期配置ブロック数 (0-30):</label>
+          <input id="block-count" type="range" min="0" max="30" value="3" />
+          <span id="block-count-value">3</span>
+          <br />
+
+          <button id="close-settings" class="btn btn-primary mt-2">
+            閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
 </html>

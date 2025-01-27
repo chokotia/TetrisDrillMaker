@@ -1,142 +1,151 @@
 // Centralized Configuration
 const config = {
   CELL_SIZE: 30, // Cell size in pixels
+  VERSION: '0.2.2',
 };
 
-// ミノとカラーの対応表を作る
+// ミノとカラーの対応表
 const minoColors = {
-  S: "rgb(89,177,1)",
-  Z: "rgb(215,15,55)",
-  L: "rgb(227,91,2)",
-  J: "rgb(33,65,198)",
-  O: "rgb(227,159,2)",
-  T: "rgb(175,41,138)",
-  I: "rgb(15,155,215)",
-  G: "rgb(204,204,204)",
+  S: 'rgb(89,177,1)',
+  Z: 'rgb(215,15,55)',
+  L: 'rgb(227,91,2)',
+  J: 'rgb(33,65,198)',
+  O: 'rgb(227,159,2)',
+  T: 'rgb(175,41,138)',
+  I: 'rgb(15,155,215)',
+  G: 'rgb(204,204,204)', // gray 用
 };
 
+// シード付き乱数 (Mulberry32) 以下は省略可...
+function mulberry32(a) {
+  return function () {
+    let t = (a += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function generateBaseSeed() {
+  const chars = 'abcdefghijklmnopqrstuvwxyz';
+  let seed = '';
+  for (let i = 0; i < 4; i++) {
+    seed += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return seed;
+}
 
-// DOM Elements
-const domElements = {
-  titleScreen: document.getElementById("title-screen"),
-  settingsScreen: document.getElementById("settings-screen"),
-  gameScreen: document.getElementById("game-screen"),
-  startButton: document.getElementById("start-game"),
-  settingsButton: document.getElementById("open-settings"),
-  backToTitleButtons: document.querySelectorAll("#back-to-title"),
-  sliders: {
-    width: document.getElementById("width"),
-    height: document.getElementById("height"),
-    nextCount: document.getElementById("next-count"),
-    blockCount: document.getElementById("block-count"),
-  },
-  values: {
-    width: document.getElementById("width-value"),
-    height: document.getElementById("height-value"),
-    nextCount: document.getElementById("next-count-value"),
-    blockCount: document.getElementById("block-count-value"),
-  },
-  shortcuts: {
-    nextProblemInput: document.getElementById("next-problem-key"),
-    backToTitleInput: document.getElementById("back-to-title-key"),
-  },
-  board: document.getElementById("board"),
-  nextContainer: document.getElementById("next"),
-};
+/* ---- ここからアプリ本体 ---- */
+let baseSeed = '';
+let currentProblemNumber = 1;
+let randomGenerator = null;
 
 function initializeApp() {
+  baseSeed = generateBaseSeed();
+  currentProblemNumber = 1;
+  randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
+
   setupEventListeners();
   loadSettings();
   setupGestureControls();
   setupEditButton();
 
-  setupOutsideClickToCloseEditPanel();
+  // 最初の問題を生成
+  generateProblem();
 
+  console.log(`Base Seed: ${baseSeed}`);
+  console.log(`Starting at Problem #${currentProblemNumber}`);
+}
+
+function createSeededGenerator(base, number) {
+  const seedString = `${base}_${number}`;
+  let seed = 0;
+  for (let i = 0; i < seedString.length; i++) {
+    seed += seedString.charCodeAt(i);
+  }
+  return mulberry32(seed);
 }
 
 function setupEventListeners() {
-  // スライダーと値の同期
-  Object.entries(domElements.sliders).forEach(([key, slider]) => {
-    const output = domElements.values[key];
-    slider.addEventListener("input", () => {
-      output.textContent = slider.value;
+  // 各種スライダー
+  ['width', 'height', 'next-count', 'block-count'].forEach(id => {
+    const slider = document.getElementById(id);
+    const output = document.getElementById(`${id}-value`);
+    if (slider && output) {
+      slider.addEventListener('input', () => {
+        output.textContent = slider.value;
+      });
+    }
+  });
+
+  // 設定ボタン: オーバーレイを表示
+  const settingsButton = document.getElementById('settings-button');
+  if (settingsButton) {
+    settingsButton.addEventListener('click', () => {
+      openSettingsOverlay();
     });
-  });
-
-  // 画面の切り替え
-  domElements.startButton.addEventListener("click", startGame);
-  domElements.settingsButton.addEventListener("click", () => showScreen(domElements.settingsScreen));
-  domElements.backToTitleButtons.forEach((btn) =>
-    btn.addEventListener("click", () => {
-      saveSettings(getSettings());
-      showScreen(domElements.titleScreen);
-    })
-  );
-
-  // ショートカットの設定
-  setupShortcutListeners();
-
-  // キーボードイベント
-  document.addEventListener("keydown", handleShortcuts);
-}
-
-function setupShortcutListeners() {
-  const { nextProblemInput, backToTitleInput } = domElements.shortcuts;
-  const shortcuts = getShortcuts();
-
-  nextProblemInput.addEventListener("input", (e) => {
-    shortcuts.nextProblemKey = e.target.value;
-    console.log(`nextProblemKey updated to: ${shortcuts.nextProblemKey}`);
-  });
-
-  backToTitleInput.addEventListener("input", (e) => {
-    shortcuts.backToTitleKey = e.target.value;
-    console.log(`backToTitleKey updated to: ${shortcuts.backToTitleKey}`);
-  });
-}
-
-function startGame() {
-  const { width, height, blockCount } = getSettings();
-  createBoard(width, height, blockCount);
-  showScreen(domElements.gameScreen);
-  updateNextPieces();
-
-  // 毎回autoを初期値に設定
-  setActionToAuto();
-}
-
-function setActionToAuto() {
-  const editOptionButtons = document.querySelectorAll(".edit-option");
-  editOptionButtons.forEach(b => b.classList.remove("selected"));
-  const autoButton = document.querySelector('.edit-option[data-action="auto"]');
-  if (autoButton) {
-    autoButton.classList.add("selected");
   }
-  currentEditAction = "auto";
-  console.log("New problem => auto as default action.");
+
+  // 設定画面の「閉じる」ボタン
+  const closeSettingsButton = document.getElementById('close-settings');
+  if (closeSettingsButton) {
+    closeSettingsButton.addEventListener('click', () => {
+      saveSettings(getSettings());
+      closeSettingsOverlay();
+    });
+  }
+
+  // Auto/Del ボタン
+  const autoButton = document.getElementById('auto-button');
+  if (autoButton) {
+    autoButton.addEventListener('click', () => {
+      setEditAction('auto');
+    });
+  }
+  const delButton = document.getElementById('del-button');
+  if (delButton) {
+    delButton.addEventListener('click', () => {
+      setEditAction('delete');
+    });
+  }
+}
+
+function openSettingsOverlay() {
+  const settingsScreen = document.getElementById('settings-screen');
+  settingsScreen.classList.remove('hidden');
+}
+
+function closeSettingsOverlay() {
+  const settingsScreen = document.getElementById('settings-screen');
+  settingsScreen.classList.add('hidden');
 }
 
 function getSettings() {
+  const widthEl = document.getElementById('width');
+  const heightEl = document.getElementById('height');
+  const nextCountEl = document.getElementById('next-count');
+  const blockCountEl = document.getElementById('block-count');
   return {
-    width: parseInt(domElements.sliders.width.value, 10),
-    height: parseInt(domElements.sliders.height.value, 10),
-    nextCount: parseInt(domElements.sliders.nextCount.value, 10),
-    blockCount: parseInt(domElements.sliders.blockCount.value, 10),
+    width: widthEl ? parseInt(widthEl.value, 10) : 5,
+    height: heightEl ? parseInt(heightEl.value, 10) : 6,
+    nextCount: nextCountEl ? parseInt(nextCountEl.value, 10) : 5,
+    blockCount: blockCountEl ? parseInt(blockCountEl.value, 10) : 3,
   };
 }
 
 function saveSettings(settings) {
-  localStorage.setItem("tetrisSettings", JSON.stringify(settings));
-  console.log("Settings saved");
+  localStorage.setItem('tetrisSettings', JSON.stringify(settings));
+  console.log('Settings saved');
 }
 
 function loadSettings() {
-  const savedSettings = JSON.parse(localStorage.getItem("tetrisSettings"));
+  const savedSettings = JSON.parse(localStorage.getItem('tetrisSettings'));
   if (savedSettings) {
     Object.entries(savedSettings).forEach(([key, value]) => {
-      if (domElements.sliders[key]) {
-        domElements.sliders[key].value = value;
-        domElements.values[key].textContent = value;
+      const slider = document.getElementById(key);
+      const valueDisplay = document.getElementById(`${key}-value`);
+      if (slider && valueDisplay) {
+        slider.value = value;
+        valueDisplay.textContent = value;
       }
     });
     const { width, height, blockCount } = savedSettings;
@@ -144,47 +153,42 @@ function loadSettings() {
   }
 }
 
-function showScreen(screen) {
-  document.querySelectorAll(".screen").forEach((s) => s.classList.add("hidden"));
-  screen.classList.remove("hidden");
+// 画面をリセットして問題再生成
+function generateProblem() {
+  const { width, height, blockCount } = getSettings();
+  createBoard(width, height, blockCount);
+  updateNextPieces();
+  updateProblemCounter();
+  setEditAction('auto');
 }
 
-function handleShortcuts(e) {
-  const shortcuts = getShortcuts();
-  if (e.key === shortcuts.nextProblemKey) {
-    console.log("Generating next board");
-    startGame();
-  } else if (e.key === shortcuts.backToTitleKey) {
-    // console.log("Returning to title");
-    // saveSettings(getSettings());
-    // showScreen(domElements.titleScreen);
+// 問題番号ラベル更新
+function updateProblemCounter() {
+  const problemCounter = document.getElementById('current-problem');
+  if (problemCounter) {
+    problemCounter.textContent = `問題 #${currentProblemNumber}`;
   }
 }
 
-function getShortcuts() {
-  return {
-    nextProblemKey: domElements.shortcuts.nextProblemInput.value || "n",
-    backToTitleKey: domElements.shortcuts.backToTitleInput.value || "t",
-  };
-}
+let currentWidth = 5;
+let currentHeight = 6;
 
 function createBoard(width, height, blockCount = 0) {
-  const board = domElements.board;
+  const board = document.getElementById('board');
   currentWidth = width;
   currentHeight = height;
 
-  board.style.setProperty("--width", width);
-  board.style.setProperty("--height", height);
-  board.innerHTML = "";
+  board.style.setProperty('--width', width);
+  board.style.setProperty('--height', height);
+  board.innerHTML = '';
 
-  // セルを作成
+  // マスを作成
   for (let i = 0; i < width * height; i++) {
-    const cell = document.createElement("div");
+    const cell = document.createElement('div');
     cell.style.width = `${config.CELL_SIZE}px`;
     cell.style.height = `${config.CELL_SIZE}px`;
 
-    // PC向けクリックイベント (既存)
-    cell.addEventListener("click", () => {
+    cell.addEventListener('click', () => {
       if (!currentEditAction) return;
       handleEditCellClick(cell, i, width, height);
     });
@@ -192,15 +196,9 @@ function createBoard(width, height, blockCount = 0) {
     board.appendChild(cell);
   }
 
-  // Hammer.jsでドラッグ (pan) しながらマスを塗る機能をセットアップ
-  setupMobileDragForBoard(document.getElementById("board-container"), board);
-
-  // ランダムブロックなど既存の処理
+  // ランダムブロック配置
   placeRandomBlocks(board, width, height, blockCount);
 }
-
-
-
 
 function placeRandomBlocks(board, width, height, blockCount) {
   const cells = Array.from(board.children);
@@ -210,15 +208,14 @@ function placeRandomBlocks(board, width, height, blockCount) {
   for (let i = 0; i < blockCount; i++) {
     let column;
     do {
-      column = columnIndices[Math.floor(Math.random() * columnIndices.length)];
+      column =
+        columnIndices[Math.floor(randomGenerator() * columnIndices.length)];
     } while (placedBlocks.has(`${column}-${i}`));
 
     for (let row = height - 1; row >= 0; row--) {
       const index = row * width + column;
-      if (!cells[index].classList.contains("block")) {
-       // 従来: cells[index].classList.add("block");
-       // 初期配置用のクラスを追加:
-        cells[index].classList.add("block", "initial-block");
+      if (!cells[index].classList.contains('block')) {
+        cells[index].classList.add('block', 'initial-block');
         placedBlocks.add(`${column}-${i}`);
         break;
       }
@@ -226,34 +223,26 @@ function placeRandomBlocks(board, width, height, blockCount) {
   }
 }
 
-
 function updateNextPieces() {
-  const nextCount = parseInt(domElements.sliders.nextCount.value, 10);
-  const excludeMinos = Array.from(
-    document.querySelectorAll("#exclude-minos input:checked")
-  ).map((input) => input.value);
-
-  const nextContainer = domElements.nextContainer;
-  nextContainer.innerHTML = "";
+  const settings = getSettings();
+  const nextCount = settings.nextCount;
+  const nextContainer = document.getElementById('next');
+  nextContainer.innerHTML = '';
 
   for (let i = 0; i < nextCount; i++) {
-    const randomMino = getRandomMino(excludeMinos);
+    const randomMino = getRandomMino();
     if (randomMino) {
-      const nextPieceContainer = document.createElement("div");
-      nextPieceContainer.classList.add("next-piece-container");
+      const nextPieceContainer = document.createElement('div');
+      nextPieceContainer.classList.add('next-piece-container');
       drawMino(randomMino, nextPieceContainer);
       nextContainer.appendChild(nextPieceContainer);
-    } else {
-      console.error("No minos available to display");
-      break;
     }
   }
 }
 
-function getRandomMino(excludeMinos) {
-  const allMinos = ["I", "O", "T", "S", "Z", "J", "L"];
-  const availableMinos = allMinos.filter((mino) => !excludeMinos.includes(mino));
-  return availableMinos[Math.floor(Math.random() * availableMinos.length)];
+function getRandomMino() {
+  const allMinos = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+  return allMinos[Math.floor(randomGenerator() * allMinos.length)];
 }
 
 function drawMino(minoType, container) {
@@ -285,393 +274,83 @@ function drawMino(minoType, container) {
     ],
   };
 
-  // ミノ配列（2次元）を取得
   const shape = minoShapes[minoType];
-
-  // ミノの外枠要素
-  const minoElement = document.createElement("div");
-  minoElement.classList.add("next-piece");
-  minoElement.style.display = "grid";
+  const minoElement = document.createElement('div');
+  minoElement.classList.add('next-piece');
+  minoElement.style.display = 'grid';
   minoElement.style.gridTemplateColumns = `repeat(${shape[0].length}, 1fr)`;
 
-  // shape をもとにセルを作り、該当セルだけ色を塗る
-  shape.forEach((row) => {
-    row.forEach((cell) => {
-      const cellElement = document.createElement("div");
+  shape.forEach(row => {
+    row.forEach(cell => {
+      const cellElement = document.createElement('div');
       if (cell) {
-        cellElement.classList.add("block");
-        // ここでミノごとの色を適用（inline スタイルでもクラスでもOK）
+        cellElement.classList.add('block');
         cellElement.style.backgroundColor = minoColors[minoType];
       }
       minoElement.appendChild(cellElement);
     });
   });
-
   container.appendChild(minoElement);
 }
 
-
+// スワイプなどのジェスチャー制御
 function setupGestureControls() {
-  const boardContainer = document.getElementById("board-container");
-  const board = document.getElementById("board");
+  const mainView = document.getElementById('main-view');
+  const hammer = new Hammer(mainView);
+  hammer.get('swipe').set({
+    direction: Hammer.DIRECTION_HORIZONTAL | Hammer.DIRECTION_VERTICAL,
+  });
+
+  // 左スワイプ→次の問題
+  hammer.on('swipeleft', () => {
+    goToNextProblem();
+  });
+  // 右スワイプ→前の問題
+  hammer.on('swiperight', () => {
+    goToPreviousProblem();
+  });
+  // 上スワイプ→設定画面 (オーバーレイを開く)
+  hammer.on('swipeup', () => {
+    saveSettings(getSettings());
+    openSettingsOverlay();
+  });
+
+  // 盤面ドラッグ
+  setupMobileDragForBoard();
+}
+
+function setupMobileDragForBoard() {
+  const boardContainer = document.getElementById('board-container');
+  const board = document.getElementById('board');
   const hammer = new Hammer(boardContainer);
 
-  // スワイプジェスチャーの方向を有効化
-  hammer.get("swipe").set({ direction: Hammer.DIRECTION_ALL });
-
-  let isBoardVisible = true; // ボードの表示状態
-
-  // 右スワイプで次の問題に進む
-  hammer.on("swiperight", () => {
-    console.log("Swiped right: Generating next board");
-    startGame(); // 既存の「次へ」機能を呼び出す
-  });
-
-  // 上スワイプでタイトル画面に戻る
-  hammer.on("swipeup", () => {
-    console.log("Swiped up: Returning to title");
-    saveSettings(getSettings()); // 設定を保存
-    showScreen(domElements.titleScreen); // タイトル画面に戻る
-  });
-
-  // ボードをタップして表示・非表示を切り替える
-  // hammer.on("tap", () => {
-  //   isBoardVisible = !isBoardVisible;
-  //   board.style.visibility = isBoardVisible ? "visible" : "hidden"; // 表示状態を切り替え
-  //   console.log(`Board is now ${isBoardVisible ? "visible" : "hidden"}`);
-  // });
-}
-
-document.addEventListener("DOMContentLoaded", initializeApp);
-
-function setupEditButton() {
-
-  const blockButton = document.getElementById("block-button");
-  const editPanel = document.getElementById("edit-panel");
-
-  blockButton.addEventListener("click", () => {
-    isPanelOpen = !isPanelOpen;
-    editPanel.classList.toggle("hidden", !isPanelOpen);
-    // パネルを閉じても currentEditAction は維持
-  });
-
-  const editOptionButtons = document.querySelectorAll(".edit-option");
-  editOptionButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      // 一度全ての .selected を外して
-      editOptionButtons.forEach(b => b.classList.remove("selected"));
-      // 自分だけ選択
-      btn.classList.add("selected");
-
-      // もし autoCellsが途中状態ならリセット
-      if (autoCells.length > 0) {
-        resetAutoCells();
-      }
-
-      // data-action を更新
-      currentEditAction = btn.dataset.action;
-      console.log("currentEditAction:", currentEditAction);
-    });
-  });
-
-  // クリアボタン関連
-  const clearButton = document.getElementById("clear-board");
-  clearButton.addEventListener("click", () => {
-    resetToInitialBoard();
-  });
-
-  // ▼▼▼ ここが追記部分：最初から Auto ボタンが選択された状態にする ▼▼▼
-  // 1. Autoボタンを取得
-  const autoButton = document.querySelector('.edit-option[data-action="auto"]');
-  if (autoButton) {
-    // 2. 全ボタンの .selected を外す
-    editOptionButtons.forEach(b => b.classList.remove("selected"));
-    // 3. Auto ボタンに .selected を付ける
-    autoButton.classList.add("selected");
-    // 4. currentEditAction を "auto" にセット
-    currentEditAction = "auto";
-    console.log("Default action set to auto.");
-  }
-}
-
-
-// 既存のコードの最下部か、適宜場所を見つけて追加してください
-// =============================================
-// 編集モードの変数
-let isPanelOpen = false; // 新規: パネルが開いているかどうか
-
-let currentEditAction = null;    // "I"/"L"/"O"/"Z"/"T"/"J"/"S"/"gray"/"delete"/"auto"
-
-// 自動置換用の一時的な白色セルを記録する配列
-let autoCells = []; // [{x, y, cellEl}, ...]
-
-// Autoモードで4マス塗り終わったか/途中か、等を管理
-let isAutoInProgress = false; // 途中で白色マスがある状態かどうか
-
-// =============================================
-// 既存の paintCell のままでもOKですが、dataset で管理すると楽になります
-function paintCell(cellElement, color) {
-  cellElement.style.backgroundColor = color;
-  if (color) {
-    cellElement.classList.add("block");
-  } else {
-    cellElement.classList.remove("block");
-  }
-}
-
-// 色を消す（背景色に戻す）
-function clearCell(cellElement) {
-  paintCell(cellElement, "");
-}
-
-// =============================================
-
-function resetAutoCells() {
-  // autoCells に登録されたマスをすべてクリア(背景に戻す)
-  autoCells.forEach(({ cellEl }) => {
-    clearCell(cellEl);
-  });
-  autoCells = [];
-  isAutoInProgress = false;
-  console.log("Auto cells reset.");
-}
-
-function parseRGBString(rgbString) {
-  // "rgb(15, 155, 215)" とか "rgb(15 155 215)" などをパース
-  // カンマやスペースを問わず、3つの数字を拾う
-  const match = rgbString.match(/rgb\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)\s*\)/i);
-  if (!match) return null; // パースできない場合
-  return [ Number(match[1]), Number(match[2]), Number(match[3]) ];
-}
-
-function isSameColor(colorA, colorB) {
-  // どちらかが null や "" の場合の考慮も必要
-  const rgbA = parseRGBString(colorA) || [];
-  const rgbB = parseRGBString(colorB) || [];
-  // [r, g, b] の各要素が同じかどうか
-  return rgbA[0] === rgbB[0] && rgbA[1] === rgbB[1] && rgbA[2] === rgbB[2];
-}
-
-function handleEditCellClick(cell, index, width, height) {
-
-  // もし初期配置ブロッククラスが付いていれば編集不可
-  if (cell.classList.contains("initial-block")) {
-    console.log("This block is initial. Cannot edit or delete.");
-    return;
-  }
-
-  const oldColor = cell.style.backgroundColor;
-  if (currentEditAction === "delete") {
-    paintCell(cell, "");
-    return;
-  }
-  if (currentEditAction === "auto") {
-    handleAutoReplace(cell, index, width, height);
-    return;
-  }
-
-  // ここで「同じ色なら削除」トグルか、常に上書きかを分岐
-  const newColor = minoColors[currentEditAction];
-
-  if (isDragging) {
-    // ドラッグ中は常に塗る(上書き)
-    paintCell(cell, newColor);
-  } else {
-    // 単クリック扱いならトグル
-    if (isSameColor(oldColor, newColor)) {
-      paintCell(cell, "");
-    } else {
-      paintCell(cell, newColor);
-    }
-  }
-}
-
-
-function handleAutoReplace(cell, index, width, height) {
-  // 1. すでにこの cell が背景色(#555等)でなければ、白を塗れない
-  //    → oldColorが "" (あるいは #555 ) ならOK, そうでなければreturn
-  const oldColor = cell.style.backgroundColor;
-  // 画面の背景色はCSSで #555 になっていますが、style.backgroundColor は "" のままの場合もあります。
-  // ここでは「classListに 'block' が含まれていない」なら空セルとみなす、というのも手。
-
-  // blockを持っていない = 空
-  if (cell.classList.contains("block")) {
-    console.log("Cell is already occupied. Cannot paint white.");
-    return;
-  }
-
-  // 2. 既に4マスならこれ以上塗らない
-  if (autoCells.length >= 4) {
-    console.log("Already have 4 white cells. No more can be placed.");
-    return;
-  }
-
-  // 3. まだ4未満なら白を塗って登録
-  paintCell(cell, "white");
-  const x = index % width;
-  const y = Math.floor(index / width);
-  autoCells.push({ x, y, cellEl: cell });
-  isAutoInProgress = true;
-
-  console.log("Auto cell added. Now autoCells.length =", autoCells.length);
-
-  // 4. 4マスそろったら判定
-  if (autoCells.length === 4) {
-    const positions = autoCells.map(c => ({ x: c.x, y: c.y }));
-    const detectedMino = detectMinoShape(positions);
-
-    if (detectedMino) {
-      // 見つかったミノの色で塗り直す
-      const color = minoColors[detectedMino];
-      autoCells.forEach(c => paintCell(c.cellEl, color));
-      console.log("Detected shape:", detectedMino);
-    } else {
-      // 見つからない場合 → 白を全部戻す
-      console.log("No matching mino shape found. Reverting white cells.");
-      resetAutoCells();
-    }
-
-    // autoCells は resetAutoCells() でもクリアされるので明示的にクリアしておく
-    autoCells = [];
-    isAutoInProgress = false;
-  }
-}
-
-function detectMinoShape(positions) {
-  // すべての座標を 0-based に平行移動して判定（最小 x, y を 0 に合わせる）
-  const minX = Math.min(...positions.map(p => p.x));
-  const minY = Math.min(...positions.map(p => p.y));
-  const normalized = positions.map(p => ({ x: p.x - minX, y: p.y - minY }));
-
-  console.log("normalized:", normalized)
-
-  // 各ミノの全回転パターンを定義
-  const shapePatterns = {
-    I: [
-      // 横
-      [ {x:0,y:0}, {x:1,y:0}, {x:2,y:0}, {x:3,y:0} ],
-      // 縦
-      [ {x:0,y:0}, {x:0,y:1}, {x:0,y:2}, {x:0,y:3} ],
-    ],
-    O: [
-      // 2x2 の正方形は回転しても同じ形
-      [ {x:0,y:0}, {x:1,y:0}, {x:0,y:1}, {x:1,y:1} ],
-    ],
-    T: [
-      // T上 (3x2)
-      [ {x:0,y:0}, {x:1,y:0}, {x:2,y:0}, {x:1,y:1} ],
-      // T右 (2x3)
-      [ {x:0,y:1}, {x:1,y:0}, {x:1,y:1}, {x:1,y:2} ],
-      // T下 (3x2)
-      [ {x:1,y:0}, {x:0,y:1}, {x:1,y:1}, {x:2,y:1} ],
-      // T左 (2x3)
-      [ {x:0,y:0}, {x:0,y:1}, {x:0,y:2}, {x:1,y:1} ],
-    ],
-    S: [
-      // S横 (3x2)
-      [ {x:1,y:0}, {x:2,y:0}, {x:0,y:1}, {x:1,y:1} ],
-      // S縦 (2x3)
-      [ {x:0,y:0}, {x:0,y:1}, {x:1,y:1}, {x:1,y:2} ],
-    ],
-    Z: [
-      // Z横 (3x2)
-      [ {x:0,y:0}, {x:1,y:0}, {x:1,y:1}, {x:2,y:1} ],
-      // Z縦 (2x3)
-      [ {x:1,y:0}, {x:0,y:1}, {x:1,y:1}, {x:0,y:2} ],
-    ],
-    J: [
-      [{x: 0, y: 0},{x: 1, y: 0},{x: 2, y: 0},{x: 2, y: 1}],
-      [{x: 0, y: 2},{x: 0, y: 1},{x: 0, y: 0},{x: 1, y: 0}],
-      [{x: 2, y: 1},{x: 1, y: 1},{x: 0, y: 1},{x: 0, y: 0}],
-      [{x: 1, y: 0},{x: 1, y: 1},{x: 1, y: 2},{x: 0, y: 2}],
-    ],
-    L: [
-      [{x: 0, y: 0},{x: 0, y: 1},{x: 0, y: 2},{x: 1, y: 2}],
-      [{x: 0, y: 1},{x: 1, y: 1},{x: 2, y: 1},{x: 2, y: 0}],
-      [{x: 1, y: 2},{x: 1, y: 1},{x: 1, y: 0},{x: 0, y: 0}],
-      [{x: 2, y: 0},{x: 1, y: 0},{x: 0, y: 0},{x: 0, y: 1}],
-    ],
-  };
-
-  // 全パターンの中から一致するミノがあるか判定
-  for (const [minoType, patterns] of Object.entries(shapePatterns)) {
-    for (const pattern of patterns) {
-      if (isSameShape(normalized, pattern)) {
-        return minoType; // マッチしたらミノタイプを返す
-      }
-    }
-  }
-  return null;
-}
-
-function isSameShape(arr1, arr2) {
-  if (arr1.length !== arr2.length) return false;
-  // ソートして座標が全て一致するか比較
-  const sortByXY = (a, b) => a.x - b.x || a.y - b.y;
-  const s1 = [...arr1].sort(sortByXY);
-  const s2 = [...arr2].sort(sortByXY);
-  return s1.every((p, i) => p.x === s2[i].x && p.y === s2[i].y);
-}
-
-
-// 配列同士が同じ座標集合か判定するための関数
-function isSameShape(arr1, arr2) {
-  if (arr1.length !== arr2.length) return false;
-  // 座標の並び順が異なる可能性があるため、ソートして比較
-  const sortByXY = (a, b) => (a.x - b.x) || (a.y - b.y);
-  const s1 = [...arr1].sort(sortByXY);
-  const s2 = [...arr2].sort(sortByXY);
-  return s1.every((p, i) => p.x === s2[i].x && p.y === s2[i].y);
-}
-
-let isDragging = false; // panmove や mousemove で移動があったらtrue
-
-function setupMobileDragForBoard(boardContainer, board) {
-  const hammer = new Hammer(boardContainer);
-
-  hammer.get("pan").set({
+  hammer.get('pan').set({
     direction: Hammer.DIRECTION_ALL,
-    threshold: 1
+    threshold: 1,
   });
 
-  hammer.on("panstart", (e) => {
+  hammer.on('panstart', () => {
     if (!currentEditAction) return;
-    isDragging = false; // panstart 時点ではまだ移動していない
-    // ただし指を置いた時点でマウスダウン相当
-  });
-
-  hammer.on("panmove", (e) => {
-    if (!currentEditAction) return;
-    isDragging = true; // 実際に動き始めたらドラッグ扱い
-
-    paintCellUnderPointer(e, board);
-  });
-
-  hammer.on("panend", (e) => {
-    // pan操作終了
     isDragging = false;
   });
 
-  // 単タップは hammer.on("tap") でも拾えるが、
-  // 既に click イベントを使っているならそちらに任せてもいい
+  hammer.on('panmove', e => {
+    if (!currentEditAction) return;
+    isDragging = true;
+    paintCellUnderPointer(e, board);
+  });
+
+  hammer.on('panend', () => {
+    isDragging = false;
+  });
 }
 
-
-
-/**
- * ドラッグやタップ時の座標 (e.center.x, e.center.y) にあるセルを探して塗る
- */
 function paintCellUnderPointer(e, board) {
-  // Hammer.js イベントの座標は e.center.x / e.center.y に格納される
   const x = e.center.x;
   const y = e.center.y;
-
-  // pointer座標にある要素を取得
   const target = document.elementFromPoint(x, y);
 
-  // もし board の子要素（つまり1つのマス）であれば処理
   if (target && target.parentNode === board) {
-    // board.children の中で何番目か
     const index = Array.from(board.children).indexOf(target);
     if (index >= 0) {
       handleEditCellClick(target, index, currentWidth, currentHeight);
@@ -679,49 +358,351 @@ function paintCellUnderPointer(e, board) {
   }
 }
 
-
-/**
- * 「初期配置クラス(initial-block)」が付いていないマスをすべて消す
- */
-function resetToInitialBoard() {
-  const cells = Array.from(domElements.board.children);
-  cells.forEach((cell) => {
-    // initial-blockクラスを持たない = 後から塗ったマスは消す
-    if (!cell.classList.contains("initial-block")) {
-      cell.style.backgroundColor = "";      // 背景色を戻す
-      cell.classList.remove("block");       // ブロッククラスを除去
-      // もし別のミノなどが付いているなら消す
-      // (今回は "initial-block" しか特別クラスがない想定なのでこれだけでOK)
-    }
-  });
-  console.log("Cleared all edits. Now only initial-block remain.");
+// 問題移動
+function goToNextProblem() {
+  currentProblemNumber += 1;
+  randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
+  generateProblem();
+}
+function goToPreviousProblem() {
+  if (currentProblemNumber > 1) {
+    currentProblemNumber -= 1;
+    randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
+    generateProblem();
+  }
 }
 
+// 編集系
+let currentEditAction = null; // "auto" / "delete" / "gray" など
+let autoCells = [];
+let isAutoInProgress = false;
+let isDragging = false;
 
-function setupOutsideClickToCloseEditPanel() {
-  const editPanel = document.getElementById("edit-panel");
-  const blockButton = document.getElementById("block-button");
+function setupEditButton() {
+  // Auto / Del / Gray など
+  const editOptionButtons = document.querySelectorAll('.edit-option');
+  editOptionButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      editOptionButtons.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      if (autoCells.length > 0) {
+        resetAutoCells();
+      }
+      currentEditAction = btn.dataset.action;
+    });
+  });
 
+  // clearボタン
+  const clearButton = document.getElementById('clear-board');
+  if (clearButton) {
+    clearButton.addEventListener('click', () => {
+      resetToInitialBoard();
+    });
+  }
 
-  // ドキュメント全体のクリックを監視
-  document.addEventListener("click", (evt) => {
-    // 1. 「編集モード中」かつ「パネルが表示されている状態」のときだけ判定
-    if (isPanelOpen && !editPanel.classList.contains("hidden")) {
+  // デフォルトはautoに
+  const autoBtn = document.querySelector('.edit-option[data-action="auto"]');
+  if (autoBtn) {
+    editOptionButtons.forEach(b => b.classList.remove('selected'));
+    autoBtn.classList.add('selected');
+    currentEditAction = 'auto';
+  }
+}
 
-      // 2. クリックされた要素がパネル自身 or その子孫 でもなく
-      //    かつ editToggleButton でもなければ、パネルを隠す
-      const isClickInsidePanel = evt.target.closest("#edit-panel");
-      const isClickOnBlockButton = (evt.target === blockButton);
+function setEditAction(action) {
+  currentEditAction = action;
+}
 
+function handleEditCellClick(cell, index, width, height) {
+  // 初期配置のブロックは削除不可
+  if (cell.classList.contains('initial-block')) {
+    return;
+  }
 
-      if (!isClickInsidePanel && !isClickOnBlockButton ) {
-        // パネルを閉じる（hiddenクラスを付与）
-        editPanel.classList.add("hidden");
-        isPanelOpen = false;
+  // Delete
+  if (currentEditAction === 'delete') {
+    paintCell(cell, '');
+    return;
+  }
+  // Gray
+  else if (currentEditAction === 'gray') {
+    // 押下されたマスをgrayにする
+    paintCell(cell, minoColors['G']); // 'rgb(204,204,204)'
+    return;
+  }
+  // Auto
+  else if (currentEditAction === 'auto') {
+    handleAutoReplace(cell, index, width, height);
+    return;
+  }
 
-        // ただし isEditMode は true のままにして、選択中ミノを継続可能に
-        console.log("Clicked outside edit-panel -> closing panel");
+  // それ以外 (通常ペイント)
+  const oldColor = cell.style.backgroundColor;
+  const newColor = minoColors[currentEditAction];
+  if (!newColor) return;
+
+  if (isDragging) {
+    // ドラッグ中は常に上書き
+    paintCell(cell, newColor);
+  } else {
+    // クリックはトグル
+    if (isSameColor(oldColor, newColor)) {
+      paintCell(cell, '');
+    } else {
+      paintCell(cell, newColor);
+    }
+  }
+}
+
+function handleAutoReplace(cell, index, width, height) {
+  if (cell.classList.contains('initial-block')) {
+    return;
+  }
+
+  const oldColor = cell.style.backgroundColor;
+  // 既にwhiteなら取り消し
+  if (oldColor === 'white') {
+    clearCell(cell);
+    const cellIndex = autoCells.findIndex(c => c.cellEl === cell);
+    if (cellIndex !== -1) {
+      autoCells.splice(cellIndex, 1);
+    }
+    return;
+  }
+
+  // 何か他の色があるなら不可
+  if (cell.classList.contains('block') && oldColor !== '') {
+    return;
+  }
+
+  // 4マス埋まっていれば不可
+  if (autoCells.length >= 4) {
+    return;
+  }
+
+  // 白セルにする
+  paintCell(cell, 'white');
+  const x = index % width;
+  const y = Math.floor(index / width);
+  autoCells.push({ x, y, cellEl: cell });
+  isAutoInProgress = true;
+
+  if (autoCells.length === 4) {
+    const positions = autoCells.map(c => ({ x: c.x, y: c.y }));
+    const detectedMino = detectMinoShape(positions);
+    if (detectedMino) {
+      const color = minoColors[detectedMino];
+      autoCells.forEach(c => paintCell(c.cellEl, color));
+    } else {
+      // ミノ形にならなければリセット
+      resetAutoCells();
+    }
+    autoCells = [];
+    isAutoInProgress = false;
+  }
+}
+
+function paintCell(cellElement, color) {
+  cellElement.style.backgroundColor = color;
+  if (color) {
+    cellElement.classList.add('block');
+  } else {
+    cellElement.classList.remove('block');
+  }
+}
+function clearCell(cellElement) {
+  paintCell(cellElement, '');
+}
+
+// autoCells の白マスをリセット
+function resetAutoCells() {
+  autoCells.forEach(({ cellEl }) => {
+    clearCell(cellEl);
+  });
+  autoCells = [];
+  isAutoInProgress = false;
+}
+
+// 色比較
+function parseRGBString(rgbString) {
+  const match = rgbString.match(/rgb\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)\s*\)/i);
+  if (!match) return null;
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function isSameColor(colorA, colorB) {
+  const rgbA = parseRGBString(colorA) || [];
+  const rgbB = parseRGBString(colorB) || [];
+  return rgbA[0] === rgbB[0] && rgbA[1] === rgbB[1] && rgbA[2] === rgbB[2];
+}
+
+// ミノ形状判定
+function detectMinoShape(positions) {
+  const minX = Math.min(...positions.map(p => p.x));
+  const minY = Math.min(...positions.map(p => p.y));
+  const normalized = positions.map(p => ({ x: p.x - minX, y: p.y - minY }));
+
+  const shapePatterns = {
+    I: [
+      [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 2, y: 0 },
+        { x: 3, y: 0 },
+      ],
+      [
+        { x: 0, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: 2 },
+        { x: 0, y: 3 },
+      ],
+    ],
+    O: [
+      [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 1, y: 1 },
+      ],
+    ],
+    T: [
+      [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 2, y: 0 },
+        { x: 1, y: 1 },
+      ],
+      [
+        { x: 0, y: 1 },
+        { x: 1, y: 0 },
+        { x: 1, y: 1 },
+        { x: 1, y: 2 },
+      ],
+      [
+        { x: 1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 1, y: 1 },
+        { x: 2, y: 1 },
+      ],
+      [
+        { x: 0, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: 2 },
+        { x: 1, y: 1 },
+      ],
+    ],
+    S: [
+      [
+        { x: 1, y: 0 },
+        { x: 2, y: 0 },
+        { x: 0, y: 1 },
+        { x: 1, y: 1 },
+      ],
+      [
+        { x: 0, y: 0 },
+        { x: 0, y: 1 },
+        { x: 1, y: 1 },
+        { x: 1, y: 2 },
+      ],
+    ],
+    Z: [
+      [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 1, y: 1 },
+        { x: 2, y: 1 },
+      ],
+      [
+        { x: 1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 1, y: 1 },
+        { x: 0, y: 2 },
+      ],
+    ],
+    J: [
+      [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 2, y: 0 },
+        { x: 2, y: 1 },
+      ],
+      [
+        { x: 0, y: 2 },
+        { x: 0, y: 1 },
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+      ],
+      [
+        { x: 2, y: 1 },
+        { x: 1, y: 1 },
+        { x: 0, y: 1 },
+        { x: 0, y: 0 },
+      ],
+      [
+        { x: 1, y: 0 },
+        { x: 1, y: 1 },
+        { x: 1, y: 2 },
+        { x: 0, y: 2 },
+      ],
+    ],
+    L: [
+      [
+        { x: 0, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: 2 },
+        { x: 1, y: 2 },
+      ],
+      [
+        { x: 0, y: 1 },
+        { x: 1, y: 1 },
+        { x: 2, y: 1 },
+        { x: 2, y: 0 },
+      ],
+      [
+        { x: 1, y: 2 },
+        { x: 1, y: 1 },
+        { x: 1, y: 0 },
+        { x: 0, y: 0 },
+      ],
+      [
+        { x: 2, y: 0 },
+        { x: 1, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 1 },
+      ],
+    ],
+  };
+
+  for (const [minoType, patterns] of Object.entries(shapePatterns)) {
+    for (const pattern of patterns) {
+      if (isSameShape(normalized, pattern)) {
+        return minoType;
       }
     }
-  });
+  }
+  return null;
 }
+
+// 座標配列が同じ形状か判定
+function isSameShape(arr1, arr2) {
+  if (arr1.length !== arr2.length) return false;
+  const sortByXY = (a, b) => a.x - b.x || a.y - b.y;
+  const s1 = [...arr1].sort(sortByXY);
+  const s2 = [...arr2].sort(sortByXY);
+  return s1.every((p, i) => p.x === s2[i].x && p.y === s2[i].y);
+}
+
+// 初期ブロック以外をリセット
+function resetToInitialBoard() {
+  const board = document.getElementById('board');
+  const cells = Array.from(board.children);
+  cells.forEach(cell => {
+    if (!cell.classList.contains('initial-block')) {
+      cell.style.backgroundColor = '';
+      cell.classList.remove('block');
+    }
+  });
+  console.log('Cleared all edits. Now only initial-block remain.');
+}
+
+document.addEventListener('DOMContentLoaded', initializeApp);
