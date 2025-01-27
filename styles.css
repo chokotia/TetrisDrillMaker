@@ -10,6 +10,7 @@
   --color-edit-selected-bg: #ffbf00;
   --color-edit-selected-text: #333333;
   --color-modal-header: #ffffff;
+  --color-button-focus: #ffbf00;
 }
 
 /* 全体ラッパ */
@@ -54,7 +55,7 @@
 }
 
 /* テトリス盤面 */
-#board {
+.tetris-board {
   background-color: var(--color-board-bg);
   display: grid;
   grid-template-columns: repeat(var(--width), 1fr);
@@ -64,18 +65,18 @@
 }
 
 /* 盤面の1マス */
-#board .cell {
+.tetris-board .cell {
   background-color: var(--color-cell-default);
   box-sizing: border-box;
 }
 
 /* ブロック状態のマス */
-#board .block {
+.tetris-board .block {
   /* 背景色はインラインスタイルで設定 */
 }
 
 /* NEXT コンテナ */
-#next {
+.next-container {
   background-color: var(--color-next-bg);
   padding: 10px;
   border-radius: 4px;
@@ -128,11 +129,17 @@
     width: 8px;
     height: 8px;
   }
+
+  /* 盤面のセルサイズを調整 */
+  .tetris-board .cell {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 /* 追加のアクセシビリティとインタラクション向上 */
 button:focus {
-  outline: 2px dashed #ffbf00;
+  outline: 2px dashed var(--color-button-focus);
   outline-offset: 2px;
 }
 
@@ -146,4 +153,29 @@ button:focus {
 
 .modal-footer {
   background-color: var(--color-bg);
+}
+
+/* 編集ボタンのスタイル */
+.edit-option {
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+
+.edit-toggle {
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+
+/* テトリス盤面のレスポンス向上 */
+.tetris-board {
+  width: max-content;
+  max-width: 100%;
+  height: max-content;
+}
+
+/* スクロール防止 */
+body {
+  overflow: hidden;
 }

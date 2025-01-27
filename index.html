@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tetris Practice App</title>
 
-    <!-- Bootstrap本体CSS -->
+    <!-- Bootstrap CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -29,7 +29,7 @@
       defer
     ></script>
 
-    <!-- Bootstrap本体JS -->
+    <!-- Bootstrap JS -->
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
@@ -40,7 +40,7 @@
 
   <body>
     <div id="app">
-      <nav
+      <header
         id="title-bar"
         class="navbar navbar-dark bg-dark fixed-top"
         aria-label="タイトルバー"
@@ -53,12 +53,14 @@
             id="settings-button"
             class="btn btn-outline-light d-flex align-items-center"
             type="button"
-            aria-label="設定"
+            aria-label="設定を開く"
+            aria-controls="settings-modal"
+            aria-haspopup="dialog"
           >
             <i class="bi bi-gear"></i>
           </button>
         </div>
-      </nav>
+      </header>
 
       <!-- メインビュー -->
       <main id="main-view" class="screen" role="main">
@@ -66,13 +68,22 @@
           id="board-container"
           class="d-flex flex-row justify-content-center align-items-start"
         >
-          <div id="board" aria-label="テトリス盤面" role="grid"></div>
-          <aside id="next" class="ms-3" aria-label="ネクストピース"></aside>
+          <div
+            id="board"
+            class="tetris-board"
+            aria-label="テトリス盤面"
+            role="grid"
+          ></div>
+          <aside
+            id="next"
+            class="ms-3 next-container"
+            aria-label="ネクストピース"
+          ></aside>
         </div>
       </main>
 
       <!-- ボトムナビバー (編集用バー) -->
-      <nav
+      <footer
         id="edit-nav"
         class="navbar navbar-dark bg-dark fixed-bottom"
         aria-label="編集ナビバー"
@@ -111,17 +122,17 @@
             id="clear-board"
             class="btn btn-outline-light edit-toggle ms-3"
             type="button"
-            aria-label="盤面クリア"
+            aria-label="盤面をクリアする"
           >
             Clear
           </button>
         </div>
-      </nav>
+      </footer>
 
       <!-- 設定画面: Bootstrapのモーダルを使用 -->
       <div
         class="modal fade"
-        id="settings-screen"
+        id="settings-modal"
         tabindex="-1"
         aria-labelledby="settingsModalLabel"
         aria-hidden="true"

@@ -60,6 +60,20 @@ function generateBaseSeed() {
   let isAutoInProgress = false;
   let isDragging = false;
 
+  // DOM要素のキャッシュ
+  const dom = {
+    settingsButton: document.getElementById('settings-button'),
+    saveAndCloseBtn: document.getElementById('save-and-close-settings'),
+    closeIconBtn: document.getElementById('close-settings-without-save'),
+    editOptionButtons: document.querySelectorAll('.edit-option'),
+    clearButton: document.getElementById('clear-board'),
+    problemCounter: document.getElementById('current-problem'),
+    board: document.getElementById('board'),
+    nextContainer: document.getElementById('next'),
+    mainView: document.getElementById('main-view'),
+    boardContainer: document.getElementById('board-container'),
+  };
+
   document.addEventListener('DOMContentLoaded', initializeApp);
 
   function initializeApp() {
@@ -68,7 +82,7 @@ function generateBaseSeed() {
     randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
 
     // Bootstrapモーダルのインスタンス作成
-    const settingsModalElement = document.getElementById('settings-screen');
+    const settingsModalElement = document.getElementById('settings-modal');
     if (settingsModalElement) {
       bsSettingsModal = new bootstrap.Modal(settingsModalElement, {
         // 必要に応じて backdrop:'static' などオプションを追加
@@ -78,7 +92,7 @@ function generateBaseSeed() {
     setupEventListeners();
     loadSettings();
     setupGestureControls();
-    setupEditButton();
+    setupEditButtons();
 
     // 最初の問題を生成
     generateProblem();
@@ -110,15 +124,13 @@ function generateBaseSeed() {
     });
 
     // 設定ボタン -> モーダルを開く
-    const settingsButton = document.getElementById('settings-button');
-    if (settingsButton) {
-      settingsButton.addEventListener('click', openSettingsOverlay);
+    if (dom.settingsButton) {
+      dom.settingsButton.addEventListener('click', openSettingsOverlay);
     }
 
     // 「保存して閉じる」ボタン
-    const saveAndCloseBtn = document.getElementById('save-and-close-settings');
-    if (saveAndCloseBtn) {
-      saveAndCloseBtn.addEventListener('click', () => {
+    if (dom.saveAndCloseBtn) {
+      dom.saveAndCloseBtn.addEventListener('click', () => {
         // 設定を保存
         const settings = getSettings();
         saveSettings(settings);
@@ -130,24 +142,27 @@ function generateBaseSeed() {
     }
 
     // 「×」ボタン (id="close-settings-without-save")
-    const closeIconBtn = document.getElementById('close-settings-without-save');
-    if (closeIconBtn) {
-      closeIconBtn.addEventListener('click', () => {
+    if (dom.closeIconBtn) {
+      dom.closeIconBtn.addEventListener('click', () => {
         console.log('設定を保存せず閉じました。');
       });
     }
 
     // Auto/Del/Gray ボタン
-    ['auto-button', 'del-button', 'gray-button'].forEach(btnId => {
-      const button = document.getElementById(btnId);
-      if (button) {
-        button.addEventListener('click', () => {
-          const action = button.dataset.action;
-          setEditAction(action);
-          updateEditButtonState(action);
-        });
-      }
+    dom.editOptionButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const action = button.dataset.action;
+        setEditAction(action);
+        updateEditButtonState(action);
+      });
     });
+
+    // Clearボタン
+    if (dom.clearButton) {
+      dom.clearButton.addEventListener('click', () => {
+        resetToInitialBoard();
+      });
+    }
   }
 
   // ARIA属性の更新
@@ -175,10 +190,14 @@ function generateBaseSeed() {
     const nextCountEl = document.getElementById('next-count');
     const blockCountEl = document.getElementById('block-count');
     return {
-      width: widthEl ? parseInt(widthEl.value, 10) : 5,
-      height: heightEl ? parseInt(heightEl.value, 10) : 6,
-      nextCount: nextCountEl ? parseInt(nextCountEl.value, 10) : 5,
-      blockCount: blockCountEl ? parseInt(blockCountEl.value, 10) : 3,
+      width: widthEl ? parseInt(widthEl.value, 10) : config.MIN_WIDTH,
+      height: heightEl ? parseInt(heightEl.value, 10) : config.MIN_HEIGHT,
+      nextCount: nextCountEl
+        ? parseInt(nextCountEl.value, 10)
+        : config.MIN_NEXT_COUNT,
+      blockCount: blockCountEl
+        ? parseInt(blockCountEl.value, 10)
+        : config.MIN_BLOCK_COUNT,
     };
   }
 
@@ -208,7 +227,11 @@ function generateBaseSeed() {
         createBoard(width, height, blockCount);
       } else {
         // 初期設定がない場合はデフォルト設定をロード
-        createBoard(config.MIN_WIDTH, config.MIN_HEIGHT, 0);
+        createBoard(
+          config.MIN_WIDTH,
+          config.MIN_HEIGHT,
+          config.MIN_BLOCK_COUNT
+        );
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -227,9 +250,8 @@ function generateBaseSeed() {
 
   // 問題番号ラベル更新
   function updateProblemCounter() {
-    const problemCounter = document.getElementById('current-problem');
-    if (problemCounter) {
-      problemCounter.textContent = `問題 #${currentProblemNumber}`;
+    if (dom.problemCounter) {
+      dom.problemCounter.textContent = `問題 #${currentProblemNumber}`;
     }
   }
 
@@ -237,15 +259,16 @@ function generateBaseSeed() {
   let currentHeight = config.MIN_HEIGHT;
 
   function createBoard(width, height, blockCount = 0) {
-    const board = document.getElementById('board');
-    if (!board) return;
+    if (!dom.board) return;
 
     currentWidth = width;
     currentHeight = height;
 
-    board.style.setProperty('--width', width);
-    board.style.setProperty('--height', height);
-    board.innerHTML = '';
+    dom.board.style.setProperty('--width', width);
+    dom.board.style.setProperty('--height', height);
+    dom.board.innerHTML = '';
+
+    const fragment = document.createDocumentFragment();
 
     // マスを作成
     for (let i = 0; i < width * height; i++) {
@@ -259,15 +282,19 @@ function generateBaseSeed() {
         handleEditCellClick(cell, i, width, height);
       });
 
-      board.appendChild(cell);
+      fragment.appendChild(cell);
     }
 
+    dom.board.appendChild(fragment);
+
     // ランダムブロック配置
-    placeRandomBlocks(board, width, height, blockCount);
+    placeRandomBlocks(width, height, blockCount);
   }
 
-  function placeRandomBlocks(board, width, height, blockCount) {
-    const cells = Array.from(board.children);
+  function placeRandomBlocks(width, height, blockCount) {
+    if (!dom.board) return;
+
+    const cells = Array.from(dom.board.children);
     const columnIndices = Array.from({ length: width }, (_, i) => i);
     const placedBlocks = new Set();
 
@@ -297,9 +324,10 @@ function generateBaseSeed() {
   function updateNextPieces() {
     const settings = getSettings();
     const nextCount = settings.nextCount;
-    const nextContainer = document.getElementById('next');
-    if (!nextContainer) return;
-    nextContainer.innerHTML = '';
+    if (!dom.nextContainer) return;
+    dom.nextContainer.innerHTML = '';
+
+    const fragment = document.createDocumentFragment();
 
     for (let i = 0; i < nextCount; i++) {
       const randomMino = getRandomMino();
@@ -307,9 +335,11 @@ function generateBaseSeed() {
         const nextPieceContainer = document.createElement('div');
         nextPieceContainer.classList.add('next-piece-container');
         drawMino(randomMino, nextPieceContainer);
-        nextContainer.appendChild(nextPieceContainer);
+        fragment.appendChild(nextPieceContainer);
       }
     }
+
+    dom.nextContainer.appendChild(fragment);
   }
 
   function getRandomMino() {
@@ -369,10 +399,9 @@ function generateBaseSeed() {
 
   // スワイプなどのジェスチャー制御
   function setupGestureControls() {
-    const mainView = document.getElementById('main-view');
-    if (!mainView) return;
+    if (!dom.mainView) return;
 
-    const hammer = new Hammer(mainView);
+    const hammer = new Hammer(dom.mainView);
     hammer.get('swipe').set({
       direction: Hammer.DIRECTION_ALL,
     });
@@ -387,11 +416,9 @@ function generateBaseSeed() {
   }
 
   function setupMobileDragForBoard() {
-    const boardContainer = document.getElementById('board-container');
-    const board = document.getElementById('board');
-    if (!boardContainer || !board) return;
+    if (!dom.boardContainer || !dom.board) return;
 
-    const hammer = new Hammer(boardContainer);
+    const hammer = new Hammer(dom.boardContainer);
 
     hammer.get('pan').set({
       direction: Hammer.DIRECTION_ALL,
@@ -406,7 +433,7 @@ function generateBaseSeed() {
     hammer.on('panmove', e => {
       if (!currentEditAction) return;
       isDragging = true;
-      paintCellUnderPointer(e, board);
+      paintCellUnderPointer(e, dom.board);
     });
 
     hammer.on('panend', () => {
@@ -443,43 +470,10 @@ function generateBaseSeed() {
   }
 
   // 編集系
-  function setupEditButton() {
-    // Auto / Del / Gray など
-    const editOptionButtons = document.querySelectorAll('.edit-option');
-    editOptionButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        editOptionButtons.forEach(b => {
-          b.classList.remove('selected');
-          b.setAttribute('aria-pressed', 'false');
-        });
-        btn.classList.add('selected');
-        btn.setAttribute('aria-pressed', 'true');
-        if (autoCells.length > 0) {
-          resetAutoCells();
-        }
-        currentEditAction = btn.dataset.action;
-      });
-    });
-
-    // clearボタン
-    const clearButton = document.getElementById('clear-board');
-    if (clearButton) {
-      clearButton.addEventListener('click', () => {
-        resetToInitialBoard();
-      });
-    }
-
+  function setupEditButtons() {
     // デフォルトはautoに
-    const autoBtn = document.querySelector('.edit-option[data-action="auto"]');
-    if (autoBtn) {
-      editOptionButtons.forEach(b => {
-        b.classList.remove('selected');
-        b.setAttribute('aria-pressed', 'false');
-      });
-      autoBtn.classList.add('selected');
-      autoBtn.setAttribute('aria-pressed', 'true');
-      currentEditAction = 'auto';
-    }
+    updateEditButtonState('auto');
+    setEditAction('auto');
   }
 
   function setEditAction(action) {
@@ -487,8 +481,7 @@ function generateBaseSeed() {
   }
 
   function updateEditButtonState(selectedAction) {
-    const editOptionButtons = document.querySelectorAll('.edit-option');
-    editOptionButtons.forEach(btn => {
+    dom.editOptionButtons.forEach(btn => {
       if (btn.dataset.action === selectedAction) {
         btn.classList.add('selected');
         btn.setAttribute('aria-pressed', 'true');
@@ -774,9 +767,8 @@ function generateBaseSeed() {
 
   // 初期ブロック以外をリセット
   function resetToInitialBoard() {
-    const board = document.getElementById('board');
-    if (!board) return;
-    const cells = Array.from(board.children);
+    if (!dom.board) return;
+    const cells = Array.from(dom.board.children);
     cells.forEach(cell => {
       if (!cell.classList.contains('initial-block')) {
         cell.style.backgroundColor = '';
