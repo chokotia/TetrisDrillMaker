@@ -9,21 +9,33 @@
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
+      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
+      crossorigin="anonymous"
+      defer
     />
+
     <!-- Bootstrap Icons -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      defer
     />
 
     <link rel="stylesheet" href="styles.css" />
 
     <!-- Hammer.js -->
-    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"
+      integrity="sha256-eVNjHw5UeU0jUqPPpZHAkU1z4U+QFBBY488WvueTm88="
+      crossorigin="anonymous"
+      defer
+    ></script>
 
     <!-- Bootstrap本体JS -->
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+      crossorigin="anonymous"
       defer
     ></script>
   </head>
@@ -46,25 +58,25 @@
       </nav>
 
       <!-- メインビュー -->
-      <div id="main-view" class="screen">
+      <main id="main-view" class="screen">
         <div
           id="board-container"
           class="d-flex flex-row justify-content-center align-items-start"
         >
           <div id="board"></div>
-          <div id="next" class="ms-3"></div>
+          <aside id="next" class="ms-3"></aside>
         </div>
-      </div>
+      </main>
 
       <!-- ボトムナビバー (編集用バー) -->
       <nav id="edit-nav" class="navbar navbar-dark bg-dark fixed-bottom">
         <div class="container-fluid">
-          <div class="btn-group" role="group" aria-label="Edit modes">
+          <div class="btn-group" role="group">
             <button
               id="auto-button"
               class="btn btn-secondary edit-option"
               data-action="auto"
-              aria-pressed="false"
+              type="button"
             >
               Auto
             </button>
@@ -72,7 +84,7 @@
               id="del-button"
               class="btn btn-secondary edit-option"
               data-action="delete"
-              aria-pressed="false"
+              type="button"
             >
               Del
             </button>
@@ -80,7 +92,7 @@
               id="gray-button"
               class="btn btn-secondary edit-option"
               data-action="gray"
-              aria-pressed="false"
+              type="button"
             >
               Gray
             </button>
@@ -100,8 +112,6 @@
         class="modal fade"
         id="settings-screen"
         tabindex="-1"
-        aria-labelledby="settingsModalLabel"
-        aria-hidden="true"
       >
         <div class="modal-dialog">
           <div class="modal-content" id="settings-modal-content">
@@ -112,7 +122,6 @@
                 type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"
-                aria-label="閉じる"
                 id="close-settings-without-save"
               ></button>
             </div>
@@ -187,6 +196,6 @@
       <!-- /モーダル ここまで -->
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
   </body>
 </html>

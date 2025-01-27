@@ -14,9 +14,7 @@
 }
 
 /* ナビバー隠し用 */
-#title-bar.hidden {
-  display: none;
-}
+#title-bar.hidden,
 #edit-nav.hidden {
   display: none;
 }
@@ -99,4 +97,22 @@
 .edit-option.selected {
   background-color: #ffbf00 !important; /* 16進数カラーコードに変更 */
   color: #333333 !important; /* 16進数カラーコードに変更 */
+}
+
+/* モーダル内のスライダーラベルのスタイル調整 */
+.modal-body .form-label {
+  font-weight: bold;
+}
+
+/* レスポンシブ対応の微調整 */
+@media (max-width: 576px) {
+  .next-piece-container {
+    width: 60px;
+    height: 30px;
+  }
+
+  .next-piece div {
+    width: 8px;
+    height: 8px;
+  }
 }
