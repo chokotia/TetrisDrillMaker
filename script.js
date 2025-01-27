@@ -46,62 +46,83 @@ function generateBaseSeed() {
 }
 
 /* ---- ここからアプリ本体 ---- */
-(() => {
-  let baseSeed = '';
-  let currentProblemNumber = 1;
-  let randomGenerator = null;
+class TetrisApp {
+  constructor() {
+    this.baseSeed = '';
+    this.currentProblemNumber = 1;
+    this.randomGenerator = null;
 
-  // BootstrapのModalインスタンスを格納する変数
-  let bsSettingsModal = null;
+    // BootstrapのModalインスタンスを格納する変数
+    this.bsSettingsModal = null;
 
-  // 編集系
-  let currentEditAction = 'auto'; // "auto" / "delete" / "gray" など
-  let autoCells = [];
-  let isAutoInProgress = false;
-  let isDragging = false;
+    // 編集系
+    this.currentEditAction = 'auto'; // "auto" / "delete" / "gray" など
+    this.autoCells = [];
+    this.isAutoInProgress = false;
+    this.isDragging = false;
 
-  // DOM要素のキャッシュ
-  const dom = {
-    settingsButton: document.getElementById('settings-button'),
-    saveAndCloseBtn: document.getElementById('save-and-close-settings'),
-    closeIconBtn: document.getElementById('close-settings-without-save'),
-    editOptionButtons: document.querySelectorAll('.edit-option'),
-    clearButton: document.getElementById('clear-board'),
-    problemCounter: document.getElementById('current-problem'),
-    board: document.getElementById('board'),
-    nextContainer: document.getElementById('next'),
-    mainView: document.getElementById('main-view'),
-    boardContainer: document.getElementById('board-container'),
-  };
+    // DOM要素のキャッシュ
+    this.dom = {
+      settingsButton: document.getElementById('settings-button'),
+      saveAndCloseBtn: document.getElementById('save-and-close-settings'),
+      closeIconBtn: document.getElementById('close-settings-without-save'),
+      editOptionButtons: document.querySelectorAll('.edit-option'),
+      clearButton: document.getElementById('clear-board'),
+      problemCounter: document.getElementById('current-problem'),
+      board: document.getElementById('board'),
+      nextContainer: document.getElementById('next'),
+      mainView: document.getElementById('main-view'),
+      boardContainer: document.getElementById('board-container'),
+      sliders: {
+        width: document.getElementById('width'),
+        height: document.getElementById('height'),
+        nextCount: document.getElementById('next-count'),
+        blockCount: document.getElementById('block-count'),
+      },
+      sliderValues: {
+        width: document.getElementById('width-value'),
+        height: document.getElementById('height-value'),
+        nextCount: document.getElementById('next-count-value'),
+        blockCount: document.getElementById('block-count-value'),
+      },
+    };
 
-  document.addEventListener('DOMContentLoaded', initializeApp);
-
-  function initializeApp() {
-    baseSeed = generateBaseSeed();
-    currentProblemNumber = 1;
-    randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
-
-    // Bootstrapモーダルのインスタンス作成
-    const settingsModalElement = document.getElementById('settings-modal');
-    if (settingsModalElement) {
-      bsSettingsModal = new bootstrap.Modal(settingsModalElement, {
-        // 必要に応じて backdrop:'static' などオプションを追加
-      });
-    }
-
-    setupEventListeners();
-    loadSettings();
-    setupGestureControls();
-    setupEditButtons();
-
-    // 最初の問題を生成
-    generateProblem();
-
-    console.log(`Base Seed: ${baseSeed}`);
-    console.log(`Starting at Problem #${currentProblemNumber}`);
+    document.addEventListener('DOMContentLoaded', () => this.initializeApp());
   }
 
-  function createSeededGenerator(base, number) {
+  initializeApp() {
+    try {
+      this.baseSeed = generateBaseSeed();
+      this.currentProblemNumber = 1;
+      this.randomGenerator = this.createSeededGenerator(
+        this.baseSeed,
+        this.currentProblemNumber
+      );
+
+      // Bootstrapモーダルのインスタンス作成
+      const settingsModalElement = document.getElementById('settings-modal');
+      if (settingsModalElement) {
+        this.bsSettingsModal = new bootstrap.Modal(settingsModalElement, {
+          // 必要に応じて backdrop:'static' などオプションを追加
+        });
+      }
+
+      this.setupEventListeners();
+      this.loadSettings();
+      this.setupGestureControls();
+      this.setupEditButtons();
+
+      // 最初の問題を生成
+      this.generateProblem();
+
+      console.log(`Base Seed: ${this.baseSeed}`);
+      console.log(`Starting at Problem #${this.currentProblemNumber}`);
+    } catch (error) {
+      console.error('Initialization failed:', error);
+    }
+  }
+
+  createSeededGenerator(base, number) {
     const seedString = `${base}_${number}`;
     let seed = 0;
     for (let i = 0; i < seedString.length; i++) {
@@ -110,98 +131,107 @@ function generateBaseSeed() {
     return mulberry32(seed);
   }
 
-  function setupEventListeners() {
+  setupEventListeners() {
     // スライダーの表示更新
-    ['width', 'height', 'next-count', 'block-count'].forEach(id => {
-      const slider = document.getElementById(id);
-      const output = document.getElementById(`${id}-value`);
+    Object.keys(this.dom.sliders).forEach(key => {
+      const slider = this.dom.sliders[key];
+      const output = this.dom.sliderValues[key];
       if (slider && output) {
         slider.addEventListener('input', () => {
           output.textContent = slider.value;
-          updateAriaValue(slider, output);
+          this.updateAriaValue(slider, output);
         });
       }
     });
 
     // 設定ボタン -> モーダルを開く
-    if (dom.settingsButton) {
-      dom.settingsButton.addEventListener('click', openSettingsOverlay);
+    if (this.dom.settingsButton) {
+      this.dom.settingsButton.addEventListener('click', () =>
+        this.openSettingsOverlay()
+      );
     }
 
     // 「保存して閉じる」ボタン
-    if (dom.saveAndCloseBtn) {
-      dom.saveAndCloseBtn.addEventListener('click', () => {
-        // 設定を保存
-        const settings = getSettings();
-        saveSettings(settings);
-        // ボードとNEXTの内容を再描画 (問題番号はそのまま)
-        generateProblem();
-        // モーダルを閉じる
-        closeSettingsOverlay();
-      });
+    if (this.dom.saveAndCloseBtn) {
+      this.dom.saveAndCloseBtn.addEventListener('click', () =>
+        this.handleSaveAndClose()
+      );
     }
 
     // 「×」ボタン (id="close-settings-without-save")
-    if (dom.closeIconBtn) {
-      dom.closeIconBtn.addEventListener('click', () => {
-        console.log('設定を保存せず閉じました。');
-      });
+    if (this.dom.closeIconBtn) {
+      this.dom.closeIconBtn.addEventListener('click', () =>
+        this.handleCloseWithoutSave()
+      );
     }
 
     // Auto/Del/Gray ボタン
-    dom.editOptionButtons.forEach(button => {
+    this.dom.editOptionButtons.forEach(button => {
       button.addEventListener('click', () => {
         const action = button.dataset.action;
-        setEditAction(action);
-        updateEditButtonState(action);
+        this.setEditAction(action);
+        this.updateEditButtonState(action);
       });
     });
 
     // Clearボタン
-    if (dom.clearButton) {
-      dom.clearButton.addEventListener('click', () => {
-        resetToInitialBoard();
-      });
+    if (this.dom.clearButton) {
+      this.dom.clearButton.addEventListener('click', () =>
+        this.resetToInitialBoard()
+      );
     }
   }
 
   // ARIA属性の更新
-  function updateAriaValue(slider, output) {
+  updateAriaValue(slider, output) {
     slider.setAttribute('aria-valuenow', slider.value);
   }
 
   // Bootstrapモーダルを開く
-  function openSettingsOverlay() {
-    if (bsSettingsModal) {
-      bsSettingsModal.show();
+  openSettingsOverlay() {
+    if (this.bsSettingsModal) {
+      this.bsSettingsModal.show();
     }
   }
 
   // Bootstrapモーダルを閉じる
-  function closeSettingsOverlay() {
-    if (bsSettingsModal) {
-      bsSettingsModal.hide();
+  closeSettingsOverlay() {
+    if (this.bsSettingsModal) {
+      this.bsSettingsModal.hide();
     }
   }
 
-  function getSettings() {
-    const widthEl = document.getElementById('width');
-    const heightEl = document.getElementById('height');
-    const nextCountEl = document.getElementById('next-count');
-    const blockCountEl = document.getElementById('block-count');
-    return {
-      width: widthEl ? parseInt(widthEl.value, 10) : config.MIN_WIDTH,
-      height: heightEl ? parseInt(heightEl.value, 10) : config.MIN_HEIGHT,
-      nextCount: nextCountEl
-        ? parseInt(nextCountEl.value, 10)
-        : config.MIN_NEXT_COUNT,
-      blockCount: blockCountEl
-        ? parseInt(blockCountEl.value, 10)
-        : config.MIN_BLOCK_COUNT,
-    };
+  handleSaveAndClose() {
+    // 設定を保存
+    const settings = this.getSettings();
+    this.saveSettings(settings);
+    // ボードとNEXTの内容を再描画 (問題番号はそのまま)
+    this.generateProblem();
+    // モーダルを閉じる
+    this.closeSettingsOverlay();
   }
 
-  function saveSettings(settings) {
+  handleCloseWithoutSave() {
+    console.log('設定を保存せず閉じました。');
+  }
+
+  getSettings() {
+    const width = this.dom.sliders.width
+      ? parseInt(this.dom.sliders.width.value, 10)
+      : config.MIN_WIDTH;
+    const height = this.dom.sliders.height
+      ? parseInt(this.dom.sliders.height.value, 10)
+      : config.MIN_HEIGHT;
+    const nextCount = this.dom.sliders.nextCount
+      ? parseInt(this.dom.sliders.nextCount.value, 10)
+      : config.MIN_NEXT_COUNT;
+    const blockCount = this.dom.sliders.blockCount
+      ? parseInt(this.dom.sliders.blockCount.value, 10)
+      : config.MIN_BLOCK_COUNT;
+    return { width, height, nextCount, blockCount };
+  }
+
+  saveSettings(settings) {
     try {
       localStorage.setItem('tetrisSettings', JSON.stringify(settings));
       console.log('Settings saved');
@@ -210,24 +240,24 @@ function generateBaseSeed() {
     }
   }
 
-  function loadSettings() {
+  loadSettings() {
     try {
       const savedSettings = JSON.parse(localStorage.getItem('tetrisSettings'));
       if (savedSettings) {
         Object.entries(savedSettings).forEach(([key, value]) => {
-          const slider = document.getElementById(key);
-          const valueDisplay = document.getElementById(`${key}-value`);
+          const slider = this.dom.sliders[key];
+          const valueDisplay = this.dom.sliderValues[key];
           if (slider && valueDisplay) {
             slider.value = value;
             valueDisplay.textContent = value;
-            updateAriaValue(slider, valueDisplay);
+            this.updateAriaValue(slider, valueDisplay);
           }
         });
         const { width, height, blockCount } = savedSettings;
-        createBoard(width, height, blockCount);
+        this.createBoard(width, height, blockCount);
       } else {
         // 初期設定がない場合はデフォルト設定をロード
-        createBoard(
+        this.createBoard(
           config.MIN_WIDTH,
           config.MIN_HEIGHT,
           config.MIN_BLOCK_COUNT
@@ -239,34 +269,31 @@ function generateBaseSeed() {
   }
 
   // 画面をリセットして問題再生成
-  function generateProblem() {
-    const { width, height, blockCount } = getSettings();
-    createBoard(width, height, blockCount);
-    updateNextPieces();
-    updateProblemCounter();
-    setEditAction('auto');
-    updateEditButtonState('auto');
+  generateProblem() {
+    const { width, height, blockCount } = this.getSettings();
+    this.createBoard(width, height, blockCount);
+    this.updateNextPieces();
+    this.updateProblemCounter();
+    this.setEditAction('auto');
+    this.updateEditButtonState('auto');
   }
 
   // 問題番号ラベル更新
-  function updateProblemCounter() {
-    if (dom.problemCounter) {
-      dom.problemCounter.textContent = `問題 #${currentProblemNumber}`;
+  updateProblemCounter() {
+    if (this.dom.problemCounter) {
+      this.dom.problemCounter.textContent = `問題 #${this.currentProblemNumber}`;
     }
   }
 
-  let currentWidth = config.MIN_WIDTH;
-  let currentHeight = config.MIN_HEIGHT;
+  createBoard(width, height, blockCount = 0) {
+    if (!this.dom.board) return;
 
-  function createBoard(width, height, blockCount = 0) {
-    if (!dom.board) return;
+    this.currentWidth = width;
+    this.currentHeight = height;
 
-    currentWidth = width;
-    currentHeight = height;
-
-    dom.board.style.setProperty('--width', width);
-    dom.board.style.setProperty('--height', height);
-    dom.board.innerHTML = '';
+    this.dom.board.style.setProperty('--width', width);
+    this.dom.board.style.setProperty('--height', height);
+    this.dom.board.innerHTML = '';
 
     const fragment = document.createDocumentFragment();
 
@@ -278,23 +305,23 @@ function generateBaseSeed() {
       cell.style.height = `${config.CELL_SIZE}px`;
 
       cell.addEventListener('click', () => {
-        if (!currentEditAction) return;
-        handleEditCellClick(cell, i, width, height);
+        if (!this.currentEditAction) return;
+        this.handleEditCellClick(cell, i, width, height);
       });
 
       fragment.appendChild(cell);
     }
 
-    dom.board.appendChild(fragment);
+    this.dom.board.appendChild(fragment);
 
     // ランダムブロック配置
-    placeRandomBlocks(width, height, blockCount);
+    this.placeRandomBlocks(width, height, blockCount);
   }
 
-  function placeRandomBlocks(width, height, blockCount) {
-    if (!dom.board) return;
+  placeRandomBlocks(width, height, blockCount) {
+    if (!this.dom.board) return;
 
-    const cells = Array.from(dom.board.children);
+    const cells = Array.from(this.dom.board.children);
     const columnIndices = Array.from({ length: width }, (_, i) => i);
     const placedBlocks = new Set();
 
@@ -304,7 +331,9 @@ function generateBaseSeed() {
       const maxAttempts = 100;
       do {
         column =
-          columnIndices[Math.floor(randomGenerator() * columnIndices.length)];
+          columnIndices[
+            Math.floor(this.randomGenerator() * columnIndices.length)
+          ];
         attempts++;
         if (attempts > maxAttempts) break;
       } while (placedBlocks.has(`${column}-${i}`));
@@ -321,33 +350,33 @@ function generateBaseSeed() {
     }
   }
 
-  function updateNextPieces() {
-    const settings = getSettings();
+  updateNextPieces() {
+    const settings = this.getSettings();
     const nextCount = settings.nextCount;
-    if (!dom.nextContainer) return;
-    dom.nextContainer.innerHTML = '';
+    if (!this.dom.nextContainer) return;
+    this.dom.nextContainer.innerHTML = '';
 
     const fragment = document.createDocumentFragment();
 
     for (let i = 0; i < nextCount; i++) {
-      const randomMino = getRandomMino();
+      const randomMino = this.getRandomMino();
       if (randomMino) {
         const nextPieceContainer = document.createElement('div');
         nextPieceContainer.classList.add('next-piece-container');
-        drawMino(randomMino, nextPieceContainer);
+        this.drawMino(randomMino, nextPieceContainer);
         fragment.appendChild(nextPieceContainer);
       }
     }
 
-    dom.nextContainer.appendChild(fragment);
+    this.dom.nextContainer.appendChild(fragment);
   }
 
-  function getRandomMino() {
+  getRandomMino() {
     const allMinos = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
-    return allMinos[Math.floor(randomGenerator() * allMinos.length)];
+    return allMinos[Math.floor(this.randomGenerator() * allMinos.length)];
   }
 
-  function drawMino(minoType, container) {
+  drawMino(minoType, container) {
     const minoShapes = {
       I: [[1, 1, 1, 1]],
       O: [
@@ -398,27 +427,27 @@ function generateBaseSeed() {
   }
 
   // スワイプなどのジェスチャー制御
-  function setupGestureControls() {
-    if (!dom.mainView) return;
+  setupGestureControls() {
+    if (!this.dom.mainView) return;
 
-    const hammer = new Hammer(dom.mainView);
+    const hammer = new Hammer(this.dom.mainView);
     hammer.get('swipe').set({
       direction: Hammer.DIRECTION_ALL,
     });
 
     // 左スワイプ→次の問題
-    hammer.on('swipeleft', goToNextProblem);
+    hammer.on('swipeleft', () => this.goToNextProblem());
     // 右スワイプ→前の問題
-    hammer.on('swiperight', goToPreviousProblem);
+    hammer.on('swiperight', () => this.goToPreviousProblem());
 
     // 盤面ドラッグ
-    setupMobileDragForBoard();
+    this.setupMobileDragForBoard();
   }
 
-  function setupMobileDragForBoard() {
-    if (!dom.boardContainer || !dom.board) return;
+  setupMobileDragForBoard() {
+    if (!this.dom.boardContainer || !this.dom.board) return;
 
-    const hammer = new Hammer(dom.boardContainer);
+    const hammer = new Hammer(this.dom.boardContainer);
 
     hammer.get('pan').set({
       direction: Hammer.DIRECTION_ALL,
@@ -426,22 +455,22 @@ function generateBaseSeed() {
     });
 
     hammer.on('panstart', () => {
-      if (!currentEditAction) return;
-      isDragging = false;
+      if (!this.currentEditAction) return;
+      this.isDragging = false;
     });
 
     hammer.on('panmove', e => {
-      if (!currentEditAction) return;
-      isDragging = true;
-      paintCellUnderPointer(e, dom.board);
+      if (!this.currentEditAction) return;
+      this.isDragging = true;
+      this.paintCellUnderPointer(e, this.dom.board);
     });
 
     hammer.on('panend', () => {
-      isDragging = false;
+      this.isDragging = false;
     });
   }
 
-  function paintCellUnderPointer(e, board) {
+  paintCellUnderPointer(e, board) {
     const x = e.center.x;
     const y = e.center.y;
     const target = document.elementFromPoint(x, y);
@@ -449,39 +478,50 @@ function generateBaseSeed() {
     if (target && target.parentNode === board) {
       const index = Array.from(board.children).indexOf(target);
       if (index >= 0) {
-        handleEditCellClick(target, index, currentWidth, currentHeight);
+        this.handleEditCellClick(
+          target,
+          index,
+          this.currentWidth,
+          this.currentHeight
+        );
       }
     }
   }
 
   // 問題移動
-  function goToNextProblem() {
-    currentProblemNumber += 1;
-    randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
-    generateProblem();
+  goToNextProblem() {
+    this.currentProblemNumber += 1;
+    this.randomGenerator = this.createSeededGenerator(
+      this.baseSeed,
+      this.currentProblemNumber
+    );
+    this.generateProblem();
   }
 
-  function goToPreviousProblem() {
-    if (currentProblemNumber > 1) {
-      currentProblemNumber -= 1;
-      randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
-      generateProblem();
+  goToPreviousProblem() {
+    if (this.currentProblemNumber > 1) {
+      this.currentProblemNumber -= 1;
+      this.randomGenerator = this.createSeededGenerator(
+        this.baseSeed,
+        this.currentProblemNumber
+      );
+      this.generateProblem();
     }
   }
 
   // 編集系
-  function setupEditButtons() {
+  setupEditButtons() {
     // デフォルトはautoに
-    updateEditButtonState('auto');
-    setEditAction('auto');
+    this.updateEditButtonState('auto');
+    this.setEditAction('auto');
   }
 
-  function setEditAction(action) {
-    currentEditAction = action;
+  setEditAction(action) {
+    this.currentEditAction = action;
   }
 
-  function updateEditButtonState(selectedAction) {
-    dom.editOptionButtons.forEach(btn => {
+  updateEditButtonState(selectedAction) {
+    this.dom.editOptionButtons.forEach(btn => {
       if (btn.dataset.action === selectedAction) {
         btn.classList.add('selected');
         btn.setAttribute('aria-pressed', 'true');
@@ -492,48 +532,48 @@ function generateBaseSeed() {
     });
   }
 
-  function handleEditCellClick(cell, index, width, height) {
+  handleEditCellClick(cell, index, width, height) {
     // 初期配置のブロックは削除不可
     if (cell.classList.contains('initial-block')) {
       return;
     }
 
     // Delete
-    if (currentEditAction === 'delete') {
-      paintCell(cell, '');
+    if (this.currentEditAction === 'delete') {
+      this.paintCell(cell, '');
       return;
     }
     // Gray
-    else if (currentEditAction === 'gray') {
+    else if (this.currentEditAction === 'gray') {
       // 押下されたマスをgrayにする
-      paintCell(cell, minoColors['gray']); // '#CCCCCC'
+      this.paintCell(cell, minoColors['gray']); // '#CCCCCC'
       return;
     }
     // Auto
-    else if (currentEditAction === 'auto') {
-      handleAutoReplace(cell, index, width, height);
+    else if (this.currentEditAction === 'auto') {
+      this.handleAutoReplace(cell, index, width, height);
       return;
     }
 
     // それ以外 (通常ペイント)
     const oldColor = cell.style.backgroundColor;
-    const newColor = minoColors[currentEditAction];
+    const newColor = minoColors[this.currentEditAction];
     if (!newColor) return;
 
-    if (isDragging) {
+    if (this.isDragging) {
       // ドラッグ中は常に上書き
-      paintCell(cell, newColor);
+      this.paintCell(cell, newColor);
     } else {
       // クリックはトグル
-      if (isSameColor(oldColor, newColor)) {
-        paintCell(cell, '');
+      if (this.isSameColor(oldColor, newColor)) {
+        this.paintCell(cell, '');
       } else {
-        paintCell(cell, newColor);
+        this.paintCell(cell, newColor);
       }
     }
   }
 
-  function handleAutoReplace(cell, index, width, height) {
+  handleAutoReplace(cell, index, width, height) {
     if (cell.classList.contains('initial-block')) {
       return;
     }
@@ -541,10 +581,10 @@ function generateBaseSeed() {
     const oldColor = cell.style.backgroundColor;
     // 既に#FFFFFFなら取り消し
     if (oldColor.toLowerCase() === '#ffffff') {
-      clearCell(cell);
-      const cellIndex = autoCells.findIndex(c => c.cellEl === cell);
+      this.clearCell(cell);
+      const cellIndex = this.autoCells.findIndex(c => c.cellEl === cell);
       if (cellIndex !== -1) {
-        autoCells.splice(cellIndex, 1);
+        this.autoCells.splice(cellIndex, 1);
       }
       return;
     }
@@ -555,33 +595,33 @@ function generateBaseSeed() {
     }
 
     // 4マス埋まっていれば不可
-    if (autoCells.length >= 4) {
+    if (this.autoCells.length >= 4) {
       return;
     }
 
     // #FFFFFFセルにする
-    paintCell(cell, minoColors['white']);
+    this.paintCell(cell, minoColors['white']);
     const x = index % width;
     const y = Math.floor(index / width);
-    autoCells.push({ x, y, cellEl: cell });
-    isAutoInProgress = true;
+    this.autoCells.push({ x, y, cellEl: cell });
+    this.isAutoInProgress = true;
 
-    if (autoCells.length === 4) {
-      const positions = autoCells.map(c => ({ x: c.x, y: c.y }));
-      const detectedMino = detectMinoShape(positions);
+    if (this.autoCells.length === 4) {
+      const positions = this.autoCells.map(c => ({ x: c.x, y: c.y }));
+      const detectedMino = this.detectMinoShape(positions);
       if (detectedMino) {
         const color = minoColors[detectedMino];
-        autoCells.forEach(c => paintCell(c.cellEl, color));
+        this.autoCells.forEach(c => this.paintCell(c.cellEl, color));
       } else {
         // ミノ形にならなければリセット
-        resetAutoCells();
+        this.resetAutoCells();
       }
-      autoCells = [];
-      isAutoInProgress = false;
+      this.autoCells = [];
+      this.isAutoInProgress = false;
     }
   }
 
-  function paintCell(cellElement, color) {
+  paintCell(cellElement, color) {
     cellElement.style.backgroundColor = color;
     if (color) {
       cellElement.classList.add('block');
@@ -590,30 +630,33 @@ function generateBaseSeed() {
     }
   }
 
-  function clearCell(cellElement) {
-    paintCell(cellElement, '');
+  clearCell(cellElement) {
+    this.paintCell(cellElement, '');
   }
 
   // autoCells の白マスをリセット
-  function resetAutoCells() {
-    autoCells.forEach(({ cellEl }) => {
-      clearCell(cellEl);
+  resetAutoCells() {
+    this.autoCells.forEach(({ cellEl }) => {
+      this.clearCell(cellEl);
     });
-    autoCells = [];
-    isAutoInProgress = false;
+    this.autoCells = [];
+    this.isAutoInProgress = false;
   }
 
   // 色比較 (16進数カラーコードの比較に変更)
-  function isSameColor(colorA, colorB) {
+  isSameColor(colorA, colorB) {
     if (!colorA || !colorB) return false;
     return colorA.toLowerCase() === colorB.toLowerCase();
   }
 
   // ミノ形状判定
-  function detectMinoShape(positions) {
+  detectMinoShape(positions) {
     const minX = Math.min(...positions.map(p => p.x));
     const minY = Math.min(...positions.map(p => p.y));
-    const normalized = positions.map(p => ({ x: p.x - minX, y: p.y - minY }));
+    const normalized = positions.map(p => ({
+      x: p.x - minX,
+      y: p.y - minY,
+    }));
 
     const shapePatterns = {
       I: [
@@ -748,7 +791,7 @@ function generateBaseSeed() {
 
     for (const [minoType, patterns] of Object.entries(shapePatterns)) {
       for (const pattern of patterns) {
-        if (isSameShape(normalized, pattern)) {
+        if (this.isSameShape(normalized, pattern)) {
           return minoType;
         }
       }
@@ -757,7 +800,7 @@ function generateBaseSeed() {
   }
 
   // 座標配列が同じ形状か判定
-  function isSameShape(arr1, arr2) {
+  isSameShape(arr1, arr2) {
     if (arr1.length !== arr2.length) return false;
     const sortByXY = (a, b) => a.x - b.x || a.y - b.y;
     const s1 = [...arr1].sort(sortByXY);
@@ -766,9 +809,9 @@ function generateBaseSeed() {
   }
 
   // 初期ブロック以外をリセット
-  function resetToInitialBoard() {
-    if (!dom.board) return;
-    const cells = Array.from(dom.board.children);
+  resetToInitialBoard() {
+    if (!this.dom.board) return;
+    const cells = Array.from(this.dom.board.children);
     cells.forEach(cell => {
       if (!cell.classList.contains('initial-block')) {
         cell.style.backgroundColor = '';
@@ -777,4 +820,7 @@ function generateBaseSeed() {
     });
     console.log('Cleared all edits. Now only initial-block remain.');
   }
-})();
+}
+
+// アプリのインスタンスを生成
+new TetrisApp();
