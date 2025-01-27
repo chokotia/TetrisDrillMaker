@@ -1,3 +1,17 @@
+/* CSS変数の定義 */
+:root {
+  --color-bg-dark: #333333;
+  --color-bg-secondary: #555555;
+  --color-border: #cccccc;
+  --color-next-bg: #222222;
+  --color-next-border: #555555;
+  --color-selected: #ffbf00;
+  --color-selected-text: #333333;
+  --color-block-default: #b0c4de;
+  --color-gray: #CCCCCC;
+  --color-white: #FFFFFF;
+}
+
 /* 全体ラッパ */
 #app {
   width: 100%;
@@ -12,9 +26,7 @@
 }
 
 /* ナビバー隠し用 */
-#title-bar.hidden {
-  display: none;
-}
+#title-bar.hidden,
 #edit-nav.hidden {
   display: none;
 }
@@ -43,27 +55,26 @@
 
 /* テトリス盤面 */
 #board {
-  background-color: #333333; /* 16進数カラーコードに変更 */
+  background-color: var(--color-bg-dark);
   display: grid;
   grid-template-columns: repeat(var(--width), 1fr);
   grid-template-rows: repeat(var(--height), 1fr);
   gap: 1px; /* 1pxの隙間を線として表示 */
-  border: 2px solid #CCCCCC; /* 全体枠を16進数に変更 */
+  border: 2px solid var(--color-border);
 }
 
-/* 盤面の1マス */
 #board div {
-  background-color: #555555; /* 16進数カラーコードに変更 */
+  background-color: var(--color-bg-secondary);
 }
 
 /* ブロック状態のマス */
 #board .block {
-  background-color: #B0C4DE; /* 16進数カラーコードに変更 */
+  background-color: var(--color-block-default);
 }
 
 /* NEXT コンテナ */
 #next {
-  background-color: #222222; /* 16進数カラーコードに変更 */
+  background-color: var(--color-next-bg);
   padding: 10px;
   border-radius: 4px;
 }
@@ -73,10 +84,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #333333; /* 16進数カラーコードに変更 */
+  background-color: var(--color-bg-dark);
   width: 80px;
   height: 40px;
-  border: 1px solid #555555; /* 16進数カラーコードに変更 */
+  border: 1px solid var(--color-next-border);
   margin-bottom: 5px;
 }
 
@@ -94,6 +105,6 @@
 
 /* 編集ボタンが選択されたときの強調表示 */
 .edit-option.selected {
-  background-color: #FFBF00 !important; /* 16進数カラーコードに変更 */
-  color: #333333 !important; /* 16進数カラーコードに変更 */
+  background-color: var(--color-selected) !important;
+  color: var(--color-selected-text) !important;
 }

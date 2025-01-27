@@ -17,7 +17,6 @@ const minoColors = {
   W: '#FFFFFF', // white 用
 };
 
-
 // シード付き乱数 (Mulberry32)
 function mulberry32(a) {
   return function () {
@@ -27,6 +26,7 @@ function mulberry32(a) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
 function generateBaseSeed() {
   const chars = 'abcdefghijklmnopqrstuvwxyz';
   let seed = '';
@@ -50,12 +50,9 @@ function initializeApp() {
   randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
 
   // Bootstrapモーダルのインスタンス作成
-  bsSettingsModal = new bootstrap.Modal(
-    document.getElementById('settings-screen'),
-    {
-      // 必要に応じて backdrop:'static' などオプションを追加
-    }
-  );
+  bsSettingsModal = new bootstrap.Modal(document.getElementById('settings-screen'), {
+    // 必要に応じて backdrop:'static' などオプションを追加
+  });
 
   setupEventListeners();
   loadSettings();
@@ -79,8 +76,8 @@ function createSeededGenerator(base, number) {
 }
 
 function setupEventListeners() {
-  // スライダーの表示更新はそのまま
-  ['width', 'height', 'next-count', 'block-count'].forEach(id => {
+  // スライダーの表示更新
+  ['width', 'height', 'next-count', 'block-count'].forEach((id) => {
     const slider = document.getElementById(id);
     const output = document.getElementById(`${id}-value`);
     if (slider && output) {
@@ -93,9 +90,7 @@ function setupEventListeners() {
   // 設定ボタン -> モーダルを開く
   const settingsButton = document.getElementById('settings-button');
   if (settingsButton) {
-    settingsButton.addEventListener('click', () => {
-      openSettingsOverlay();
-    });
+    settingsButton.addEventListener('click', openSettingsOverlay);
   }
 
   // 「保存して閉じる」ボタン
@@ -103,7 +98,8 @@ function setupEventListeners() {
   if (saveAndCloseBtn) {
     saveAndCloseBtn.addEventListener('click', () => {
       // 設定を保存
-      saveSettings(getSettings());
+      const settings = getSettings();
+      saveSettings(settings);
       // ボードとNEXTの内容を再描画 (問題番号はそのまま)
       generateProblem();
       // モーダルを閉じる
@@ -112,29 +108,24 @@ function setupEventListeners() {
   }
 
   // 「×」ボタン (id="close-settings-without-save")
-  // data-bs-dismiss="modal"があるのでクリック時にモーダルは閉じるが、
-  // 追加の処理（保存せず閉じるなど）をしたい場合はここでハンドリングも可。
   const closeIconBtn = document.getElementById('close-settings-without-save');
   if (closeIconBtn) {
     closeIconBtn.addEventListener('click', () => {
-      // ここでは特に何もせず閉じるだけ
       console.log('設定を保存せず閉じました。');
     });
   }
 
   // Auto/Del/Gray ボタン
-  const autoButton = document.getElementById('auto-button');
-  if (autoButton) {
-    autoButton.addEventListener('click', () => {
-      setEditAction('auto');
-    });
-  }
-  const delButton = document.getElementById('del-button');
-  if (delButton) {
-    delButton.addEventListener('click', () => {
-      setEditAction('delete');
-    });
-  }
+  ['auto-button', 'del-button', 'gray-button'].forEach((btnId) => {
+    const button = document.getElementById(btnId);
+    if (button) {
+      button.addEventListener('click', () => {
+        const action = button.dataset.action;
+        setEditAction(action);
+        updateEditButtonState(action);
+      });
+    }
+  });
 }
 
 // Bootstrapモーダルを開く
@@ -188,6 +179,7 @@ function generateProblem() {
   updateNextPieces();
   updateProblemCounter();
   setEditAction('auto');
+  updateEditButtonState('auto');
 }
 
 // 問題番号ラベル更新
@@ -236,8 +228,7 @@ function placeRandomBlocks(board, width, height, blockCount) {
   for (let i = 0; i < blockCount; i++) {
     let column;
     do {
-      column =
-        columnIndices[Math.floor(randomGenerator() * columnIndices.length)];
+      column = columnIndices[Math.floor(randomGenerator() * columnIndices.length)];
     } while (placedBlocks.has(`${column}-${i}`));
 
     for (let row = height - 1; row >= 0; row--) {
@@ -308,8 +299,8 @@ function drawMino(minoType, container) {
   minoElement.style.display = 'grid';
   minoElement.style.gridTemplateColumns = `repeat(${shape[0].length}, 1fr)`;
 
-  shape.forEach(row => {
-    row.forEach(cell => {
+  shape.forEach((row) => {
+    row.forEach((cell) => {
       const cellElement = document.createElement('div');
       if (cell) {
         cellElement.classList.add('block');
@@ -326,17 +317,13 @@ function setupGestureControls() {
   const mainView = document.getElementById('main-view');
   const hammer = new Hammer(mainView);
   hammer.get('swipe').set({
-    direction: Hammer.DIRECTION_HORIZONTAL | Hammer.DIRECTION_VERTICAL,
+    direction: Hammer.DIRECTION_ALL,
   });
 
   // 左スワイプ→次の問題
-  hammer.on('swipeleft', () => {
-    goToNextProblem();
-  });
+  hammer.on('swipeleft', goToNextProblem);
   // 右スワイプ→前の問題
-  hammer.on('swiperight', () => {
-    goToPreviousProblem();
-  });
+  hammer.on('swiperight', goToPreviousProblem);
   // 上スワイプ→設定画面 (オーバーレイを開く)
   hammer.on('swipeup', () => {
     saveSettings(getSettings());
@@ -362,7 +349,7 @@ function setupMobileDragForBoard() {
     isDragging = false;
   });
 
-  hammer.on('panmove', e => {
+  hammer.on('panmove', (e) => {
     if (!currentEditAction) return;
     isDragging = true;
     paintCellUnderPointer(e, board);
@@ -392,6 +379,7 @@ function goToNextProblem() {
   randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
   generateProblem();
 }
+
 function goToPreviousProblem() {
   if (currentProblemNumber > 1) {
     currentProblemNumber -= 1;
@@ -409,9 +397,9 @@ let isDragging = false;
 function setupEditButton() {
   // Auto / Del / Gray など
   const editOptionButtons = document.querySelectorAll('.edit-option');
-  editOptionButtons.forEach(btn => {
+  editOptionButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
-      editOptionButtons.forEach(b => b.classList.remove('selected'));
+      editOptionButtons.forEach((b) => b.classList.remove('selected'));
       btn.classList.add('selected');
       if (autoCells.length > 0) {
         resetAutoCells();
@@ -431,7 +419,7 @@ function setupEditButton() {
   // デフォルトはautoに
   const autoBtn = document.querySelector('.edit-option[data-action="auto"]');
   if (autoBtn) {
-    editOptionButtons.forEach(b => b.classList.remove('selected'));
+    editOptionButtons.forEach((b) => b.classList.remove('selected'));
     autoBtn.classList.add('selected');
     currentEditAction = 'auto';
   }
@@ -439,6 +427,19 @@ function setupEditButton() {
 
 function setEditAction(action) {
   currentEditAction = action;
+}
+
+function updateEditButtonState(selectedAction) {
+  const editOptionButtons = document.querySelectorAll('.edit-option');
+  editOptionButtons.forEach((btn) => {
+    if (btn.dataset.action === selectedAction) {
+      btn.classList.add('selected');
+      btn.setAttribute('aria-pressed', 'true');
+    } else {
+      btn.classList.remove('selected');
+      btn.setAttribute('aria-pressed', 'false');
+    }
+  });
 }
 
 function handleEditCellClick(cell, index, width, height) {
@@ -491,7 +492,7 @@ function handleAutoReplace(cell, index, width, height) {
   // 既に#FFFFFFなら取り消し
   if (oldColor.toLowerCase() === '#ffffff') {
     clearCell(cell);
-    const cellIndex = autoCells.findIndex(c => c.cellEl === cell);
+    const cellIndex = autoCells.findIndex((c) => c.cellEl === cell);
     if (cellIndex !== -1) {
       autoCells.splice(cellIndex, 1);
     }
@@ -516,11 +517,11 @@ function handleAutoReplace(cell, index, width, height) {
   isAutoInProgress = true;
 
   if (autoCells.length === 4) {
-    const positions = autoCells.map(c => ({ x: c.x, y: c.y }));
+    const positions = autoCells.map((c) => ({ x: c.x, y: c.y }));
     const detectedMino = detectMinoShape(positions);
     if (detectedMino) {
       const color = minoColors[detectedMino];
-      autoCells.forEach(c => paintCell(c.cellEl, color));
+      autoCells.forEach((c) => paintCell(c.cellEl, color));
     } else {
       // ミノ形にならなければリセット
       resetAutoCells();
@@ -538,6 +539,7 @@ function paintCell(cellElement, color) {
     cellElement.classList.remove('block');
   }
 }
+
 function clearCell(cellElement) {
   paintCell(cellElement, '');
 }
@@ -559,9 +561,9 @@ function isSameColor(colorA, colorB) {
 
 // ミノ形状判定
 function detectMinoShape(positions) {
-  const minX = Math.min(...positions.map(p => p.x));
-  const minY = Math.min(...positions.map(p => p.y));
-  const normalized = positions.map(p => ({ x: p.x - minX, y: p.y - minY }));
+  const minX = Math.min(...positions.map((p) => p.x));
+  const minY = Math.min(...positions.map((p) => p.y));
+  const normalized = positions.map((p) => ({ x: p.x - minX, y: p.y - minY }));
 
   const shapePatterns = {
     I: [
@@ -717,7 +719,7 @@ function isSameShape(arr1, arr2) {
 function resetToInitialBoard() {
   const board = document.getElementById('board');
   const cells = Array.from(board.children);
-  cells.forEach(cell => {
+  cells.forEach((cell) => {
     if (!cell.classList.contains('initial-block')) {
       cell.style.backgroundColor = '';
       cell.classList.remove('block');

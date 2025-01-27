@@ -32,15 +32,16 @@
     <div id="app">
       <nav id="title-bar" class="navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
-          <span id="current-problem" class="navbar-brand problem-counter"
-            >問題 #1</span
-          >
+          <span id="current-problem" class="navbar-brand problem-counter">
+            問題 #1
+          </span>
           <button
             id="settings-button"
             class="btn btn-outline-light d-flex align-items-center"
             type="button"
+            aria-label="設定を開く"
           >
-            <i class="bi bi-gear" style="font-size: 1.2rem"></i>
+            <i class="bi bi-gear"></i>
           </button>
         </div>
       </nav>
@@ -64,6 +65,7 @@
               id="auto-button"
               class="btn btn-secondary edit-option"
               data-action="auto"
+              aria-pressed="false"
             >
               Auto
             </button>
@@ -71,6 +73,7 @@
               id="del-button"
               class="btn btn-secondary edit-option"
               data-action="delete"
+              aria-pressed="false"
             >
               Del
             </button>
@@ -78,6 +81,7 @@
               id="gray-button"
               class="btn btn-secondary edit-option"
               data-action="gray"
+              aria-pressed="false"
             >
               Gray
             </button>
@@ -87,7 +91,7 @@
             class="btn btn-outline-light edit-toggle ms-3"
             type="button"
           >
-            clear
+            Clear
           </button>
         </div>
       </nav>
@@ -109,7 +113,7 @@
                 type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"
-                aria-label="Close"
+                aria-label="閉じる"
                 id="close-settings-without-save"
               ></button>
             </div>
@@ -127,9 +131,7 @@
                 <span id="width-value">5</span>
               </div>
               <div class="mb-3">
-                <label for="height" class="form-label"
-                  >盤面の高さ (6-10):</label
-                >
+                <label for="height" class="form-label">盤面の高さ (6-10):</label>
                 <input
                   id="height"
                   type="range"
@@ -141,9 +143,7 @@
                 <span id="height-value">6</span>
               </div>
               <div class="mb-3">
-                <label for="next-count" class="form-label"
-                  >ネクスト個数 (2-10):</label
-                >
+                <label for="next-count" class="form-label">ネクスト個数 (2-10):</label>
                 <input
                   id="next-count"
                   type="range"
@@ -155,9 +155,7 @@
                 <span id="next-count-value">5</span>
               </div>
               <div class="mb-3">
-                <label for="block-count" class="form-label"
-                  >ランダム初期配置ブロック数 (0-30):</label
-                >
+                <label for="block-count" class="form-label">ランダム初期配置ブロック数 (0-30):</label>
                 <input
                   id="block-count"
                   type="range"
@@ -170,7 +168,11 @@
               </div>
             </div>
             <div class="modal-footer">
-              <button id="save-and-close-settings" class="btn btn-primary">
+              <button
+                id="save-and-close-settings"
+                class="btn btn-primary"
+                type="button"
+              >
                 保存して閉じる
               </button>
             </div>
