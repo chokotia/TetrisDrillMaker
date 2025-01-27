@@ -26,18 +26,19 @@
 
 /* メインビュー */
 #main-view.screen {
-  padding-top: 56px;   /* 上部ナビバーの高さ分 */
-  padding-bottom: 56px;/* 下部ナビバーの高さ分 */
-  width: 100%;
   height: 100%;
+  width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
   background-color: #f4f4f4;
+  display: flex;
+  justify-content: center;  /* 横方向の中央寄せ */
+  align-items: center;      /* 縦方向の中央寄せ */
+  overflow: hidden;
 }
 
 /* 盤面コンテナ: align-items-start で高さをそろえないようにする */
 #board-container {
-  margin-top: 20px; /* 少し余白 */
+  margin: 0; /* もしくは margin-top: 10px; など */
 }
 
 /* テトリス盤面 */
