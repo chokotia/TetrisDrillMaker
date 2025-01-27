@@ -13,8 +13,9 @@ const minoColors = {
   O: '#E39F02',
   T: '#AF298A',
   I: '#0F9BD7',
-  G: '#CCCCCC', // gray 用
-  W: '#FFFFFF', // white 用
+  gray: '#CCCCCC', // gray 用
+  white: '#FFFFFF', // white 用
+  default: '#b0c4de', // 初期ブロック用のデフォルト色
 };
 
 // シード付き乱数 (Mulberry32)
@@ -50,9 +51,12 @@ function initializeApp() {
   randomGenerator = createSeededGenerator(baseSeed, currentProblemNumber);
 
   // Bootstrapモーダルのインスタンス作成
-  bsSettingsModal = new bootstrap.Modal(document.getElementById('settings-screen'), {
-    // 必要に応じて backdrop:'static' などオプションを追加
-  });
+  bsSettingsModal = new bootstrap.Modal(
+    document.getElementById('settings-screen'),
+    {
+      // 必要に応じて backdrop:'static' などオプションを追加
+    }
+  );
 
   setupEventListeners();
   loadSettings();
@@ -77,7 +81,7 @@ function createSeededGenerator(base, number) {
 
 function setupEventListeners() {
   // スライダーの表示更新
-  ['width', 'height', 'next-count', 'block-count'].forEach((id) => {
+  ['width', 'height', 'next-count', 'block-count'].forEach(id => {
     const slider = document.getElementById(id);
     const output = document.getElementById(`${id}-value`);
     if (slider && output) {
@@ -116,7 +120,7 @@ function setupEventListeners() {
   }
 
   // Auto/Del/Gray ボタン
-  ['auto-button', 'del-button', 'gray-button'].forEach((btnId) => {
+  ['auto-button', 'del-button', 'gray-button'].forEach(btnId => {
     const button = document.getElementById(btnId);
     if (button) {
       button.addEventListener('click', () => {
@@ -228,13 +232,15 @@ function placeRandomBlocks(board, width, height, blockCount) {
   for (let i = 0; i < blockCount; i++) {
     let column;
     do {
-      column = columnIndices[Math.floor(randomGenerator() * columnIndices.length)];
+      column =
+        columnIndices[Math.floor(randomGenerator() * columnIndices.length)];
     } while (placedBlocks.has(`${column}-${i}`));
 
     for (let row = height - 1; row >= 0; row--) {
       const index = row * width + column;
       if (!cells[index].classList.contains('block')) {
         cells[index].classList.add('block', 'initial-block');
+        cells[index].style.backgroundColor = minoColors['default']; // デフォルト色を設定
         placedBlocks.add(`${column}-${i}`);
         break;
       }
@@ -299,8 +305,8 @@ function drawMino(minoType, container) {
   minoElement.style.display = 'grid';
   minoElement.style.gridTemplateColumns = `repeat(${shape[0].length}, 1fr)`;
 
-  shape.forEach((row) => {
-    row.forEach((cell) => {
+  shape.forEach(row => {
+    row.forEach(cell => {
       const cellElement = document.createElement('div');
       if (cell) {
         cellElement.classList.add('block');
@@ -349,7 +355,7 @@ function setupMobileDragForBoard() {
     isDragging = false;
   });
 
-  hammer.on('panmove', (e) => {
+  hammer.on('panmove', e => {
     if (!currentEditAction) return;
     isDragging = true;
     paintCellUnderPointer(e, board);
@@ -397,9 +403,9 @@ let isDragging = false;
 function setupEditButton() {
   // Auto / Del / Gray など
   const editOptionButtons = document.querySelectorAll('.edit-option');
-  editOptionButtons.forEach((btn) => {
+  editOptionButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      editOptionButtons.forEach((b) => b.classList.remove('selected'));
+      editOptionButtons.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       if (autoCells.length > 0) {
         resetAutoCells();
@@ -419,7 +425,7 @@ function setupEditButton() {
   // デフォルトはautoに
   const autoBtn = document.querySelector('.edit-option[data-action="auto"]');
   if (autoBtn) {
-    editOptionButtons.forEach((b) => b.classList.remove('selected'));
+    editOptionButtons.forEach(b => b.classList.remove('selected'));
     autoBtn.classList.add('selected');
     currentEditAction = 'auto';
   }
@@ -431,7 +437,7 @@ function setEditAction(action) {
 
 function updateEditButtonState(selectedAction) {
   const editOptionButtons = document.querySelectorAll('.edit-option');
-  editOptionButtons.forEach((btn) => {
+  editOptionButtons.forEach(btn => {
     if (btn.dataset.action === selectedAction) {
       btn.classList.add('selected');
       btn.setAttribute('aria-pressed', 'true');
@@ -456,7 +462,7 @@ function handleEditCellClick(cell, index, width, height) {
   // Gray
   else if (currentEditAction === 'gray') {
     // 押下されたマスをgrayにする
-    paintCell(cell, minoColors['G']); // '#CCCCCC'
+    paintCell(cell, minoColors['gray']); // '#CCCCCC'
     return;
   }
   // Auto
@@ -492,7 +498,7 @@ function handleAutoReplace(cell, index, width, height) {
   // 既に#FFFFFFなら取り消し
   if (oldColor.toLowerCase() === '#ffffff') {
     clearCell(cell);
-    const cellIndex = autoCells.findIndex((c) => c.cellEl === cell);
+    const cellIndex = autoCells.findIndex(c => c.cellEl === cell);
     if (cellIndex !== -1) {
       autoCells.splice(cellIndex, 1);
     }
@@ -517,11 +523,11 @@ function handleAutoReplace(cell, index, width, height) {
   isAutoInProgress = true;
 
   if (autoCells.length === 4) {
-    const positions = autoCells.map((c) => ({ x: c.x, y: c.y }));
+    const positions = autoCells.map(c => ({ x: c.x, y: c.y }));
     const detectedMino = detectMinoShape(positions);
     if (detectedMino) {
       const color = minoColors[detectedMino];
-      autoCells.forEach((c) => paintCell(c.cellEl, color));
+      autoCells.forEach(c => paintCell(c.cellEl, color));
     } else {
       // ミノ形にならなければリセット
       resetAutoCells();
@@ -561,9 +567,9 @@ function isSameColor(colorA, colorB) {
 
 // ミノ形状判定
 function detectMinoShape(positions) {
-  const minX = Math.min(...positions.map((p) => p.x));
-  const minY = Math.min(...positions.map((p) => p.y));
-  const normalized = positions.map((p) => ({ x: p.x - minX, y: p.y - minY }));
+  const minX = Math.min(...positions.map(p => p.x));
+  const minY = Math.min(...positions.map(p => p.y));
+  const normalized = positions.map(p => ({ x: p.x - minX, y: p.y - minY }));
 
   const shapePatterns = {
     I: [
@@ -719,7 +725,7 @@ function isSameShape(arr1, arr2) {
 function resetToInitialBoard() {
   const board = document.getElementById('board');
   const cells = Array.from(board.children);
-  cells.forEach((cell) => {
+  cells.forEach(cell => {
     if (!cell.classList.contains('initial-block')) {
       cell.style.backgroundColor = '';
       cell.classList.remove('block');
