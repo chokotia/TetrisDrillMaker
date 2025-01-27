@@ -1,4 +1,15 @@
-/* 修正後の styles.css */
+/* CSS変数の導入によるカラー管理の一元化 */
+:root {
+  --color-bg: #f4f4f4;
+  --color-board-bg: #333333;
+  --color-board-border: #cccccc;
+  --color-cell-default: #555555;
+  --color-next-bg: #222222;
+  --color-next-border: #555555;
+  --color-edit-selected-bg: #ffbf00;
+  --color-edit-selected-text: #333333;
+  --color-modal-header: #ffffff;
+}
 
 /* 全体ラッパ */
 #app {
@@ -29,7 +40,7 @@
   height: 100%;
   width: 100%;
   box-sizing: border-box;
-  background-color: #f4f4f4;
+  background-color: var(--color-bg);
   display: flex;
   justify-content: center; /* 横方向の中央寄せ */
   align-items: center; /* 縦方向の中央寄せ */
@@ -43,30 +54,31 @@
 
 /* テトリス盤面 */
 #board {
-  background-color: #333333; /* 16進数カラーコードに変更 */
+  background-color: var(--color-board-bg);
   display: grid;
   grid-template-columns: repeat(var(--width), 1fr);
   grid-template-rows: repeat(var(--height), 1fr);
   gap: 1px; /* 1pxの隙間を線として表示 */
-  border: 2px solid #cccccc; /* 全体枠を16進数に変更 */
+  border: 2px solid var(--color-board-border);
 }
 
 /* 盤面の1マス */
-#board div {
-  background-color: #555555; /* デフォルトの背景色 */
+#board .cell {
+  background-color: var(--color-cell-default);
+  box-sizing: border-box;
 }
 
 /* ブロック状態のマス */
-/* background-color を削除 */
 #board .block {
-  /* background-color: var(--color-block-default); */ /* 削除 */
+  /* 背景色はインラインスタイルで設定 */
 }
 
 /* NEXT コンテナ */
 #next {
-  background-color: #222222; /* 16進数カラーコードに変更 */
+  background-color: var(--color-next-bg);
   padding: 10px;
   border-radius: 4px;
+  border: 1px solid var(--color-next-border);
 }
 
 /* NEXT の各ミノ表示 */
@@ -74,10 +86,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #333333; /* 16進数カラーコードに変更 */
+  background-color: var(--color-board-bg);
   width: 80px;
   height: 40px;
-  border: 1px solid #555555; /* 16進数カラーコードに変更 */
+  border: 1px solid var(--color-next-border);
   margin-bottom: 5px;
 }
 
@@ -95,8 +107,8 @@
 
 /* 編集ボタンが選択されたときの強調表示 */
 .edit-option.selected {
-  background-color: #ffbf00 !important; /* 16進数カラーコードに変更 */
-  color: #333333 !important; /* 16進数カラーコードに変更 */
+  background-color: var(--color-edit-selected-bg) !important;
+  color: var(--color-edit-selected-text) !important;
 }
 
 /* モーダル内のスライダーラベルのスタイル調整 */
@@ -115,4 +127,22 @@
     width: 8px;
     height: 8px;
   }
+}
+
+/* 追加のアクセシビリティとインタラクション向上 */
+button:focus {
+  outline: 2px dashed #ffbf00;
+  outline-offset: 2px;
+}
+
+.modal-content {
+  background-color: var(--color-bg);
+}
+
+.modal-header {
+  background-color: var(--color-modal-header);
+}
+
+.modal-footer {
+  background-color: var(--color-bg);
 }
