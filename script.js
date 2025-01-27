@@ -381,11 +381,6 @@ function generateBaseSeed() {
     hammer.on('swipeleft', goToNextProblem);
     // 右スワイプ→前の問題
     hammer.on('swiperight', goToPreviousProblem);
-    // 上スワイプ→設定画面 (オーバーレイを開く)
-    hammer.on('swipeup', () => {
-      saveSettings(getSettings());
-      openSettingsOverlay();
-    });
 
     // 盤面ドラッグ
     setupMobileDragForBoard();
