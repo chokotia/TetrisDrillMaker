@@ -43,27 +43,27 @@
 
 /* テトリス盤面 */
 #board {
-  background-color: #333;
+  background-color: #333333; /* 16進数カラーコードに変更 */
   display: grid;
   grid-template-columns: repeat(var(--width), 1fr);
   grid-template-rows: repeat(var(--height), 1fr);
   gap: 1px; /* 1pxの隙間を線として表示 */
-  border: 2px solid #ccc; /* 全体枠 */
+  border: 2px solid #CCCCCC; /* 全体枠を16進数に変更 */
 }
 
 /* 盤面の1マス */
 #board div {
-  background-color: #555;
+  background-color: #555555; /* 16進数カラーコードに変更 */
 }
 
 /* ブロック状態のマス */
 #board .block {
-  background-color: #b0c4de;
+  background-color: #B0C4DE; /* 16進数カラーコードに変更 */
 }
 
 /* NEXT コンテナ */
 #next {
-  background-color: #222;
+  background-color: #222222; /* 16進数カラーコードに変更 */
   padding: 10px;
   border-radius: 4px;
 }
@@ -73,10 +73,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #333;
+  background-color: #333333; /* 16進数カラーコードに変更 */
   width: 80px;
   height: 40px;
-  border: 1px solid #555;
+  border: 1px solid #555555; /* 16進数カラーコードに変更 */
   margin-bottom: 5px;
 }
 
@@ -94,6 +94,6 @@
 
 /* 編集ボタンが選択されたときの強調表示 */
 .edit-option.selected {
-  background-color: #ffbf00 !important;
-  color: #333 !important;
+  background-color: #FFBF00 !important; /* 16進数カラーコードに変更 */
+  color: #333333 !important; /* 16進数カラーコードに変更 */
 }

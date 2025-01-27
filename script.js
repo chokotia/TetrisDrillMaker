@@ -4,17 +4,19 @@ const config = {
   VERSION: '0.2.2',
 };
 
-// ミノとカラーの対応表
+// ミノとカラーの対応表 (RGBから16進数カラーコードに変更)
 const minoColors = {
-  S: 'rgb(89,177,1)',
-  Z: 'rgb(215,15,55)',
-  L: 'rgb(227,91,2)',
-  J: 'rgb(33,65,198)',
-  O: 'rgb(227,159,2)',
-  T: 'rgb(175,41,138)',
-  I: 'rgb(15,155,215)',
-  G: 'rgb(204,204,204)', // gray 用
+  S: '#59B101',
+  Z: '#D70F37',
+  L: '#E35B02',
+  J: '#2141C6',
+  O: '#E39F02',
+  T: '#AF298A',
+  I: '#0F9BD7',
+  G: '#CCCCCC', // gray 用
+  W: '#FFFFFF', // white 用
 };
+
 
 // シード付き乱数 (Mulberry32)
 function mulberry32(a) {
@@ -453,7 +455,7 @@ function handleEditCellClick(cell, index, width, height) {
   // Gray
   else if (currentEditAction === 'gray') {
     // 押下されたマスをgrayにする
-    paintCell(cell, minoColors['G']); // 'rgb(204,204,204)'
+    paintCell(cell, minoColors['G']); // '#CCCCCC'
     return;
   }
   // Auto
@@ -486,8 +488,8 @@ function handleAutoReplace(cell, index, width, height) {
   }
 
   const oldColor = cell.style.backgroundColor;
-  // 既にwhiteなら取り消し
-  if (oldColor === 'white') {
+  // 既に#FFFFFFなら取り消し
+  if (oldColor.toLowerCase() === '#ffffff') {
     clearCell(cell);
     const cellIndex = autoCells.findIndex(c => c.cellEl === cell);
     if (cellIndex !== -1) {
@@ -506,8 +508,8 @@ function handleAutoReplace(cell, index, width, height) {
     return;
   }
 
-  // 白セルにする
-  paintCell(cell, 'white');
+  // #FFFFFFセルにする
+  paintCell(cell, '#FFFFFF');
   const x = index % width;
   const y = Math.floor(index / width);
   autoCells.push({ x, y, cellEl: cell });
@@ -549,17 +551,10 @@ function resetAutoCells() {
   isAutoInProgress = false;
 }
 
-// 色比較
-function parseRGBString(rgbString) {
-  const match = rgbString.match(/rgb\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)\s*\)/i);
-  if (!match) return null;
-  return [Number(match[1]), Number(match[2]), Number(match[3])];
-}
-
+// 色比較 (16進数カラーコードの比較に変更)
 function isSameColor(colorA, colorB) {
-  const rgbA = parseRGBString(colorA) || [];
-  const rgbB = parseRGBString(colorB) || [];
-  return rgbA[0] === rgbB[0] && rgbA[1] === rgbB[1] && rgbA[2] === rgbB[2];
+  if (!colorA || !colorB) return false;
+  return colorA.toLowerCase() === colorB.toLowerCase();
 }
 
 // ミノ形状判定
