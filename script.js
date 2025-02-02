@@ -332,6 +332,9 @@ class TetrisApp {
 
   // 画面をリセットして問題再生成
   generateProblem() {
+    // ★ 前回のAuto選択状態をリセット ★
+    this.resetAutoCells();
+
     const { width, height, nextCount, blockCountMin, blockCountMax } =
       this.getSettings();
     let bcMin = blockCountMin;
@@ -344,6 +347,7 @@ class TetrisApp {
     this.createBoard(width, height, blockCount);
     this.updateNextPieces();
     this.updateProblemCounter();
+    // Autoモードを選択状態にする場合も、ここで状態を整える
     this.setEditAction('auto');
     this.updateEditButtonState('auto');
   }
@@ -598,7 +602,11 @@ class TetrisApp {
     this.setEditAction('auto');
   }
 
+  // ★ 修正：Autoモード以外に切り替える際、または新規問題生成時に autoCells をリセットする
   setEditAction(action) {
+    if (action !== 'auto') {
+      this.resetAutoCells();
+    }
     this.currentEditAction = action;
   }
 
