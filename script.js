@@ -70,7 +70,7 @@ class TetrisApp {
     this.isAutoInProgress = false;
     this.isDragging = false;
 
-    // DOM要素のキャッシュ
+    // DOM要素のキャッシュ（block-range 用に変更）
     this.dom = {
       settingsButton: document.getElementById('settings-button'),
       saveAndCloseBtn: document.getElementById('save-and-close-settings'),
@@ -86,13 +86,13 @@ class TetrisApp {
         width: document.getElementById('width'),
         height: document.getElementById('height'),
         nextCount: document.getElementById('next-count'),
-        blockCount: document.getElementById('block-count'),
+        blockRange: document.getElementById('block-range-slider'),
       },
       sliderValues: {
         width: document.getElementById('width-value'),
         height: document.getElementById('height-value'),
         nextCount: document.getElementById('next-count-value'),
-        blockCount: document.getElementById('block-count-value'),
+        blockRange: document.getElementById('block-range-values'),
       },
     };
 
@@ -117,6 +117,7 @@ class TetrisApp {
       }
 
       this.setupEventListeners();
+      this.initializeBlockRangeSlider(); // noUiSlider の初期化
       this.loadSettings();
       this.setupGestureControls();
       this.setupEditButtons();
@@ -141,8 +142,9 @@ class TetrisApp {
   }
 
   setupEventListeners() {
-    // スライダーの表示更新
+    // スライダー（range系）の表示更新は各自管理（blockRange は noUiSlider により更新）
     Object.keys(this.dom.sliders).forEach(key => {
+      if (key === 'blockRange') return; // noUiSlider は別処理
       const slider = this.dom.sliders[key];
       const output = this.dom.sliderValues[key];
       if (slider && output) {
@@ -191,6 +193,26 @@ class TetrisApp {
     }
   }
 
+  // noUiSlider を使ったブロック数レンジスライダーの初期化
+  initializeBlockRangeSlider() {
+    const blockRangeSlider = this.dom.sliders.blockRange;
+    noUiSlider.create(blockRangeSlider, {
+      start: [1, 3],
+      connect: true,
+      step: 1,
+      range: {
+        min: config.MIN_BLOCK_COUNT,
+        max: config.MAX_BLOCK_COUNT,
+      },
+    });
+    blockRangeSlider.noUiSlider.on('update', values => {
+      // 値は文字列なので数値に丸める
+      const minVal = Math.round(values[0]);
+      const maxVal = Math.round(values[1]);
+      this.dom.sliderValues.blockRange.textContent = `${minVal} - ${maxVal}`;
+    });
+  }
+
   // ARIA属性の更新
   updateAriaValue(slider, output) {
     slider.setAttribute('aria-valuenow', slider.value);
@@ -224,6 +246,7 @@ class TetrisApp {
     console.log('設定を保存せず閉じました。');
   }
 
+  // noUiSlider からブロック数の範囲を取得
   getSettings() {
     const width = this.dom.sliders.width
       ? parseInt(this.dom.sliders.width.value, 10)
@@ -234,12 +257,13 @@ class TetrisApp {
     const nextCount = this.dom.sliders.nextCount
       ? parseInt(this.dom.sliders.nextCount.value, 10)
       : config.MIN_NEXT_COUNT;
-    const blockCount = this.dom.sliders.blockCount
-      ? parseInt(this.dom.sliders.blockCount.value, 10)
-      : config.MIN_BLOCK_COUNT;
+    // noUiSlider から取得（文字列の配列なので parse する）
+    const blockRangeValues = this.dom.sliders.blockRange.noUiSlider.get();
+    const blockCountMin = parseInt(blockRangeValues[0], 10);
+    const blockCountMax = parseInt(blockRangeValues[1], 10);
     const minoModeEl = document.getElementById('mino-mode');
     const minoMode = minoModeEl ? minoModeEl.value : 'random';
-    return { width, height, nextCount, blockCount, minoMode };
+    return { width, height, nextCount, blockCountMin, blockCountMax, minoMode };
   }
 
   saveSettings(settings) {
@@ -256,7 +280,7 @@ class TetrisApp {
       const savedSettings = JSON.parse(localStorage.getItem('tetrisSettings'));
       if (savedSettings) {
         Object.entries(savedSettings).forEach(([key, value]) => {
-          if (this.dom.sliders[key] && this.dom.sliderValues[key]) {
+          if (this.dom.sliders[key] && key !== 'blockRange') {
             this.dom.sliders[key].value = value;
             this.dom.sliderValues[key].textContent = value;
             this.updateAriaValue(
@@ -264,7 +288,6 @@ class TetrisApp {
               this.dom.sliderValues[key]
             );
           }
-          // 設定項目としてセレクト要素がある場合
           if (key === 'minoMode') {
             const minoModeEl = document.getElementById('mino-mode');
             if (minoModeEl) {
@@ -272,14 +295,34 @@ class TetrisApp {
             }
           }
         });
-        const { width, height, blockCount } = savedSettings;
+        const { width, height, blockCountMin, blockCountMax } = savedSettings;
+        // noUiSlider の値を設定
+        if (
+          this.dom.sliders.blockRange &&
+          this.dom.sliders.blockRange.noUiSlider
+        ) {
+          this.dom.sliders.blockRange.noUiSlider.set([
+            blockCountMin,
+            blockCountMax,
+          ]);
+        }
+        // 問題生成時は乱数でブロック数を決定
+        const blockCount =
+          Math.floor(
+            this.randomGenerator() * (blockCountMax - blockCountMin + 1)
+          ) + blockCountMin;
         this.createBoard(width, height, blockCount);
       } else {
         // 初期設定がない場合はデフォルト設定をロード
+        const defaultBlockCount =
+          Math.floor(
+            this.randomGenerator() *
+              (config.MAX_BLOCK_COUNT - config.MIN_BLOCK_COUNT + 1)
+          ) + config.MIN_BLOCK_COUNT;
         this.createBoard(
           config.MIN_WIDTH,
           config.MIN_HEIGHT,
-          config.MIN_BLOCK_COUNT
+          defaultBlockCount
         );
       }
     } catch (error) {
@@ -289,7 +332,15 @@ class TetrisApp {
 
   // 画面をリセットして問題再生成
   generateProblem() {
-    const { width, height, blockCount } = this.getSettings();
+    const { width, height, nextCount, blockCountMin, blockCountMax } =
+      this.getSettings();
+    let bcMin = blockCountMin;
+    let bcMax = blockCountMax;
+    if (bcMin > bcMax) {
+      [bcMin, bcMax] = [bcMax, bcMin];
+    }
+    const blockCount =
+      Math.floor(this.randomGenerator() * (bcMax - bcMin + 1)) + bcMin;
     this.createBoard(width, height, blockCount);
     this.updateNextPieces();
     this.updateProblemCounter();
@@ -361,7 +412,7 @@ class TetrisApp {
         const index = row * width + column;
         if (!cells[index].classList.contains('block')) {
           cells[index].classList.add('block', 'initial-block');
-          cells[index].style.backgroundColor = minoColors['default']; // デフォルト色を設定
+          cells[index].style.backgroundColor = minoColors['default'];
           placedBlocks.add(`${column}-${i}`);
           break;
         }
@@ -378,21 +429,16 @@ class TetrisApp {
     const fragment = document.createDocumentFragment();
 
     if (settings.minoMode === '7bag') {
-      // 7種一巡モードの場合
       const tetrominoes = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
       const pieces = [];
-      // 現在の袋の途中から開始するため、まずランダムなオフセット (0～6) を決定
       const offset = Math.floor(this.randomGenerator() * 7);
-      // 1袋目をシード付き乱数でシャッフル
       let bag = shuffle([...tetrominoes], this.randomGenerator);
-      bag = bag.slice(offset); // オフセット分を削除
+      bag = bag.slice(offset);
       pieces.push(...bag);
-      // 必要な個数に満たない場合は次の袋を連結
       while (pieces.length < nextCount) {
         const newBag = shuffle([...tetrominoes], this.randomGenerator);
         pieces.push(...newBag);
       }
-      // 先頭から nextCount 個を表示
       for (let i = 0; i < nextCount; i++) {
         const mino = pieces[i];
         const nextPieceContainer = document.createElement('div');
@@ -401,7 +447,6 @@ class TetrisApp {
         fragment.appendChild(nextPieceContainer);
       }
     } else {
-      // 完全ランダムモード
       for (let i = 0; i < nextCount; i++) {
         const randomMino = this.getRandomMino();
         if (randomMino) {
@@ -471,7 +516,6 @@ class TetrisApp {
     container.appendChild(minoElement);
   }
 
-  // スワイプなどのジェスチャー制御
   setupGestureControls() {
     if (!this.dom.mainView) return;
 
@@ -480,12 +524,9 @@ class TetrisApp {
       direction: Hammer.DIRECTION_ALL,
     });
 
-    // 左スワイプ→次の問題
     hammer.on('swipeleft', () => this.goToNextProblem());
-    // 右スワイプ→前の問題
     hammer.on('swiperight', () => this.goToPreviousProblem());
 
-    // 盤面ドラッグ
     this.setupMobileDragForBoard();
   }
 
@@ -493,7 +534,6 @@ class TetrisApp {
     if (!this.dom.boardContainer || !this.dom.board) return;
 
     const hammer = new Hammer(this.dom.boardContainer);
-
     hammer.get('pan').set({
       direction: Hammer.DIRECTION_ALL,
       threshold: 1,
@@ -533,7 +573,6 @@ class TetrisApp {
     }
   }
 
-  // 問題移動
   goToNextProblem() {
     this.currentProblemNumber += 1;
     this.randomGenerator = this.createSeededGenerator(
@@ -554,9 +593,7 @@ class TetrisApp {
     }
   }
 
-  // 編集系
   setupEditButtons() {
-    // デフォルトはautoに
     this.updateEditButtonState('auto');
     this.setEditAction('auto');
   }
@@ -578,38 +615,28 @@ class TetrisApp {
   }
 
   handleEditCellClick(cell, index, width, height) {
-    // 初期配置のブロックは削除不可
     if (cell.classList.contains('initial-block')) {
       return;
     }
 
-    // Delete
     if (this.currentEditAction === 'delete') {
       this.paintCell(cell, '');
       return;
-    }
-    // Gray
-    else if (this.currentEditAction === 'gray') {
-      // 押下されたマスをgrayにする
-      this.paintCell(cell, minoColors['gray']); // '#CCCCCC'
+    } else if (this.currentEditAction === 'gray') {
+      this.paintCell(cell, minoColors['gray']);
       return;
-    }
-    // Auto
-    else if (this.currentEditAction === 'auto') {
+    } else if (this.currentEditAction === 'auto') {
       this.handleAutoReplace(cell, index, width, height);
       return;
     }
 
-    // それ以外 (通常ペイント)
     const oldColor = cell.style.backgroundColor;
     const newColor = minoColors[this.currentEditAction];
     if (!newColor) return;
 
     if (this.isDragging) {
-      // ドラッグ中は常に上書き
       this.paintCell(cell, newColor);
     } else {
-      // クリックはトグル
       if (this.isSameColor(oldColor, newColor)) {
         this.paintCell(cell, '');
       } else {
@@ -624,7 +651,6 @@ class TetrisApp {
     }
 
     const oldColor = cell.style.backgroundColor;
-    // 既に#FFFFFFなら取り消し
     if (oldColor.toLowerCase() === '#ffffff') {
       this.clearCell(cell);
       const cellIndex = this.autoCells.findIndex(c => c.cellEl === cell);
@@ -634,17 +660,14 @@ class TetrisApp {
       return;
     }
 
-    // 何か他の色があるなら不可
     if (cell.classList.contains('block') && oldColor !== '') {
       return;
     }
 
-    // 4マス埋まっていれば不可
     if (this.autoCells.length >= 4) {
       return;
     }
 
-    // #FFFFFFセルにする
     this.paintCell(cell, minoColors['white']);
     const x = index % width;
     const y = Math.floor(index / width);
@@ -658,7 +681,6 @@ class TetrisApp {
         const color = minoColors[detectedMino];
         this.autoCells.forEach(c => this.paintCell(c.cellEl, color));
       } else {
-        // ミノ形にならなければリセット
         this.resetAutoCells();
       }
       this.autoCells = [];
@@ -679,7 +701,6 @@ class TetrisApp {
     this.paintCell(cellElement, '');
   }
 
-  // autoCells の白マスをリセット
   resetAutoCells() {
     this.autoCells.forEach(({ cellEl }) => {
       this.clearCell(cellEl);
@@ -688,13 +709,11 @@ class TetrisApp {
     this.isAutoInProgress = false;
   }
 
-  // 色比較 (16進数カラーコードの比較に変更)
   isSameColor(colorA, colorB) {
     if (!colorA || !colorB) return false;
     return colorA.toLowerCase() === colorB.toLowerCase();
   }
 
-  // ミノ形状判定
   detectMinoShape(positions) {
     const minX = Math.min(...positions.map(p => p.x));
     const minY = Math.min(...positions.map(p => p.y));
@@ -844,7 +863,6 @@ class TetrisApp {
     return null;
   }
 
-  // 座標配列が同じ形状か判定
   isSameShape(arr1, arr2) {
     if (arr1.length !== arr2.length) return false;
     const sortByXY = (a, b) => a.x - b.x || a.y - b.y;
@@ -853,7 +871,6 @@ class TetrisApp {
     return s1.every((p, i) => p.x === s2[i].x && p.y === s2[i].y);
   }
 
-  // 初期ブロック以外をリセット
   resetToInitialBoard() {
     if (!this.dom.board) return;
     const cells = Array.from(this.dom.board.children);
@@ -867,5 +884,4 @@ class TetrisApp {
   }
 }
 
-// アプリのインスタンスを生成
 new TetrisApp();
