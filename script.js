@@ -45,6 +45,15 @@ function generateBaseSeed() {
   return seed;
 }
 
+// Fisher–Yates シャッフル (シード付き乱数を利用)
+function shuffle(array, random) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 /* ---- ここからアプリ本体 ---- */
 class TetrisApp {
   constructor() {
@@ -228,7 +237,9 @@ class TetrisApp {
     const blockCount = this.dom.sliders.blockCount
       ? parseInt(this.dom.sliders.blockCount.value, 10)
       : config.MIN_BLOCK_COUNT;
-    return { width, height, nextCount, blockCount };
+    const minoModeEl = document.getElementById('mino-mode');
+    const minoMode = minoModeEl ? minoModeEl.value : 'random';
+    return { width, height, nextCount, blockCount, minoMode };
   }
 
   saveSettings(settings) {
@@ -245,12 +256,20 @@ class TetrisApp {
       const savedSettings = JSON.parse(localStorage.getItem('tetrisSettings'));
       if (savedSettings) {
         Object.entries(savedSettings).forEach(([key, value]) => {
-          const slider = this.dom.sliders[key];
-          const valueDisplay = this.dom.sliderValues[key];
-          if (slider && valueDisplay) {
-            slider.value = value;
-            valueDisplay.textContent = value;
-            this.updateAriaValue(slider, valueDisplay);
+          if (this.dom.sliders[key] && this.dom.sliderValues[key]) {
+            this.dom.sliders[key].value = value;
+            this.dom.sliderValues[key].textContent = value;
+            this.updateAriaValue(
+              this.dom.sliders[key],
+              this.dom.sliderValues[key]
+            );
+          }
+          // 設定項目としてセレクト要素がある場合
+          if (key === 'minoMode') {
+            const minoModeEl = document.getElementById('mino-mode');
+            if (minoModeEl) {
+              minoModeEl.value = value;
+            }
           }
         });
         const { width, height, blockCount } = savedSettings;
@@ -358,13 +377,39 @@ class TetrisApp {
 
     const fragment = document.createDocumentFragment();
 
-    for (let i = 0; i < nextCount; i++) {
-      const randomMino = this.getRandomMino();
-      if (randomMino) {
+    if (settings.minoMode === '7bag') {
+      // 7種一巡モードの場合
+      const tetrominoes = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+      const pieces = [];
+      // 現在の袋の途中から開始するため、まずランダムなオフセット (0～6) を決定
+      const offset = Math.floor(this.randomGenerator() * 7);
+      // 1袋目をシード付き乱数でシャッフル
+      let bag = shuffle([...tetrominoes], this.randomGenerator);
+      bag = bag.slice(offset); // オフセット分を削除
+      pieces.push(...bag);
+      // 必要な個数に満たない場合は次の袋を連結
+      while (pieces.length < nextCount) {
+        const newBag = shuffle([...tetrominoes], this.randomGenerator);
+        pieces.push(...newBag);
+      }
+      // 先頭から nextCount 個を表示
+      for (let i = 0; i < nextCount; i++) {
+        const mino = pieces[i];
         const nextPieceContainer = document.createElement('div');
         nextPieceContainer.classList.add('next-piece-container');
-        this.drawMino(randomMino, nextPieceContainer);
+        this.drawMino(mino, nextPieceContainer);
         fragment.appendChild(nextPieceContainer);
+      }
+    } else {
+      // 完全ランダムモード
+      for (let i = 0; i < nextCount; i++) {
+        const randomMino = this.getRandomMino();
+        if (randomMino) {
+          const nextPieceContainer = document.createElement('div');
+          nextPieceContainer.classList.add('next-piece-container');
+          this.drawMino(randomMino, nextPieceContainer);
+          fragment.appendChild(nextPieceContainer);
+        }
       }
     }
 
