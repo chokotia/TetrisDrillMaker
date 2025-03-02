@@ -3,111 +3,56 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="テトリス練習アプリ - パズルを解いて上達しよう" />
+    <meta name="theme-color" content="#212529" />
     <title>Tetris Practice App</title>
 
-    <!-- Bootstrap CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
-      crossorigin="anonymous"
-    />
-
-    <!-- Bootstrap Icons -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-    />
-
-    <!-- noUiSlider CSS -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.css"
-    />
-
+    <!-- スタイルシート -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.css" />
     <link rel="stylesheet" href="styles.css" />
 
-    <!-- Hammer.js -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"
-      integrity="sha256-eVNjHw5UeU0jUqPPpZHAkU1z4U+QFBBY488WvueTm88="
-      crossorigin="anonymous"
-      defer
-    ></script>
-
-    <!-- Bootstrap JS -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
-      crossorigin="anonymous"
-      defer
-    ></script>
-
-    <!-- noUiSlider JS -->
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.js"
-      defer
-    ></script>
+    <!-- スクリプト -->
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js" integrity="sha256-eVNjHw5UeU0jUqPPpZHAkU1z4U+QFBBY488WvueTm88=" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.1/nouislider.min.js" defer></script>
+    <script src="script.js" defer></script>
   </head>
 
   <body>
     <div id="app">
-      <header
-        id="title-bar"
-        class="navbar navbar-dark bg-dark fixed-top"
-        aria-label="タイトルバー"
-      >
+      <header id="title-bar" class="navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
-          <span id="current-problem" class="navbar-brand problem-counter">
+          <h1 id="current-problem" class="navbar-brand problem-counter m-0">
             問題 #1
-          </span>
+          </h1>
           <button
             id="settings-button"
             class="btn btn-outline-light d-flex align-items-center"
             type="button"
             aria-label="設定を開く"
-            aria-controls="settings-modal"
-            aria-haspopup="dialog"
           >
             <i class="bi bi-gear"></i>
           </button>
         </div>
       </header>
 
-      <!-- メインビュー -->
-      <main id="main-view" class="screen" role="main">
-        <div
-          id="board-container"
-          class="d-flex flex-row justify-content-center align-items-start"
-        >
-          <div
-            id="board"
-            class="tetris-board"
-            aria-label="テトリス盤面"
-            role="grid"
-          ></div>
-          <aside
-            id="next"
-            class="ms-3 next-container"
-            aria-label="ネクストピース"
-          ></aside>
+      <main id="main-view" class="screen">
+        <div id="board-container" class="d-flex flex-row justify-content-center align-items-start">
+          <div id="board" class="tetris-board"></div>
+          <aside id="next" class="ms-3 next-container"></aside>
         </div>
       </main>
 
-      <!-- ボトムナビバー (編集用バー) -->
-      <footer
-        id="edit-nav"
-        class="navbar navbar-dark bg-dark fixed-bottom"
-        aria-label="編集ナビバー"
-      >
+      <footer id="edit-nav" class="navbar navbar-dark bg-dark fixed-bottom">
         <div class="container-fluid">
-          <div class="btn-group" role="group" aria-label="編集オプション">
+          <div class="btn-group">
             <button
               id="auto-button"
               class="btn btn-secondary edit-option"
               data-action="auto"
               type="button"
-              aria-pressed="false"
             >
               Auto
             </button>
@@ -116,7 +61,6 @@
               class="btn btn-secondary edit-option"
               data-action="delete"
               type="button"
-              aria-pressed="false"
             >
               Del
             </button>
@@ -125,7 +69,6 @@
               class="btn btn-secondary edit-option"
               data-action="gray"
               type="button"
-              aria-pressed="false"
             >
               Gray
             </button>
@@ -141,94 +84,84 @@
         </div>
       </footer>
 
-      <!-- 設定画面: Bootstrapのモーダルを使用 -->
       <div
         class="modal fade"
         id="settings-modal"
         tabindex="-1"
         aria-labelledby="settingsModalLabel"
         aria-hidden="true"
+        role="dialog"
       >
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content" id="settings-modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="settingsModalLabel">設定</h5>
+              <h2 class="modal-title fs-5" id="settingsModalLabel">設定</h2>
               <button
                 type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"
-                aria-label="閉じる"
+                aria-label="設定を閉じる"
                 id="close-settings-without-save"
               ></button>
             </div>
-            <div class="modal-body">
+            <form id="settings-form" class="modal-body">
               <div class="mb-3">
-                <label for="width" class="form-label">盤面の幅 (3-10):</label>
-                <input
-                  id="width"
-                  type="range"
-                  class="form-range"
-                  min="3"
-                  max="10"
-                  value="5"
-                  aria-valuemin="3"
-                  aria-valuemax="10"
-                  aria-valuenow="5"
-                />
-                <span id="width-value">5</span>
+                <label for="width" class="form-label">盤面の幅:</label>
+                <div class="d-flex align-items-center gap-2">
+                  <input
+                    id="width"
+                    type="range"
+                    class="form-range flex-grow-1"
+                    min="3"
+                    max="10"
+                    value="5"
+                  />
+                  <output for="width" id="width-value" class="badge bg-secondary">5</output>
+                </div>
               </div>
               <div class="mb-3">
-                <label for="height" class="form-label"
-                  >盤面の高さ (6-10):</label
-                >
-                <input
-                  id="height"
-                  type="range"
-                  class="form-range"
-                  min="6"
-                  max="10"
-                  value="6"
-                  aria-valuemin="6"
-                  aria-valuemax="10"
-                  aria-valuenow="6"
-                />
-                <span id="height-value">6</span>
+                <label for="height" class="form-label">盤面の高さ:</label>
+                <div class="d-flex align-items-center gap-2">
+                  <input
+                    id="height"
+                    type="range"
+                    class="form-range flex-grow-1"
+                    min="6"
+                    max="10"
+                    value="6"
+                  />
+                  <output for="height" id="height-value" class="badge bg-secondary">6</output>
+                </div>
               </div>
               <div class="mb-3">
-                <label for="next-count" class="form-label"
-                  >ネクスト個数 (2-10):</label
-                >
-                <input
-                  id="next-count"
-                  type="range"
-                  class="form-range"
-                  min="2"
-                  max="10"
-                  value="5"
-                  aria-valuemin="2"
-                  aria-valuemax="10"
-                  aria-valuenow="5"
-                />
-                <span id="next-count-value">5</span>
+                <label for="next-count" class="form-label">ネクスト個数:</label>
+                <div class="d-flex align-items-center gap-2">
+                  <input
+                    id="next-count"
+                    type="range"
+                    class="form-range flex-grow-1"
+                    min="2"
+                    max="10"
+                    value="5"
+                  />
+                  <output for="next-count" id="next-count-value" class="badge bg-secondary">5</output>
+                </div>
               </div>
-              <!-- ここで1つのスライダーで最小・最大を指定 -->
               <div class="mb-3">
                 <label for="block-range-slider" class="form-label">
-                  ランダム初期配置ブロック数 (範囲: 0〜30):
+                  ランダム初期配置ブロック数:
                 </label>
                 <div id="block-range-slider"></div>
-                <span id="block-range-values">1 - 3</span>
+                <output for="block-range-slider" id="block-range-values" class="badge bg-secondary mt-2">1 - 3</output>
               </div>
               <div class="mb-3">
-                <label for="mino-mode" class="form-label"
-                  >ミノ取得モード:</label
-                >
+                <label for="mino-mode" class="form-label">ミノ取得モード:</label>
                 <select id="mino-mode" class="form-select">
                   <option value="random">完全ランダム</option>
                   <option value="7bag">7種一巡</option>
                 </select>
               </div>
-            </div>
+            </form>
             <div class="modal-footer">
               <button
                 id="save-and-close-settings"
@@ -241,9 +174,6 @@
           </div>
         </div>
       </div>
-      <!-- /モーダル ここまで -->
     </div>
-
-    <script src="script.js" defer></script>
   </body>
 </html>
