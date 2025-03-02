@@ -1,15 +1,28 @@
-// Centralized Configuration
+// アプリケーション設定
 const config = {
-  CELL_SIZE: 30, // Cell size in pixels
-  VERSION: '0.2.2',
-  MIN_WIDTH: 3,
-  MAX_WIDTH: 10,
-  MIN_HEIGHT: 6,
-  MAX_HEIGHT: 10,
-  MIN_NEXT_COUNT: 2,
-  MAX_NEXT_COUNT: 10,
-  MIN_BLOCK_COUNT: 0,
-  MAX_BLOCK_COUNT: 30,
+  // 表示設定
+  CELL_SIZE: 30,  // セルのサイズ（ピクセル）
+  VERSION: '0.2.2',  // アプリケーションバージョン
+
+  // ボードサイズの制限
+  BOARD: {
+    MIN_WIDTH: 3,
+    MAX_WIDTH: 10,
+    MIN_HEIGHT: 6,
+    MAX_HEIGHT: 10,
+  },
+
+  // NEXTの表示数制限
+  NEXT: {
+    MIN_COUNT: 2,
+    MAX_COUNT: 10,
+  },
+
+  // 初期配置ブロック数の制限
+  BLOCKS: {
+    MIN_COUNT: 0,
+    MAX_COUNT: 30,
+  },
 };
 
 // ミノとカラーの対応表
@@ -204,8 +217,8 @@ class TetrisApp {
       connect: true,
       step: 1,
       range: {
-        min: config.MIN_BLOCK_COUNT,
-        max: config.MAX_BLOCK_COUNT,
+        min: config.BLOCKS.MIN_COUNT,
+        max: config.BLOCKS.MAX_COUNT,
       },
     });
     blockRangeSlider.noUiSlider.on('update', values => {
@@ -253,13 +266,13 @@ class TetrisApp {
   getSettings() {
     const width = this.dom.sliders.width
       ? parseInt(this.dom.sliders.width.value, 10)
-      : config.MIN_WIDTH;
+      : config.BOARD.MIN_WIDTH;
     const height = this.dom.sliders.height
       ? parseInt(this.dom.sliders.height.value, 10)
-      : config.MIN_HEIGHT;
+      : config.BOARD.MIN_HEIGHT;
     const nextCount = this.dom.sliders.nextCount
       ? parseInt(this.dom.sliders.nextCount.value, 10)
-      : config.MIN_NEXT_COUNT;
+      : config.NEXT.MIN_COUNT;
     // noUiSlider から取得（文字列の配列なので parse する）
     const blockRangeValues = this.dom.sliders.blockRange.noUiSlider.get();
     const blockCountMin = parseInt(blockRangeValues[0], 10);
@@ -320,11 +333,11 @@ class TetrisApp {
         const defaultBlockCount =
           Math.floor(
             this.randomGenerator() *
-              (config.MAX_BLOCK_COUNT - config.MIN_BLOCK_COUNT + 1)
-          ) + config.MIN_BLOCK_COUNT;
+              (config.BLOCKS.MAX_COUNT - config.BLOCKS.MIN_COUNT + 1)
+          ) + config.BLOCKS.MIN_COUNT;
         this.createBoard(
-          config.MIN_WIDTH,
-          config.MIN_HEIGHT,
+          config.BOARD.MIN_WIDTH,
+          config.BOARD.MIN_HEIGHT,
           defaultBlockCount
         );
       }
