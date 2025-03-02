@@ -865,17 +865,34 @@ class TetrisApp {
       return;
     }
 
-    if (this.currentEditAction === 'delete') {
-      this.paintCell(cell, '');
-      return;
-    } else if (this.currentEditAction === 'gray') {
-      this.paintCell(cell, minoColors['gray']);
-      return;
-    } else if (this.currentEditAction === 'auto') {
-      this.handleAutoReplace(cell, index, width, height);
-      return;
+    switch (this.currentEditAction) {
+      case 'delete':
+        this.handleDeleteAction(cell);
+        break;
+      case 'gray':
+        this.handleGrayAction(cell);
+        break;
+      case 'auto':
+        this.handleAutoAction(cell, index, width, height);
+        break;
+      default:
+        this.handleColorAction(cell);
+        break;
     }
+  }
 
+  // 削除アクション
+  handleDeleteAction(cell) {
+    this.paintCell(cell, '');
+  }
+
+  // グレーブロックアクション
+  handleGrayAction(cell) {
+    this.paintCell(cell, minoColors['gray']);
+  }
+
+  // 通常のカラーブロックアクション
+  handleColorAction(cell) {
     const oldColor = cell.style.backgroundColor;
     const newColor = minoColors[this.currentEditAction];
     if (!newColor) return;
@@ -891,29 +908,53 @@ class TetrisApp {
     }
   }
 
-  handleAutoReplace(cell, index, width, height) {
-    if (cell.classList.contains('initial-block')) {
-      return;
-    }
-
+  // 自動配置アクション
+  handleAutoAction(cell, index, width, height) {
     const oldColor = cell.style.backgroundColor;
-    if (oldColor.toLowerCase() === '#ffffff') {
-      this.clearCell(cell);
-      const cellIndex = this.autoCells.findIndex(c => c.cellEl === cell);
-      if (cellIndex !== -1) {
-        this.autoCells.splice(cellIndex, 1);
-      }
+    
+    // 白ブロックの削除処理
+    if (this.isWhiteBlock(oldColor)) {
+      this.removeWhiteBlock(cell);
       return;
     }
 
-    if (cell.classList.contains('block') && oldColor !== '') {
+    // 既存ブロックのチェック
+    if (this.isExistingBlock(cell, oldColor)) {
       return;
     }
 
-    if (this.autoCells.length >= 4) {
-      return;
+    // 新規ブロックの配置
+    if (this.canAddNewBlock()) {
+      this.addNewAutoBlock(cell, index, width, height);
     }
+  }
 
+  // 白ブロックかどうかの判定
+  isWhiteBlock(color) {
+    return color.toLowerCase() === minoColors.white.toLowerCase();
+  }
+
+  // 白ブロックの削除
+  removeWhiteBlock(cell) {
+    this.clearCell(cell);
+    const cellIndex = this.autoCells.findIndex(c => c.cellEl === cell);
+    if (cellIndex !== -1) {
+      this.autoCells.splice(cellIndex, 1);
+    }
+  }
+
+  // 既存ブロックのチェック
+  isExistingBlock(cell, color) {
+    return cell.classList.contains('block') && color !== '';
+  }
+
+  // 新規ブロック追加可能かどうかの判定
+  canAddNewBlock() {
+    return this.autoCells.length < 4;
+  }
+
+  // 新規自動ブロックの追加
+  addNewAutoBlock(cell, index, width, height) {
     this.paintCell(cell, minoColors['white']);
     const x = index % width;
     const y = Math.floor(index / width);
@@ -921,17 +962,22 @@ class TetrisApp {
     this.isAutoInProgress = true;
 
     if (this.autoCells.length === 4) {
-      const positions = this.autoCells.map(c => ({ x: c.x, y: c.y }));
-      const detectedMino = this.detectMinoShape(positions);
-      if (detectedMino) {
-        const color = minoColors[detectedMino];
-        this.autoCells.forEach(c => this.paintCell(c.cellEl, color));
-      } else {
-        this.resetAutoCells();
-      }
-      this.autoCells = [];
-      this.isAutoInProgress = false;
+      this.completeAutoPlacement();
     }
+  }
+
+  // 自動配置の完了処理
+  completeAutoPlacement() {
+    const positions = this.autoCells.map(c => ({ x: c.x, y: c.y }));
+    const detectedMino = this.detectMinoShape(positions);
+    if (detectedMino) {
+      const color = minoColors[detectedMino];
+      this.autoCells.forEach(c => this.paintCell(c.cellEl, color));
+    } else {
+      this.resetAutoCells();
+    }
+    this.autoCells = [];
+    this.isAutoInProgress = false;
   }
 
   paintCell(cellElement, color) {
