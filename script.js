@@ -2,7 +2,7 @@
 const config = {
   // 表示設定
   CELL_SIZE: 30,  // セルのサイズ（ピクセル）
-  VERSION: '0.2.3',  // アプリケーションバージョン
+  VERSION: '0.2.4',  // アプリケーションバージョン
 
   // ボードサイズの制限
   BOARD: {
@@ -602,64 +602,95 @@ class TetrisApp {
 
     this.currentWidth = width;
     this.currentHeight = height;
+    this.setupBoardStyles(width, height);
+    this.createBoardCells(width, height);
+    this.placeInitialBlocks(width, height, blockCount);
+  }
 
+  // ボードのスタイル設定
+  setupBoardStyles(width, height) {
     this.dom.board.style.setProperty('--width', width);
     this.dom.board.style.setProperty('--height', height);
     this.dom.board.innerHTML = '';
+  }
 
+  // ボードのセルを作成
+  createBoardCells(width, height) {
     const fragment = document.createDocumentFragment();
+    const totalCells = width * height;
 
-    // マスを作成
-    for (let i = 0; i < width * height; i++) {
-      const cell = document.createElement('div');
-      cell.classList.add('cell');
-      cell.style.width = `${config.CELL_SIZE}px`;
-      cell.style.height = `${config.CELL_SIZE}px`;
-
-      cell.addEventListener('click', () => {
-        if (!this.currentEditAction) return;
-        this.handleEditCellClick(cell, i, width, height);
-      });
-
+    for (let i = 0; i < totalCells; i++) {
+      const cell = this.createBoardCell(i, width, height);
       fragment.appendChild(cell);
     }
 
     this.dom.board.appendChild(fragment);
-
-    // ランダムブロック配置
-    this.placeRandomBlocks(width, height, blockCount);
   }
 
-  placeRandomBlocks(width, height, blockCount) {
-    if (!this.dom.board) return;
+  // 個別のセルを作成
+  createBoardCell(index, width, height) {
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.style.width = `${config.CELL_SIZE}px`;
+    cell.style.height = `${config.CELL_SIZE}px`;
+
+    cell.addEventListener('click', () => {
+      if (!this.currentEditAction) return;
+      this.handleEditCellClick(cell, index, width, height);
+    });
+
+    return cell;
+  }
+
+  // 初期ブロックを配置
+  placeInitialBlocks(width, height, blockCount) {
+    if (blockCount <= 0) return;
 
     const cells = Array.from(this.dom.board.children);
     const columnIndices = Array.from({ length: width }, (_, i) => i);
     const placedBlocks = new Set();
 
     for (let i = 0; i < blockCount; i++) {
-      let column;
-      let attempts = 0;
-      const maxAttempts = 100;
-      do {
-        column =
-          columnIndices[
-            Math.floor(this.randomGenerator() * columnIndices.length)
-          ];
-        attempts++;
-        if (attempts > maxAttempts) break;
-      } while (placedBlocks.has(`${column}-${i}`));
+      this.placeBlockInColumn(columnIndices, cells, width, height, placedBlocks, i);
+    }
+  }
 
-      for (let row = height - 1; row >= 0; row--) {
-        const index = row * width + column;
-        if (!cells[index].classList.contains('block')) {
-          cells[index].classList.add('block', 'initial-block');
-          cells[index].style.backgroundColor = minoColors['default'];
-          placedBlocks.add(`${column}-${i}`);
-          break;
-        }
+  // 列にブロックを配置
+  placeBlockInColumn(columnIndices, cells, width, height, placedBlocks, blockIndex) {
+    let column;
+    let attempts = 0;
+    const maxAttempts = 100;
+
+    do {
+      column = this.getRandomColumn(columnIndices);
+      attempts++;
+      if (attempts > maxAttempts) break;
+    } while (placedBlocks.has(`${column}-${blockIndex}`));
+
+    this.placeBlockInFirstEmptyCell(column, cells, width, height, placedBlocks, blockIndex);
+  }
+
+  // ランダムな列を取得
+  getRandomColumn(columnIndices) {
+    return columnIndices[Math.floor(this.randomGenerator() * columnIndices.length)];
+  }
+
+  // 列の最初の空きセルにブロックを配置
+  placeBlockInFirstEmptyCell(column, cells, width, height, placedBlocks, blockIndex) {
+    for (let row = height - 1; row >= 0; row--) {
+      const index = row * width + column;
+      if (!cells[index].classList.contains('block')) {
+        this.createInitialBlock(cells[index]);
+        placedBlocks.add(`${column}-${blockIndex}`);
+        break;
       }
     }
+  }
+
+  // 初期ブロックを作成
+  createInitialBlock(cell) {
+    cell.classList.add('block', 'initial-block');
+    cell.style.backgroundColor = minoColors['default'];
   }
 
   updateNextPieces() {
