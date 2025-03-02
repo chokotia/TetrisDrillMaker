@@ -2,7 +2,7 @@
 const config = {
   // 表示設定
   CELL_SIZE: 30,  // セルのサイズ（ピクセル）
-  VERSION: '0.2.7',  // アプリケーションバージョン
+  VERSION: '0.2.8',  // アプリケーションバージョン
 
   // ボードサイズの制限
   BOARD: {
@@ -446,42 +446,87 @@ class TetrisApp {
 
   // スライダーの設定を取得
   getSliderSettings() {
-    const width = this.getSliderValue('width', config.BOARD.MIN_WIDTH);
-    const height = this.getSliderValue('height', config.BOARD.MIN_HEIGHT);
-    const nextCount = this.getSliderValue('nextCount', config.NEXT.MIN_COUNT);
-    const { blockCountMin, blockCountMax } = this.getBlockRangeValues();
-
     return {
-      width,
-      height,
-      nextCount,
-      blockCountMin,
-      blockCountMax,
+      ...this.getBoardSettings(),
+      ...this.getNextSettings(),
+      ...this.getBlockCountSettings(),
     };
+  }
+
+  // ボード設定を取得
+  getBoardSettings() {
+    return {
+      width: this.getSliderValue('width', config.BOARD.MIN_WIDTH),
+      height: this.getSliderValue('height', config.BOARD.MIN_HEIGHT),
+    };
+  }
+
+  // NEXT設定を取得
+  getNextSettings() {
+    return {
+      nextCount: this.getSliderValue('nextCount', config.NEXT.MIN_COUNT),
+    };
+  }
+
+  // ブロック数設定を取得
+  getBlockCountSettings() {
+    const { blockCountMin, blockCountMax } = this.getBlockRangeValues();
+    return { blockCountMin, blockCountMax };
   }
 
   // 個別のスライダー値を取得
   getSliderValue(key, defaultValue) {
-    return this.dom.sliders[key]
-      ? parseInt(this.dom.sliders[key].value, 10)
-      : defaultValue;
+    const slider = this.dom.sliders[key];
+    return slider ? this.parseSliderValue(slider.value, defaultValue) : defaultValue;
+  }
+
+  // スライダー値をパース
+  parseSliderValue(value, defaultValue) {
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? defaultValue : parsed;
   }
 
   // ブロック数範囲の値を取得
   getBlockRangeValues() {
-    const blockRangeValues = this.dom.sliders.blockRange.noUiSlider.get();
+    if (!this.hasValidBlockRangeSlider()) {
+      return this.getDefaultBlockRangeValues();
+    }
+    return this.parseBlockRangeValues();
+  }
+
+  // ブロック数スライダーの有効性チェック
+  hasValidBlockRangeSlider() {
+    return this.dom.sliders.blockRange && this.dom.sliders.blockRange.noUiSlider;
+  }
+
+  // デフォルトのブロック数範囲を取得
+  getDefaultBlockRangeValues() {
     return {
-      blockCountMin: parseInt(blockRangeValues[0], 10),
-      blockCountMax: parseInt(blockRangeValues[1], 10),
+      blockCountMin: config.BLOCKS.MIN_COUNT,
+      blockCountMax: config.BLOCKS.MAX_COUNT,
+    };
+  }
+
+  // ブロック数範囲の値をパース
+  parseBlockRangeValues() {
+    const values = this.dom.sliders.blockRange.noUiSlider.get();
+    return {
+      blockCountMin: Math.round(parseFloat(values[0])),
+      blockCountMax: Math.round(parseFloat(values[1])),
     };
   }
 
   // ミノモードの設定を取得
   getMinoModeSettings() {
-    const minoModeEl = document.getElementById('mino-mode');
     return {
-      minoMode: minoModeEl ? minoModeEl.value : 'random',
+      minoMode: this.getMinoMode(),
     };
+  }
+
+  // ミノモードを取得
+  getMinoMode() {
+    const minoModeEl = document.getElementById('mino-mode');
+    return minoModeEl ? minoModeEl.value : 'random';
   }
 
   // 設定をローカルストレージに保存
@@ -497,87 +542,90 @@ class TetrisApp {
   // 設定の読み込みと適用
   loadSettings() {
     try {
-      const savedSettings = this.getSavedSettings();
-      if (savedSettings) {
-        this.applySettings(savedSettings);
-      } else {
-        this.applyDefaultSettings();
-      }
+      this.loadAndApplySettings();
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      this.handleSettingsLoadError(error);
+    }
+  }
+
+  // 設定の読み込みと適用を実行
+  loadAndApplySettings() {
+    const settings = this.loadStoredSettings();
+    this.applyLoadedSettings(settings);
+  }
+
+  // 保存された設定を読み込み
+  loadStoredSettings() {
+    const savedSettings = this.getSavedSettings();
+    return savedSettings || this.getDefaultSettings();
+  }
+
+  // デフォルト設定を取得
+  getDefaultSettings() {
+    return {
+      width: config.BOARD.MIN_WIDTH,
+      height: config.BOARD.MIN_HEIGHT,
+      nextCount: config.NEXT.MIN_COUNT,
+      blockCountMin: config.BLOCKS.MIN_COUNT,
+      blockCountMax: config.BLOCKS.MAX_COUNT,
+      minoMode: 'random',
+    };
+  }
+
+  // 設定の読み込みエラーを処理
+  handleSettingsLoadError(error) {
+    console.error('Failed to load settings:', error);
+    this.applyDefaultSettings();
+  }
+
+  // 読み込んだ設定を適用
+  applyLoadedSettings(settings) {
+    if (this.isValidSettings(settings)) {
+      this.applySettings(settings);
+    } else {
       this.applyDefaultSettings();
     }
   }
 
-  // 保存された設定を取得
-  getSavedSettings() {
-    const settings = localStorage.getItem('tetrisSettings');
-    return settings ? JSON.parse(settings) : null;
+  // 設定の有効性をチェック
+  isValidSettings(settings) {
+    return settings && typeof settings === 'object' &&
+           this.hasRequiredSettings(settings) &&
+           this.isWithinValidRange(settings);
   }
 
-  // 設定を適用
-  applySettings(settings) {
-    this.applySliderSettings(settings);
-    this.applyMinoModeSettings(settings);
-    this.applyBlockRangeSettings(settings);
-    this.createInitialBoard(settings);
+  // 必要な設定が存在するかチェック
+  hasRequiredSettings(settings) {
+    const required = ['width', 'height', 'nextCount', 'blockCountMin', 'blockCountMax', 'minoMode'];
+    return required.every(key => key in settings);
   }
 
-  // スライダー設定を適用
-  applySliderSettings(settings) {
-    Object.entries(settings).forEach(([key, value]) => {
-      if (this.dom.sliders[key] && key !== 'blockRange') {
-        this.dom.sliders[key].value = value;
-        this.dom.sliderValues[key].textContent = value;
-        this.updateAriaValue(this.dom.sliders[key], this.dom.sliderValues[key]);
-      }
-    });
+  // 設定値が有効範囲内かチェック
+  isWithinValidRange(settings) {
+    return this.isValidBoardSize(settings) &&
+           this.isValidNextCount(settings) &&
+           this.isValidBlockCount(settings);
   }
 
-  // ミノモード設定を適用
-  applyMinoModeSettings(settings) {
-    if (settings.minoMode) {
-      const minoModeEl = document.getElementById('mino-mode');
-      if (minoModeEl) {
-        minoModeEl.value = settings.minoMode;
-      }
-    }
+  // ボードサイズの有効性チェック
+  isValidBoardSize(settings) {
+    return settings.width >= config.BOARD.MIN_WIDTH &&
+           settings.width <= config.BOARD.MAX_WIDTH &&
+           settings.height >= config.BOARD.MIN_HEIGHT &&
+           settings.height <= config.BOARD.MAX_HEIGHT;
   }
 
-  // ブロック数範囲の設定を適用
-  applyBlockRangeSettings(settings) {
-    const { blockCountMin, blockCountMax } = settings;
-    if (
-      this.dom.sliders.blockRange &&
-      this.dom.sliders.blockRange.noUiSlider
-    ) {
-      this.dom.sliders.blockRange.noUiSlider.set([blockCountMin, blockCountMax]);
-    }
+  // NEXT数の有効性チェック
+  isValidNextCount(settings) {
+    return settings.nextCount >= config.NEXT.MIN_COUNT &&
+           settings.nextCount <= config.NEXT.MAX_COUNT;
   }
 
-  // 初期ボードを作成
-  createInitialBoard(settings) {
-    const { width, height, blockCountMin, blockCountMax } = settings;
-    const blockCount = this.calculateRandomBlockCount(blockCountMin, blockCountMax);
-    this.createBoard(width, height, blockCount);
-  }
-
-  // デフォルト設定を適用
-  applyDefaultSettings() {
-    const defaultBlockCount = this.calculateRandomBlockCount(
-      config.BLOCKS.MIN_COUNT,
-      config.BLOCKS.MAX_COUNT
-    );
-    this.createBoard(
-      config.BOARD.MIN_WIDTH,
-      config.BOARD.MIN_HEIGHT,
-      defaultBlockCount
-    );
-  }
-
-  // ブロック数をランダムに計算
-  calculateRandomBlockCount(min, max) {
-    return Math.floor(this.randomGenerator() * (max - min + 1)) + min;
+  // ブロック数の有効性チェック
+  isValidBlockCount(settings) {
+    return settings.blockCountMin >= config.BLOCKS.MIN_COUNT &&
+           settings.blockCountMax <= config.BLOCKS.MAX_COUNT &&
+           settings.blockCountMin <= settings.blockCountMax;
   }
 
   // 画面をリセットして問題再生成
@@ -1277,6 +1325,67 @@ class TetrisApp {
       }
     });
     console.log('Cleared all edits. Now only initial-block remain.');
+  }
+
+  // 保存された設定を取得
+  getSavedSettings() {
+    const settings = localStorage.getItem('tetrisSettings');
+    return settings ? JSON.parse(settings) : null;
+  }
+
+  // 設定を適用
+  applySettings(settings) {
+    this.applySliderSettings(settings);
+    this.applyMinoModeSettings(settings);
+    this.applyBlockRangeSettings(settings);
+    this.createInitialBoard(settings);
+  }
+
+  // スライダー設定を適用
+  applySliderSettings(settings) {
+    Object.entries(settings).forEach(([key, value]) => {
+      if (this.dom.sliders[key] && key !== 'blockRange') {
+        this.dom.sliders[key].value = value;
+        this.dom.sliderValues[key].textContent = value;
+        this.updateAriaValue(this.dom.sliders[key], this.dom.sliderValues[key]);
+      }
+    });
+  }
+
+  // ミノモード設定を適用
+  applyMinoModeSettings(settings) {
+    if (settings.minoMode) {
+      const minoModeEl = document.getElementById('mino-mode');
+      if (minoModeEl) {
+        minoModeEl.value = settings.minoMode;
+      }
+    }
+  }
+
+  // ブロック数範囲の設定を適用
+  applyBlockRangeSettings(settings) {
+    const { blockCountMin, blockCountMax } = settings;
+    if (this.hasValidBlockRangeSlider()) {
+      this.dom.sliders.blockRange.noUiSlider.set([blockCountMin, blockCountMax]);
+    }
+  }
+
+  // 初期ボードを作成
+  createInitialBoard(settings) {
+    const { width, height, blockCountMin, blockCountMax } = settings;
+    const blockCount = this.calculateRandomBlockCount(blockCountMin, blockCountMax);
+    this.createBoard(width, height, blockCount);
+  }
+
+  // デフォルト設定を適用
+  applyDefaultSettings() {
+    const defaultSettings = this.getDefaultSettings();
+    this.applySettings(defaultSettings);
+  }
+
+  // ブロック数をランダムに計算
+  calculateRandomBlockCount(min, max) {
+    return Math.floor(this.randomGenerator() * (max - min + 1)) + min;
   }
 }
 
