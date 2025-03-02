@@ -2,7 +2,7 @@
 const config = {
   // 表示設定
   CELL_SIZE: 30,  // セルのサイズ（ピクセル）
-  VERSION: '0.2.5',  // アプリケーションバージョン
+  VERSION: '0.2.6',  // アプリケーションバージョン
 
   // ボードサイズの制限
   BOARD: {
@@ -694,10 +694,9 @@ class TetrisApp {
   }
 
   updateNextPieces() {
-    const settings = this.getSettings();
-    const nextCount = settings.nextCount;
     if (!this.dom.nextContainer) return;
 
+    const settings = this.getSettings();
     const pieces = this.generateNextPieces(settings);
     this.renderNextPieces(pieces);
   }
@@ -714,20 +713,35 @@ class TetrisApp {
   generate7BagPieces(count) {
     const tetrominoes = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
     const pieces = [];
-    const offset = Math.floor(this.randomGenerator() * 7);
+    const offset = this.calculateBagOffset();
     
     // 最初のバッグを生成してオフセットを適用
-    let bag = shuffle([...tetrominoes], this.randomGenerator);
-    bag = bag.slice(offset);
+    let bag = this.generateShuffledBag(tetrominoes);
+    bag = this.applyOffset(bag, offset);
     pieces.push(...bag);
 
     // 必要な数になるまで新しいバッグを追加
     while (pieces.length < count) {
-      const newBag = shuffle([...tetrominoes], this.randomGenerator);
+      const newBag = this.generateShuffledBag(tetrominoes);
       pieces.push(...newBag);
     }
 
     return pieces.slice(0, count);
+  }
+
+  // バッグのオフセットを計算
+  calculateBagOffset() {
+    return Math.floor(this.randomGenerator() * 7);
+  }
+
+  // シャッフルされたバッグを生成
+  generateShuffledBag(tetrominoes) {
+    return shuffle([...tetrominoes], this.randomGenerator);
+  }
+
+  // バッグにオフセットを適用
+  applyOffset(bag, offset) {
+    return bag.slice(offset);
   }
 
   // ランダム生成によるピース生成
@@ -737,9 +751,19 @@ class TetrisApp {
 
   // NEXTピースの描画
   renderNextPieces(pieces) {
-    this.dom.nextContainer.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+    this.clearNextContainer();
+    const fragment = this.createNextPiecesFragment(pieces);
+    this.dom.nextContainer.appendChild(fragment);
+  }
 
+  // NEXTコンテナをクリア
+  clearNextContainer() {
+    this.dom.nextContainer.innerHTML = '';
+  }
+
+  // NEXTピースのフラグメントを作成
+  createNextPiecesFragment(pieces) {
+    const fragment = document.createDocumentFragment();
     pieces.forEach(mino => {
       if (mino) {
         const container = this.createNextPieceContainer();
@@ -747,8 +771,7 @@ class TetrisApp {
         fragment.appendChild(container);
       }
     });
-
-    this.dom.nextContainer.appendChild(fragment);
+    return fragment;
   }
 
   // NEXTピースのコンテナ作成
@@ -796,35 +819,57 @@ class TetrisApp {
         [1, 1, 1],
       ],
     };
-    return minoShapes[minoType];
+    return minoShapes[minoType] || null;
   }
 
   // ミノの要素を作成
   createMinoElement(shape) {
     const element = document.createElement('div');
+    this.setupMinoElementStyles(element, shape);
+    return element;
+  }
+
+  // ミノ要素のスタイル設定
+  setupMinoElementStyles(element, shape) {
     element.classList.add('next-piece');
     element.style.display = 'grid';
-    element.style.gridTemplateColumns = `repeat(${shape[0].length}, 1fr)`;
-    return element;
+    element.style.gridTemplateColumns = this.calculateGridColumns(shape);
+  }
+
+  // グリッド列の計算
+  calculateGridColumns(shape) {
+    return `repeat(${shape[0].length}, 1fr)`;
   }
 
   // ミノの形状を描画
   fillMinoShape(element, shape, minoType) {
     shape.forEach(row => {
       row.forEach(cell => {
-        const cellElement = document.createElement('div');
-        if (cell) {
-          cellElement.classList.add('block');
-          cellElement.style.backgroundColor = minoColors[minoType];
-        }
+        const cellElement = this.createShapeCell(cell, minoType);
         element.appendChild(cellElement);
       });
     });
   }
 
+  // 形状のセルを作成
+  createShapeCell(cell, minoType) {
+    const cellElement = document.createElement('div');
+    if (cell) {
+      this.setupShapeCellStyles(cellElement, minoType);
+    }
+    return cellElement;
+  }
+
+  // 形状セルのスタイル設定
+  setupShapeCellStyles(cellElement, minoType) {
+    cellElement.classList.add('block');
+    cellElement.style.backgroundColor = minoColors[minoType];
+  }
+
   getRandomMino() {
     const allMinos = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
-    return allMinos[Math.floor(this.randomGenerator() * allMinos.length)];
+    const randomIndex = Math.floor(this.randomGenerator() * allMinos.length);
+    return allMinos[randomIndex];
   }
 
   setupGestureControls() {
