@@ -12,18 +12,21 @@ const config = {
   MAX_BLOCK_COUNT: 30,
 };
 
-// ミノとカラーの対応表 (RGBから16進数カラーコードに変更)
+// ミノとカラーの対応表
 const minoColors = {
-  S: '#59B101',
-  Z: '#D70F37',
-  L: '#E35B02',
-  J: '#2141C6',
-  O: '#E39F02',
-  T: '#AF298A',
+  // 通常のミノの色
   I: '#0F9BD7',
-  gray: '#CCCCCC', // gray 用
-  white: '#FFFFFF', // white 用
-  default: '#B0C4DE', // 初期ブロック用のデフォルト色
+  J: '#2141C6',
+  L: '#E35B02',
+  O: '#E39F02',
+  S: '#59B101',
+  T: '#AF298A',
+  Z: '#D70F37',
+  
+  // 特殊な状態の色
+  gray: '#CCCCCC',
+  white: '#FFFFFF',
+  default: '#B0C4DE',
 };
 
 // シード付き乱数 (Mulberry32)
