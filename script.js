@@ -2,7 +2,7 @@
 const config = {
   // 表示設定
   CELL_SIZE: 30,  // セルのサイズ（ピクセル）
-  VERSION: '0.2.6',  // アプリケーションバージョン
+  VERSION: '0.2.7',  // アプリケーションバージョン
 
   // ボードサイズの制限
   BOARD: {
@@ -227,18 +227,18 @@ class TetrisApp {
     this.baseSeed = '';
     this.currentProblemNumber = 1;
     this.randomGenerator = null;
-
-    // BootstrapのModalインスタンスを格納する変数
     this.bsSettingsModal = null;
-
-    // 編集系
-    this.currentEditAction = 'auto'; // "auto" / "delete" / "gray" など
+    this.currentEditAction = 'auto';
     this.autoCells = [];
     this.isAutoInProgress = false;
     this.isDragging = false;
+    this.dom = this.initializeDOMElements();
 
-    // DOM要素のキャッシュ（block-range 用に変更）
-    this.dom = {
+    document.addEventListener('DOMContentLoaded', () => this.initializeApp());
+  }
+
+  initializeDOMElements() {
+    return {
       settingsButton: document.getElementById('settings-button'),
       saveAndCloseBtn: document.getElementById('save-and-close-settings'),
       closeIconBtn: document.getElementById('close-settings-without-save'),
@@ -262,39 +262,51 @@ class TetrisApp {
         blockRange: document.getElementById('block-range-values'),
       },
     };
-
-    document.addEventListener('DOMContentLoaded', () => this.initializeApp());
   }
 
   initializeApp() {
     try {
-      this.baseSeed = generateBaseSeed();
-      this.currentProblemNumber = 1;
-      this.randomGenerator = this.createSeededGenerator(
-        this.baseSeed,
-        this.currentProblemNumber
-      );
-
-      // Bootstrapモーダルのインスタンス作成
-      const settingsModalElement = document.getElementById('settings-modal');
-      if (settingsModalElement) {
-        this.bsSettingsModal = new bootstrap.Modal(settingsModalElement);
-      }
-
-      this.setupAllEventListeners();
-      this.initializeBlockRangeSlider();
-      this.loadSettings();
-      this.setupGestureControls();
-      this.setupEditButtons();
-
-      // 最初の問題を生成
-      this.generateProblem();
-
-      console.log(`Base Seed: ${this.baseSeed}`);
-      console.log(`Starting at Problem #${this.currentProblemNumber}`);
+      this.initializeGameState();
+      this.initializeSettingsModal();
+      this.initializeControls();
+      this.generateFirstProblem();
+      this.logInitializationInfo();
     } catch (error) {
       console.error('Initialization failed:', error);
     }
+  }
+
+  initializeGameState() {
+    this.baseSeed = generateBaseSeed();
+    this.currentProblemNumber = 1;
+    this.randomGenerator = this.createSeededGenerator(
+      this.baseSeed,
+      this.currentProblemNumber
+    );
+  }
+
+  initializeSettingsModal() {
+    const settingsModalElement = document.getElementById('settings-modal');
+    if (settingsModalElement) {
+      this.bsSettingsModal = new bootstrap.Modal(settingsModalElement);
+    }
+  }
+
+  initializeControls() {
+    this.setupAllEventListeners();
+    this.initializeBlockRangeSlider();
+    this.loadSettings();
+    this.setupGestureControls();
+    this.setupEditButtons();
+  }
+
+  generateFirstProblem() {
+    this.generateProblem();
+  }
+
+  logInitializationInfo() {
+    console.log(`Base Seed: ${this.baseSeed}`);
+    console.log(`Starting at Problem #${this.currentProblemNumber}`);
   }
 
   createSeededGenerator(base, number) {
@@ -874,59 +886,112 @@ class TetrisApp {
 
   setupGestureControls() {
     if (!this.dom.mainView) return;
+    this.setupSwipeControls();
+    this.setupPanControls();
+  }
 
-    const hammer = new Hammer(this.dom.mainView);
+  // スワイプ操作の設定
+  setupSwipeControls() {
+    const hammer = this.createHammerInstance(this.dom.mainView);
+    this.configureSwipeRecognizer(hammer);
+    this.bindSwipeHandlers(hammer);
+  }
+
+  // Hammerインスタンスの作成
+  createHammerInstance(element) {
+    return new Hammer(element);
+  }
+
+  // スワイプ認識の設定
+  configureSwipeRecognizer(hammer) {
     hammer.get('swipe').set({
       direction: Hammer.DIRECTION_ALL,
     });
-
-    hammer.on('swipeleft', () => this.goToNextProblem());
-    hammer.on('swiperight', () => this.goToPreviousProblem());
-
-    this.setupMobileDragForBoard();
   }
 
-  setupMobileDragForBoard() {
+  // スワイプハンドラーのバインド
+  bindSwipeHandlers(hammer) {
+    hammer.on('swipeleft', () => this.handleSwipeLeft());
+    hammer.on('swiperight', () => this.handleSwipeRight());
+  }
+
+  // 左スワイプの処理
+  handleSwipeLeft() {
+    this.goToNextProblem();
+  }
+
+  // 右スワイプの処理
+  handleSwipeRight() {
+    this.goToPreviousProblem();
+  }
+
+  // パン操作の設定
+  setupPanControls() {
     if (!this.dom.boardContainer || !this.dom.board) return;
 
-    const hammer = new Hammer(this.dom.boardContainer);
+    const hammer = this.createHammerInstance(this.dom.boardContainer);
+    this.configurePanRecognizer(hammer);
+    this.bindPanHandlers(hammer);
+  }
+
+  // パン認識の設定
+  configurePanRecognizer(hammer) {
     hammer.get('pan').set({
       direction: Hammer.DIRECTION_ALL,
       threshold: 1,
     });
-
-    hammer.on('panstart', () => {
-      if (!this.currentEditAction) return;
-      this.isDragging = false;
-    });
-
-    hammer.on('panmove', e => {
-      if (!this.currentEditAction) return;
-      this.isDragging = true;
-      this.paintCellUnderPointer(e, this.dom.board);
-    });
-
-    hammer.on('panend', () => {
-      this.isDragging = false;
-    });
   }
 
-  paintCellUnderPointer(e, board) {
-    const x = e.center.x;
-    const y = e.center.y;
-    const target = document.elementFromPoint(x, y);
+  // パンハンドラーのバインド
+  bindPanHandlers(hammer) {
+    hammer.on('panstart', () => this.handlePanStart());
+    hammer.on('panmove', e => this.handlePanMove(e));
+    hammer.on('panend', () => this.handlePanEnd());
+  }
 
-    if (target && target.parentNode === board) {
-      const index = Array.from(board.children).indexOf(target);
-      if (index >= 0) {
-        this.handleEditCellClick(
-          target,
-          index,
-          this.currentWidth,
-          this.currentHeight
-        );
-      }
+  // パン開始時の処理
+  handlePanStart() {
+    if (!this.currentEditAction) return;
+    this.isDragging = false;
+  }
+
+  // パン移動時の処理
+  handlePanMove(event) {
+    if (!this.currentEditAction) return;
+    this.isDragging = true;
+    this.handleCellPaint(event);
+  }
+
+  // パン終了時の処理
+  handlePanEnd() {
+    this.isDragging = false;
+  }
+
+  // セルの描画処理
+  handleCellPaint(event) {
+    const cell = this.findCellUnderPointer(event);
+    if (!cell) return;
+
+    const index = this.getCellIndex(cell);
+    if (index >= 0) {
+      this.handleEditCellClick(
+        cell,
+        index,
+        this.currentWidth,
+        this.currentHeight
+      );
     }
+  }
+
+  // ポインター位置のセル検出
+  findCellUnderPointer(event) {
+    const target = document.elementFromPoint(event.center.x, event.center.y);
+    return target && target.parentNode === this.dom.board ? target : null;
+  }
+
+  // セルのインデックス取得
+  getCellIndex(cell) {
+    return Array.from(this.dom.board.children).indexOf(cell);
   }
 
   goToNextProblem() {
