@@ -2,7 +2,7 @@
 const config = {
   // 表示設定
   CELL_SIZE: 30,  // セルのサイズ（ピクセル）
-  VERSION: '0.2.4',  // アプリケーションバージョン
+  VERSION: '0.2.5',  // アプリケーションバージョン
 
   // ボードサイズの制限
   BOARD: {
@@ -697,49 +697,78 @@ class TetrisApp {
     const settings = this.getSettings();
     const nextCount = settings.nextCount;
     if (!this.dom.nextContainer) return;
-    this.dom.nextContainer.innerHTML = '';
 
+    const pieces = this.generateNextPieces(settings);
+    this.renderNextPieces(pieces);
+  }
+
+  // NEXTピースの生成
+  generateNextPieces(settings) {
+    const nextCount = settings.nextCount;
+    return settings.minoMode === '7bag'
+      ? this.generate7BagPieces(nextCount)
+      : this.generateRandomPieces(nextCount);
+  }
+
+  // 7-bagシステムによるピース生成
+  generate7BagPieces(count) {
+    const tetrominoes = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+    const pieces = [];
+    const offset = Math.floor(this.randomGenerator() * 7);
+    
+    // 最初のバッグを生成してオフセットを適用
+    let bag = shuffle([...tetrominoes], this.randomGenerator);
+    bag = bag.slice(offset);
+    pieces.push(...bag);
+
+    // 必要な数になるまで新しいバッグを追加
+    while (pieces.length < count) {
+      const newBag = shuffle([...tetrominoes], this.randomGenerator);
+      pieces.push(...newBag);
+    }
+
+    return pieces.slice(0, count);
+  }
+
+  // ランダム生成によるピース生成
+  generateRandomPieces(count) {
+    return Array.from({ length: count }, () => this.getRandomMino());
+  }
+
+  // NEXTピースの描画
+  renderNextPieces(pieces) {
+    this.dom.nextContainer.innerHTML = '';
     const fragment = document.createDocumentFragment();
 
-    if (settings.minoMode === '7bag') {
-      const tetrominoes = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
-      const pieces = [];
-      const offset = Math.floor(this.randomGenerator() * 7);
-      let bag = shuffle([...tetrominoes], this.randomGenerator);
-      bag = bag.slice(offset);
-      pieces.push(...bag);
-      while (pieces.length < nextCount) {
-        const newBag = shuffle([...tetrominoes], this.randomGenerator);
-        pieces.push(...newBag);
+    pieces.forEach(mino => {
+      if (mino) {
+        const container = this.createNextPieceContainer();
+        this.drawMino(mino, container);
+        fragment.appendChild(container);
       }
-      for (let i = 0; i < nextCount; i++) {
-        const mino = pieces[i];
-        const nextPieceContainer = document.createElement('div');
-        nextPieceContainer.classList.add('next-piece-container');
-        this.drawMino(mino, nextPieceContainer);
-        fragment.appendChild(nextPieceContainer);
-      }
-    } else {
-      for (let i = 0; i < nextCount; i++) {
-        const randomMino = this.getRandomMino();
-        if (randomMino) {
-          const nextPieceContainer = document.createElement('div');
-          nextPieceContainer.classList.add('next-piece-container');
-          this.drawMino(randomMino, nextPieceContainer);
-          fragment.appendChild(nextPieceContainer);
-        }
-      }
-    }
+    });
 
     this.dom.nextContainer.appendChild(fragment);
   }
 
-  getRandomMino() {
-    const allMinos = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
-    return allMinos[Math.floor(this.randomGenerator() * allMinos.length)];
+  // NEXTピースのコンテナ作成
+  createNextPieceContainer() {
+    const container = document.createElement('div');
+    container.classList.add('next-piece-container');
+    return container;
   }
 
   drawMino(minoType, container) {
+    const shape = this.getMinoShape(minoType);
+    if (!shape) return;
+
+    const minoElement = this.createMinoElement(shape);
+    this.fillMinoShape(minoElement, shape, minoType);
+    container.appendChild(minoElement);
+  }
+
+  // ミノの形状データを取得
+  getMinoShape(minoType) {
     const minoShapes = {
       I: [[1, 1, 1, 1]],
       O: [
@@ -767,15 +796,20 @@ class TetrisApp {
         [1, 1, 1],
       ],
     };
+    return minoShapes[minoType];
+  }
 
-    const shape = minoShapes[minoType];
-    if (!shape) return;
+  // ミノの要素を作成
+  createMinoElement(shape) {
+    const element = document.createElement('div');
+    element.classList.add('next-piece');
+    element.style.display = 'grid';
+    element.style.gridTemplateColumns = `repeat(${shape[0].length}, 1fr)`;
+    return element;
+  }
 
-    const minoElement = document.createElement('div');
-    minoElement.classList.add('next-piece');
-    minoElement.style.display = 'grid';
-    minoElement.style.gridTemplateColumns = `repeat(${shape[0].length}, 1fr)`;
-
+  // ミノの形状を描画
+  fillMinoShape(element, shape, minoType) {
     shape.forEach(row => {
       row.forEach(cell => {
         const cellElement = document.createElement('div');
@@ -783,10 +817,14 @@ class TetrisApp {
           cellElement.classList.add('block');
           cellElement.style.backgroundColor = minoColors[minoType];
         }
-        minoElement.appendChild(cellElement);
+        element.appendChild(cellElement);
       });
     });
-    container.appendChild(minoElement);
+  }
+
+  getRandomMino() {
+    const allMinos = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+    return allMinos[Math.floor(this.randomGenerator() * allMinos.length)];
   }
 
   setupGestureControls() {
@@ -1038,29 +1076,85 @@ class TetrisApp {
   }
 
   detectMinoShape(positions) {
-    const minX = Math.min(...positions.map(p => p.x));
-    const minY = Math.min(...positions.map(p => p.y));
-    const normalized = positions.map(p => ({
+    if (!this.isValidPositionsCount(positions)) return null;
+
+    const normalizedPositions = this.normalizePositions(positions);
+    return this.findMatchingMinoType(normalizedPositions);
+  }
+
+  // 位置データの数が有効か確認
+  isValidPositionsCount(positions) {
+    return positions && positions.length === 4;
+  }
+
+  // 位置データを正規化
+  normalizePositions(positions) {
+    const { minX, minY } = this.findMinCoordinates(positions);
+    return positions.map(p => ({
       x: p.x - minX,
       y: p.y - minY,
     }));
+  }
 
+  // 最小座標を取得
+  findMinCoordinates(positions) {
+    return {
+      minX: Math.min(...positions.map(p => p.x)),
+      minY: Math.min(...positions.map(p => p.y)),
+    };
+  }
+
+  // マッチするミノタイプを検索
+  findMatchingMinoType(normalizedPositions) {
     for (const [minoType, patterns] of Object.entries(MINO_PATTERNS)) {
-      for (const pattern of patterns) {
-        if (this.isSameShape(normalized, pattern)) {
-          return minoType;
-        }
+      if (this.hasMatchingPattern(normalizedPositions, patterns)) {
+        return minoType;
       }
     }
     return null;
   }
 
-  isSameShape(arr1, arr2) {
-    if (arr1.length !== arr2.length) return false;
-    const sortByXY = (a, b) => a.x - b.x || a.y - b.y;
-    const s1 = [...arr1].sort(sortByXY);
-    const s2 = [...arr2].sort(sortByXY);
-    return s1.every((p, i) => p.x === s2[i].x && p.y === s2[i].y);
+  // パターンとのマッチングをチェック
+  hasMatchingPattern(normalizedPositions, patterns) {
+    return patterns.some(pattern => 
+      this.isSameShape(normalizedPositions, pattern)
+    );
+  }
+
+  // 形状の一致を確認
+  isSameShape(positions1, positions2) {
+    if (!this.hasSameLength(positions1, positions2)) return false;
+
+    const sorted1 = this.sortPositions(positions1);
+    const sorted2 = this.sortPositions(positions2);
+    return this.arePositionsEqual(sorted1, sorted2);
+  }
+
+  // 配列の長さが同じか確認
+  hasSameLength(arr1, arr2) {
+    return arr1.length === arr2.length;
+  }
+
+  // 位置データをソート
+  sortPositions(positions) {
+    return [...positions].sort(this.comparePositions);
+  }
+
+  // 位置データの比較関数
+  comparePositions(a, b) {
+    return a.x - b.x || a.y - b.y;
+  }
+
+  // ソートされた位置データが等しいか確認
+  arePositionsEqual(positions1, positions2) {
+    return positions1.every((pos, index) => 
+      this.isSamePosition(pos, positions2[index])
+    );
+  }
+
+  // 2つの位置が等しいか確認
+  isSamePosition(pos1, pos2) {
+    return pos1.x === pos2.x && pos1.y === pos2.y;
   }
 
   resetToInitialBoard() {
