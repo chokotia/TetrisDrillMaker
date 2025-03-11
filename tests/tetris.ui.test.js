@@ -16,6 +16,19 @@ const {
   setMinoMode,
   saveAndCloseSettings,
   getNextPieceCount,
+  clickCell,
+  setEditMode,
+  clearBoard,
+  getCellColor,
+  getBoardSize,
+  getUsedNextPieceCount,
+  clickNextPiece,
+  clickRemoveUsedButton,
+  swipeLeft,
+  swipeRight,
+  setBlockRangeSlider,
+  isModalVisible,
+  isModalHidden
 } = require('./helpers');
 
 describe('テトリスドリルメーカー - UIコンポーネントテスト', () => {
@@ -155,6 +168,56 @@ describe('テトリスドリルメーカー - ネクストピース表示テス�
     
     // 設定した数のネクストピースが表示されているか確認
     expect(nextPieceCount).toBe(targetNextCount);
+  });
+
+  test('ネクストピースをクリックして使用済み状態にできる', async () => {
+    // 初期状態では使用済みピースはない
+    const initialUsedCount = await getUsedNextPieceCount();
+    expect(initialUsedCount).toBe(0);
+    
+    // 最初のネクストピースをクリック
+    await clickNextPiece(0);
+    
+    // 使用済みピースが1つになったことを確認
+    const usedCountAfterClick = await getUsedNextPieceCount();
+    expect(usedCountAfterClick).toBe(1);
+    
+    // 同じピースをもう一度クリックすると使用済み状態が解除される
+    await clickNextPiece(0);
+    const usedCountAfterToggle = await getUsedNextPieceCount();
+    expect(usedCountAfterToggle).toBe(0);
+  });
+  
+  test('複数のネクストピースを使用済みにして削除できる', async () => {
+    // 設定を開いてネクスト数を5に設定
+    await openSettings();
+    await setSliderValue('next-count', 5);
+    await saveAndCloseSettings();
+    
+    // 初期状態のネクストピース数を確認
+    const initialCount = await getNextPieceCount();
+    expect(initialCount).toBe(5);
+    
+    // 複数のピースを使用済みにする
+    await clickNextPiece(0);
+    await clickNextPiece(2);
+    await clickNextPiece(4);
+    
+    // 使用済みピースが3つになったことを確認
+    const usedCount = await getUsedNextPieceCount();
+    expect(usedCount).toBe(3);
+    
+    // Remove Usedボタンをクリック
+    await clickRemoveUsedButton();
+    await wait(500); // アニメーションや更新を待つ
+    
+    // 使用済みピースが削除され、残りのピースが表示されていることを確認
+    const remainingCount = await getNextPieceCount();
+    expect(remainingCount).toBe(5); // 表示数は変わらない
+    
+    // 使用済みピースがなくなったことを確認
+    const remainingUsedCount = await getUsedNextPieceCount();
+    expect(remainingUsedCount).toBe(0);
   });
 });
 

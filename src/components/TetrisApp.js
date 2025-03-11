@@ -38,6 +38,7 @@ export class TetrisApp {
       closeIconBtn: document.getElementById('close-settings-without-save'),
       editOptionButtons: document.querySelectorAll('.edit-option'),
       clearButton: document.getElementById('clear-board'),
+      removeUsedButton: document.getElementById('remove-used'),
       problemCounter: document.getElementById('current-problem'),
       board: document.getElementById('board'),
       nextContainer: document.getElementById('next'),
@@ -131,6 +132,8 @@ export class TetrisApp {
     this.setupModalListeners();
     this.setupEditOptionListeners();
     this.setupClearButtonListener();
+    this.setupRemoveUsedButtonListener();
+    this.setupGestureControls();
   }
 
   /**
@@ -195,6 +198,15 @@ export class TetrisApp {
       this.dom.clearButton.addEventListener('click', () => 
         this.resetToInitialBoard()
       );
+    }
+  }
+
+  /**
+   * 使用済みピース削除ボタンのリスナーを設定
+   */
+  setupRemoveUsedButtonListener() {
+    if (this.dom.removeUsedButton) {
+      this.dom.removeUsedButton.addEventListener('click', () => this.removeUsedPieces());
     }
   }
 
@@ -296,6 +308,11 @@ export class TetrisApp {
     
     this.currentWidth = settings.width;
     this.currentHeight = settings.height;
+    
+    // 新しい問題を生成するときにネクストピースをリセット
+    MinoManager.currentPieces = [];
+    MinoManager.usedPieces = {};
+    MinoManager.displayStartIndex = 0;
     
     MinoManager.updateNextPieces(this.dom.nextContainer, settings, this.randomGenerator);
     this.updateProblemCounter();
@@ -413,5 +430,13 @@ export class TetrisApp {
   resetToInitialBoard() {
     BoardManager.resetToInitialBoard(this.dom.board);
     console.log('編集内容をクリアしました。初期ブロックのみ残っています。');
+  }
+
+  /**
+   * 使用済みピースを削除
+   */
+  removeUsedPieces() {
+    const settings = SettingsManager.getSettings(this.dom);
+    MinoManager.removeUsedPieces(this.dom.nextContainer, settings);
   }
 } 

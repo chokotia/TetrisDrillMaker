@@ -131,6 +131,34 @@ async function getNextPieceCount() {
 }
 
 /**
+ * 指定したインデックスのネクストピースをクリックする
+ * @param {number} index - クリックするネクストピースのインデックス（0ベース）
+ * @returns {Promise<void>}
+ */
+async function clickNextPiece(index) {
+  const nextPieces = await page.$$('.next-piece-container');
+  if (index < nextPieces.length) {
+    await nextPieces[index].click();
+  }
+}
+
+/**
+ * 使用済みのネクストピースの数を取得する
+ * @returns {Promise<number>} 使用済みのネクストピースの数
+ */
+async function getUsedNextPieceCount() {
+  return page.$$eval('.next-piece-container.used-piece', containers => containers.length);
+}
+
+/**
+ * Remove Usedボタンをクリックする
+ * @returns {Promise<void>}
+ */
+async function clickRemoveUsedButton() {
+  await page.click('#remove-used');
+}
+
+/**
  * 左スワイプ操作をシミュレートする
  * @returns {Promise<void>}
  */
@@ -221,6 +249,9 @@ module.exports = {
   getCellColor,
   getBoardSize,
   getNextPieceCount,
+  clickNextPiece,
+  getUsedNextPieceCount,
+  clickRemoveUsedButton,
   swipeLeft,
   swipeRight,
   setBlockRangeSlider,

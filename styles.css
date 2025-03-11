@@ -11,6 +11,8 @@
   --color-edit-selected-text: #333333;
   --color-modal-header: #ffffff;
   --color-button-focus: #ffbf00;
+  --color-used-piece-overlay: rgba(0, 0, 0, 0.5);
+  --color-used-mark: #ff0000;
 }
 
 /* 全体ラッパ */
@@ -81,6 +83,8 @@
   padding: 10px;
   border-radius: 4px;
   border: 1px solid var(--color-next-border);
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 /* NEXT の各ミノ表示 */
@@ -93,6 +97,41 @@
   height: 40px;
   border: 1px solid var(--color-next-border);
   margin-bottom: 5px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.next-piece-container:hover {
+  transform: scale(1.05);
+}
+
+/* 使用済みピースのスタイル */
+.next-piece-container.used-piece {
+  opacity: 0.6;
+  position: relative;
+}
+
+.next-piece-container.used-piece::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-used-piece-overlay);
+  z-index: 1;
+}
+
+.next-piece-container .used-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--color-used-mark);
+  font-size: 24px;
+  font-weight: bold;
+  z-index: 2;
 }
 
 .next-piece {

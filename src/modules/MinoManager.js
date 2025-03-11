@@ -6,6 +6,15 @@ import { shuffle } from '../utils/random.js';
  * テトリスミノの生成と描画を担当
  */
 export class MinoManager {
+  // 現在のネクストピースを保持する配列
+  static currentPieces = [];
+  // 使用済みのネクストピースを記録する配列（インデックスをキーとして使用）
+  static usedPieces = {};
+  // 表示中のネクストピースの開始インデックス
+  static displayStartIndex = 0;
+  // 生成するネクストピースの総数
+  static TOTAL_NEXT_COUNT = 100;
+
   /**
    * NEXTピースを更新する
    * @param {HTMLElement} nextContainer - NEXTコンテナ要素
@@ -15,8 +24,26 @@ export class MinoManager {
   static updateNextPieces(nextContainer, settings, randomGenerator) {
     if (!nextContainer) return;
 
-    const pieces = this.generateNextPieces(settings, randomGenerator);
-    this.renderNextPieces(nextContainer, pieces);
+    // 初回のみ大量のピースを生成
+    if (this.currentPieces.length === 0) {
+      this.currentPieces = this.generateLargeNextPieces(settings, randomGenerator);
+      this.usedPieces = {};
+      this.displayStartIndex = 0;
+    }
+
+    this.renderVisibleNextPieces(nextContainer, settings.nextCount);
+  }
+
+  /**
+   * 大量のNEXTピースを生成
+   * @param {Object} settings - 設定
+   * @param {Function} randomGenerator - 乱数生成関数
+   * @returns {Array} 生成されたピース配列
+   */
+  static generateLargeNextPieces(settings, randomGenerator) {
+    return settings.minoMode === '7bag'
+      ? this.generate7BagPieces(this.TOTAL_NEXT_COUNT, randomGenerator)
+      : this.generateRandomPieces(this.TOTAL_NEXT_COUNT, randomGenerator);
   }
 
   /**
@@ -108,6 +135,39 @@ export class MinoManager {
   }
 
   /**
+   * 表示可能なNEXTピースを描画
+   * @param {HTMLElement} nextContainer - NEXTコンテナ要素
+   * @param {number} visibleCount - 表示するピース数
+   */
+  static renderVisibleNextPieces(nextContainer, visibleCount) {
+    this.clearNextContainer(nextContainer);
+    
+    // 表示範囲のピースを取得
+    const endIndex = Math.min(this.displayStartIndex + visibleCount, this.currentPieces.length);
+    const visiblePieces = this.currentPieces.slice(this.displayStartIndex, endIndex);
+    
+    const fragment = document.createDocumentFragment();
+    
+    // 各ピースをレンダリング
+    visiblePieces.forEach((mino, index) => {
+      if (mino) {
+        const actualIndex = this.displayStartIndex + index;
+        const container = this.createNextPieceContainer(actualIndex);
+        this.drawMino(mino, container);
+        
+        // 使用済みの場合はスタイルを適用
+        if (this.usedPieces[actualIndex]) {
+          this.markAsUsed(container);
+        }
+        
+        fragment.appendChild(container);
+      }
+    });
+    
+    nextContainer.appendChild(fragment);
+  }
+
+  /**
    * NEXTピースの描画
    * @param {HTMLElement} nextContainer - NEXTコンテナ要素
    * @param {Array} pieces - ピース配列
@@ -145,12 +205,91 @@ export class MinoManager {
 
   /**
    * NEXTピースのコンテナ作成
+   * @param {number} index - ピースのインデックス（オプション）
    * @returns {HTMLElement} 作成されたコンテナ要素
    */
-  static createNextPieceContainer() {
+  static createNextPieceContainer(index = null) {
     const container = document.createElement('div');
     container.classList.add('next-piece-container');
+    
+    // インデックスが指定されている場合は属性として追加
+    if (index !== null) {
+      container.setAttribute('data-index', index);
+      
+      // クリックイベントを追加
+      container.addEventListener('click', () => this.togglePieceUsed(container, index));
+    }
+    
     return container;
+  }
+
+  /**
+   * ピースの使用状態をトグル
+   * @param {HTMLElement} container - ピースコンテナ
+   * @param {number} index - ピースのインデックス
+   */
+  static togglePieceUsed(container, index) {
+    if (this.usedPieces[index]) {
+      // 使用済みマークを解除
+      delete this.usedPieces[index];
+      container.classList.remove('used-piece');
+      container.querySelector('.used-mark')?.remove();
+    } else {
+      // 使用済みとしてマーク
+      this.usedPieces[index] = true;
+      this.markAsUsed(container);
+    }
+  }
+
+  /**
+   * ピースを使用済みとしてマーク
+   * @param {HTMLElement} container - ピースコンテナ
+   */
+  static markAsUsed(container) {
+    container.classList.add('used-piece');
+    
+    // バツ印を追加
+    if (!container.querySelector('.used-mark')) {
+      const usedMark = document.createElement('div');
+      usedMark.classList.add('used-mark');
+      usedMark.innerHTML = '×';
+      container.appendChild(usedMark);
+    }
+  }
+
+  /**
+   * スクロールコントロールを追加
+   * @param {HTMLElement} nextContainer - NEXTコンテナ要素
+   * @param {DocumentFragment} fragment - 追加先のフラグメント
+   */
+  static addScrollControls(nextContainer, fragment) {
+    // このメソッドは使用しないため、空にしておく
+  }
+
+  /**
+   * 使用済みピースを削除して表示を更新
+   * @param {HTMLElement} nextContainer - NEXTコンテナ要素
+   * @param {Object} settings - 設定オブジェクト
+   */
+  static removeUsedPieces(nextContainer, settings) {
+    // 使用済みでないピースだけを残す
+    const newPieces = [];
+    let newIndex = 0;
+    
+    for (let i = 0; i < this.currentPieces.length; i++) {
+      if (!this.usedPieces[i]) {
+        newPieces[newIndex] = this.currentPieces[i];
+        newIndex++;
+      }
+    }
+    
+    // 新しい配列で更新
+    this.currentPieces = newPieces;
+    this.usedPieces = {};
+    this.displayStartIndex = 0;
+    
+    // 表示を更新
+    this.renderVisibleNextPieces(nextContainer, settings.nextCount);
   }
 
   /**
