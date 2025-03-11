@@ -1,5 +1,5 @@
 {
-  "name": "tetrisdrillmaker",
+  "name": "tetris-drill-maker",
   "version": "1.0.0",
   "description": "",
   "homepage": "https://github.com/chokotia/TetrisDrillMaker#readme",
@@ -15,9 +15,22 @@
   "type": "commonjs",
   "main": "script.js",
   "scripts": {
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,html,css,scss}\""
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,html,css,scss}\"",
+    "test": "jest",
+    "start": "http-server -p 3000"
   },
+  "keywords": [],
   "devDependencies": {
-    "prettier": "^3.4.2"
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-image-snapshot": "^6.4.0",
+    "jest-puppeteer": "^10.0.1",
+    "prettier": "^3.4.2",
+    "puppeteer": "^22.3.0"
+  },
+  "dependencies": {
+    "http-server": "^14.1.1"
   }
 }

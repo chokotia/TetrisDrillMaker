@@ -1,1 +1,4 @@
 node_modules
+*.png
+tests/__image_snapshots__/
+tests/__snapshots__/
