@@ -171,6 +171,16 @@
                   <option value="7bag">7種一巡</option>
                 </select>
               </div>
+              <div class="mb-3">
+                <label for="seed-value" class="form-label">シード値:</label>
+                <div class="input-group">
+                  <input type="text" id="seed-value" class="form-control">
+                  <button class="btn btn-outline-secondary" type="button" id="regenerate-seed">
+                    <i class="bi bi-arrow-repeat"></i> 再生成
+                  </button>
+                </div>
+                <small class="form-text text-muted">シード値は問題の再現性を保証します。同じシード値で同じ問題が生成されます。1文字以上入力してください。</small>
+              </div>
             </form>
             <div class="modal-footer">
               <button

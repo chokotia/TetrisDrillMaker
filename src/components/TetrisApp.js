@@ -1,4 +1,4 @@
-import { generateBaseSeed, createSeededGenerator } from '../utils/random.js';
+import { generateBaseSeed, createSeededGenerator, getSavedSeed, saveSeed, isValidSeed } from '../utils/random.js';
 import { config } from '../utils/config.js';
 import { SettingsManager } from '../modules/SettingsManager.js';
 import { BoardManager } from '../modules/BoardManager.js';
@@ -44,6 +44,8 @@ export class TetrisApp {
       nextContainer: document.getElementById('next'),
       mainView: document.getElementById('main-view'),
       boardContainer: document.getElementById('board-container'),
+      seedValue: document.getElementById('seed-value'),
+      regenerateSeedBtn: document.getElementById('regenerate-seed'),
       sliders: {
         width: document.getElementById('width'),
         height: document.getElementById('height'),
@@ -79,12 +81,13 @@ export class TetrisApp {
    * ゲーム状態の初期化
    */
   initializeGameState() {
-    this.baseSeed = generateBaseSeed();
+    this.baseSeed = getSavedSeed();
     this.currentProblemNumber = 1;
     this.randomGenerator = createSeededGenerator(
       this.baseSeed,
       this.currentProblemNumber
     );
+    saveSeed(this.baseSeed);
   }
 
   /**
@@ -133,6 +136,7 @@ export class TetrisApp {
     this.setupEditOptionListeners();
     this.setupClearButtonListener();
     this.setupRemoveUsedButtonListener();
+    this.setupSeedRegenerateListener();
     this.setupGestureControls();
   }
 
@@ -159,21 +163,21 @@ export class TetrisApp {
    */
   setupModalListeners() {
     if (this.dom.settingsButton) {
-      this.dom.settingsButton.addEventListener('click', () => 
-        this.openSettingsOverlay()
-      );
+      this.dom.settingsButton.addEventListener('click', () => {
+        this.openSettingsOverlay();
+      });
     }
 
     if (this.dom.saveAndCloseBtn) {
-      this.dom.saveAndCloseBtn.addEventListener('click', () => 
-        this.handleSaveAndClose()
-      );
+      this.dom.saveAndCloseBtn.addEventListener('click', () => {
+        this.handleSaveAndClose();
+      });
     }
 
     if (this.dom.closeIconBtn) {
-      this.dom.closeIconBtn.addEventListener('click', () => 
-        this.handleCloseWithoutSave()
-      );
+      this.dom.closeIconBtn.addEventListener('click', () => {
+        this.handleCloseWithoutSave();
+      });
     }
   }
 
@@ -240,6 +244,8 @@ export class TetrisApp {
    */
   openSettingsOverlay() {
     if (this.bsSettingsModal) {
+      this.loadSettings();
+      this.updateSeedValueDisplay();
       this.bsSettingsModal.show();
     }
   }
@@ -254,24 +260,31 @@ export class TetrisApp {
   }
 
   /**
-   * 保存して閉じる処理
+   * シード再生成ボタンのイベントリスナーを設定
    */
-  handleSaveAndClose() {
-    // 設定を保存
-    const settings = SettingsManager.getSettings(this.dom);
-    SettingsManager.saveSettings(settings);
-    // ボードとNEXTの内容を再描画 (問題番号はそのまま)
-    this.generateProblem();
-    // モーダルを閉じる
-    this.closeSettingsOverlay();
+  setupSeedRegenerateListener() {
+    if (this.dom.regenerateSeedBtn) {
+      this.dom.regenerateSeedBtn.addEventListener('click', () => {
+        this.regenerateSeed();
+      });
+    }
   }
 
   /**
-   * 保存せずに閉じる処理
+   * シード値を再生成する
    */
-  handleCloseWithoutSave() {
-    console.log('設定を保存せず閉じました。');
-    this.closeSettingsOverlay();
+  regenerateSeed() {
+    this.baseSeed = generateBaseSeed();
+    this.updateSeedValueDisplay();
+  }
+
+  /**
+   * シード値表示を更新する
+   */
+  updateSeedValueDisplay() {
+    if (this.dom.seedValue) {
+      this.dom.seedValue.value = this.baseSeed;
+    }
   }
 
   /**
@@ -402,18 +415,21 @@ export class TetrisApp {
    * 次の問題へ移動
    */
   goToNextProblem() {
+    console.log(`次の問題へ移動: 現在の問題番号 ${this.currentProblemNumber}`);
     this.currentProblemNumber += 1;
     this.randomGenerator = createSeededGenerator(
       this.baseSeed,
       this.currentProblemNumber
     );
     this.generateProblem();
+    console.log(`移動後の問題番号: ${this.currentProblemNumber}`);
   }
 
   /**
    * 前の問題へ移動
    */
   goToPreviousProblem() {
+    console.log(`前の問題へ移動: 現在の問題番号 ${this.currentProblemNumber}`);
     if (this.currentProblemNumber > 1) {
       this.currentProblemNumber -= 1;
       this.randomGenerator = createSeededGenerator(
@@ -421,6 +437,7 @@ export class TetrisApp {
         this.currentProblemNumber
       );
       this.generateProblem();
+      console.log(`移動後の問題番号: ${this.currentProblemNumber}`);
     }
   }
 
@@ -438,5 +455,47 @@ export class TetrisApp {
   removeUsedPieces() {
     const settings = SettingsManager.getSettings(this.dom);
     MinoManager.removeUsedPieces(this.dom.nextContainer, settings);
+  }
+
+  /**
+   * 設定を保存して閉じる
+   */
+  handleSaveAndClose() {
+    const settings = SettingsManager.getSettings(this.dom);
+    SettingsManager.saveSettings(settings);
+    
+    // シード値を取得して検証
+    const newSeed = this.dom.seedValue.value.trim();
+    if (!isValidSeed(newSeed)) {
+      alert('シード値は1文字以上入力してください。');
+      return;
+    }
+    
+    // シード値を更新して保存
+    this.baseSeed = newSeed;
+    saveSeed(this.baseSeed);
+    
+    // 問題番号を1に戻し、新しい乱数生成器を初期化
+    this.currentProblemNumber = 1;
+    this.randomGenerator = createSeededGenerator(
+      this.baseSeed,
+      this.currentProblemNumber
+    );
+    
+    // ネクストピースのキャッシュをクリア
+    MinoManager.currentPieces = [];
+    MinoManager.usedPieces = {};
+    MinoManager.displayStartIndex = 0;
+    
+    this.closeSettingsOverlay();
+    this.generateProblem();
+  }
+
+  /**
+   * 保存せずに閉じる処理
+   */
+  handleCloseWithoutSave() {
+    console.log('設定を保存せず閉じました。');
+    this.closeSettingsOverlay();
   }
 } 

@@ -5,6 +5,10 @@ import { EditManager } from './EditManager.js';
  * タッチ操作とジェスチャーを担当
  */
 export class GestureManager {
+  // クラス変数を追加
+  static lastSwipeTime = 0;
+  static swipeDebounceTime = 500; // ミリ秒
+
   /**
    * ジェスチャーコントロールをセットアップ
    * @param {HTMLElement} mainView - メインビュー要素
@@ -52,7 +56,17 @@ export class GestureManager {
   static configureSwipeRecognizer(hammer) {
     hammer.get('swipe').set({
       direction: Hammer.DIRECTION_ALL,
+      threshold: 10,        // スワイプ検出の閾値を上げる
+      velocity: 0.65,       // 速度の閾値を上げる
+      time: 300,            // 最大時間を設定
     });
+    
+    // 同時認識を防止
+    const swipe = hammer.get('swipe');
+    const pan = hammer.get('pan');
+    
+    // スワイプとパンの同時認識を防止
+    swipe.recognizeWith(pan);
   }
 
   /**
@@ -63,10 +77,20 @@ export class GestureManager {
    */
   static bindSwipeHandlers(hammer, onSwipeLeft, onSwipeRight) {
     hammer.on('swipeleft', () => {
+      // デバウンス処理
+      const now = Date.now();
+      if (now - this.lastSwipeTime < this.swipeDebounceTime) return;
+      this.lastSwipeTime = now;
+      
       if (onSwipeLeft) onSwipeLeft();
     });
     
     hammer.on('swiperight', () => {
+      // デバウンス処理
+      const now = Date.now();
+      if (now - this.lastSwipeTime < this.swipeDebounceTime) return;
+      this.lastSwipeTime = now;
+      
       if (onSwipeRight) onSwipeRight();
     });
   }

@@ -26,6 +26,50 @@ export function generateBaseSeed() {
 }
 
 /**
+ * シード値が有効かどうかを検証する
+ * @param {string} seed - 検証するシード値
+ * @returns {boolean} 有効な場合はtrue、無効な場合はfalse
+ */
+export function isValidSeed(seed) {
+  return seed && seed.trim().length > 0;
+}
+
+/**
+ * 保存されたシードを取得する
+ * @returns {string|null} 保存されたシード文字列、または新しく生成したシード
+ */
+export function getSavedSeed() {
+  try {
+    const savedSeed = localStorage.getItem('tetrisSeed');
+    return savedSeed && isValidSeed(savedSeed) ? savedSeed : generateBaseSeed();
+  } catch (error) {
+    console.error('シードの読み込みに失敗しました:', error);
+    return generateBaseSeed();
+  }
+}
+
+/**
+ * シードを保存する
+ * @param {string} seed - 保存するシード文字列
+ * @returns {boolean} 保存に成功した場合はtrue
+ */
+export function saveSeed(seed) {
+  if (!isValidSeed(seed)) {
+    console.error('無効なシード値です:', seed);
+    return false;
+  }
+  
+  try {
+    localStorage.setItem('tetrisSeed', seed);
+    console.log('シードを保存しました:', seed);
+    return true;
+  } catch (error) {
+    console.error('シードの保存に失敗しました:', error);
+    return false;
+  }
+}
+
+/**
  * シード付き乱数生成器を作成する
  * @param {string} base - ベースシード
  * @param {number} number - 問題番号

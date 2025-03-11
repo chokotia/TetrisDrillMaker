@@ -230,10 +230,111 @@ async function isModalVisible(modalId) {
  * @returns {Promise<boolean>} モーダルが非表示になっていればtrue
  */
 async function isModalHidden(modalId) {
-  return page.evaluate(id => {
+  const isHidden = await page.evaluate((id) => {
     const modal = document.getElementById(id);
-    return modal && !modal.classList.contains('show');
+    return !modal.classList.contains('show');
   }, modalId);
+  return isHidden;
+}
+
+/**
+ * シード値を設定する
+ * @param {string} seed 設定するシード値
+ * @returns {Promise<void>}
+ */
+async function setSeedValue(seed) {
+  await page.evaluate((value) => {
+    const seedInput = document.getElementById('seed-value');
+    if (seedInput) {
+      seedInput.value = value;
+    }
+  }, seed);
+  await wait(100);
+}
+
+/**
+ * シード値を取得する
+ * @returns {Promise<string>}
+ */
+async function getSeedValue() {
+  const seedValue = await page.evaluate(() => {
+    const seedInput = document.getElementById('seed-value');
+    return seedInput ? seedInput.value : '';
+  });
+  return seedValue;
+}
+
+/**
+ * シード値再生成ボタンをクリックする
+ * @returns {Promise<void>}
+ */
+async function clickRegenerateSeed() {
+  await page.click('#regenerate-seed');
+  await wait(100);
+}
+
+/**
+ * 盤面の全セルの色情報を取得する
+ * @returns {Promise<Array<string>>} セルの色情報の配列
+ */
+async function getBoardState() {
+  const cellColors = await page.evaluate(() => {
+    const cells = document.querySelectorAll('#board .cell');
+    return Array.from(cells).map(cell => {
+      // 初期ブロックの検出
+      if (cell.classList.contains('initial-block')) return 'initial';
+      
+      // セルのクラス名から色情報を抽出
+      if (cell.classList.contains('cell-gray')) return 'gray';
+      if (cell.classList.contains('cell-i')) return 'i';
+      if (cell.classList.contains('cell-j')) return 'j';
+      if (cell.classList.contains('cell-l')) return 'l';
+      if (cell.classList.contains('cell-o')) return 'o';
+      if (cell.classList.contains('cell-s')) return 's';
+      if (cell.classList.contains('cell-t')) return 't';
+      if (cell.classList.contains('cell-z')) return 'z';
+      return 'empty';
+    });
+  });
+  return cellColors;
+}
+
+/**
+ * ネクストピースの情報を取得する
+ * @returns {Promise<Array<string>>} ネクストピースの種類の配列
+ */
+async function getNextPiecesState() {
+  const nextPieces = await page.evaluate(() => {
+    const nextContainers = document.querySelectorAll('#next .next-piece');
+    return Array.from(nextContainers).map(container => {
+      // ネクストピースのクラス名から種類を抽出
+      if (container.classList.contains('piece-i')) return 'i';
+      if (container.classList.contains('piece-j')) return 'j';
+      if (container.classList.contains('piece-l')) return 'l';
+      if (container.classList.contains('piece-o')) return 'o';
+      if (container.classList.contains('piece-s')) return 's';
+      if (container.classList.contains('piece-t')) return 't';
+      if (container.classList.contains('piece-z')) return 'z';
+      return 'unknown';
+    });
+  });
+  return nextPieces;
+}
+
+/**
+ * 現在の問題番号を取得する
+ * @returns {Promise<number>} 問題番号
+ */
+async function getCurrentProblemNumber() {
+  const problemNumber = await page.evaluate(() => {
+    const problemCounter = document.getElementById('current-problem');
+    if (!problemCounter) return 1;
+    
+    const text = problemCounter.textContent.trim();
+    const match = text.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 1;
+  });
+  return problemNumber;
 }
 
 module.exports = {
@@ -257,4 +358,10 @@ module.exports = {
   setBlockRangeSlider,
   isModalVisible,
   isModalHidden,
+  setSeedValue,
+  getSeedValue,
+  clickRegenerateSeed,
+  getBoardState,
+  getNextPiecesState,
+  getCurrentProblemNumber,
 }; 
