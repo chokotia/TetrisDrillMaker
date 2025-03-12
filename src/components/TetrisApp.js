@@ -566,23 +566,6 @@ export class TetrisApp {
     // AIマネージャーを初期化
     await this.aiManager.initialize();
 
-    // 幅が10の場合のみAskAIボタンを有効化
-    this.updateAskAIButtonState();
-  }
-
-  /**
-   * Ask AIボタン表示状態の更新
-   */
-  updateAskAIButtonState() {
-    if (!this.aiDom || !this.aiDom.askAIButton) return;
-
-    const currentWidth = parseInt(this.dom.sliderValues.width.textContent);
-    const isValidWidth = currentWidth === 10;
-
-    this.aiDom.askAIButton.disabled = !isValidWidth;
-    this.aiDom.askAIButton.title = isValidWidth 
-      ? 'AIに最適な手を求める' 
-      : '幅10の盤面でないとAI機能は使用できません';
   }
 
   /**
