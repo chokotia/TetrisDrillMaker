@@ -9,7 +9,7 @@ export const config = {
     MIN_WIDTH: 3,
     MAX_WIDTH: 10,
     MIN_HEIGHT: 6,
-    MAX_HEIGHT: 10,
+    MAX_HEIGHT: 20,
   },
 
   // NEXTの表示数制限
