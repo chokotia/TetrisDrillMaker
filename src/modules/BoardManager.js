@@ -232,4 +232,101 @@ export class BoardManager {
   static isExistingBlock(cell, color) {
     return cell.classList.contains('block') && color !== '';
   }
+
+  /**
+   * 現在のボード状態を取得
+   * @param {HTMLElement} boardElement - ボード要素
+   * @param {number} width - ボードの幅
+   * @param {number} height - ボードの高さ
+   * @returns {Array} 現在のボード状態の2次元配列
+   */
+  static getCurrentBoard(boardElement, width, height) {
+    if (!boardElement) return [];
+    
+    const cells = boardElement.querySelectorAll('.cell');
+    const board = [];
+    
+    // 2次元配列を初期化
+    for (let y = 0; y < height; y++) {
+      board.push(Array(width).fill(null));
+    }
+    
+    // 各セルの状態を取得
+    cells.forEach((cell, index) => {
+      const x = index % width;
+      const y = Math.floor(index / width);
+      
+      if (cell.classList.contains('block')) {
+        // ブロックの色から種類を判別
+        let type = null;
+        const style = window.getComputedStyle(cell);
+        const backgroundColor = style.backgroundColor;
+        
+        // 色から対応するミノタイプを判定
+        for (const [minoType, color] of Object.entries(minoColors)) {
+          if (this.isSameColor(backgroundColor, color)) {
+            type = minoType;
+            break;
+          }
+        }
+        
+        // お邪魔ブロック（グレー）の場合
+        if (type === null && this.isExistingBlock(cell, backgroundColor)) {
+          type = 'G'; // お邪魔ブロックとして扱う
+        }
+        
+        board[y][x] = type;
+      }
+    });
+    
+    return board;
+  }
+  
+  /**
+   * AIから返された盤面状態をボードに適用
+   * @param {HTMLElement} boardElement - ボード要素
+   * @param {Array} aiBoard - AIから返された盤面状態
+   * @param {number} width - ボードの幅
+   * @param {number} height - ボードの高さ
+   */
+  static applyAIBoard(boardElement, aiBoard, width, height) {
+    if (!boardElement || !aiBoard || !aiBoard.length) return;
+    
+    const cells = boardElement.querySelectorAll('.cell');
+    
+    // 盤面サイズが一致しない場合は処理しない
+    if (aiBoard[0].length !== width) {
+      console.error('AI盤面の幅がアプリの盤面と一致しません');
+      return;
+    }
+    
+    // 高さは最大20行だが、現在の表示領域に合わせる
+    const effectiveHeight = Math.min(height, aiBoard.length);
+    const y_diff = aiBoard.length - height
+    
+    // 各セルを更新
+    for (let y = 0; y < effectiveHeight; y++) {
+      for (let x = 0; x < width; x++) {
+        const index = y * width + x;
+        const cell = cells[index];
+        const cellValue = aiBoard[y+y_diff][x];
+        
+        if (cellValue) {
+          // ブロックを配置
+          let color = minoColors[cellValue];
+          if (!color && cellValue === 'G') {
+            // お邪魔ブロックの場合
+            color = config.BLOCKS.GRAY;
+          }
+          
+          if (color) {
+            this.paintCell(cell, color);
+          }
+        } else {
+          // 空のセル
+          this.clearCell(cell);
+        }
+      }
+    }
+  }
 } 

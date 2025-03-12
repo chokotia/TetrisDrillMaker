@@ -13,6 +13,9 @@
   --color-button-focus: #ffbf00;
   --color-used-piece-overlay: rgba(0, 0, 0, 0.5);
   --color-used-mark: #ff0000;
+  --color-ai-history-item: #f8f9fa;
+  --color-ai-history-selected: #d1e7ff;
+  --color-ai-history-hover: #e2e6ea;
 }
 
 /* 全体ラッパ */
@@ -217,4 +220,88 @@ button:focus {
 /* スクロール防止 */
 body {
   overflow: hidden;
+}
+
+/* AI関連スタイル */
+.ai-history-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.25rem;
+}
+
+.ai-history-item {
+  cursor: pointer;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--color-ai-history-item);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  transition: background-color 0.2s ease;
+}
+
+.ai-history-item:last-child {
+  border-bottom: none;
+}
+
+.ai-history-item:hover {
+  background-color: var(--color-ai-history-hover);
+}
+
+.ai-history-item.selected {
+  background-color: var(--color-ai-history-selected);
+  font-weight: bold;
+}
+
+.ai-piece-type {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  margin-right: 8px;
+  vertical-align: middle;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+  line-height: 20px;
+}
+
+.ai-piece-type.I { background-color: #00f0f0; }
+.ai-piece-type.O { background-color: #f0f000; }
+.ai-piece-type.T { background-color: #a000f0; }
+.ai-piece-type.L { background-color: #f0a000; }
+.ai-piece-type.J { background-color: #0000f0; }
+.ai-piece-type.S { background-color: #00f000; }
+.ai-piece-type.Z { background-color: #f00000; }
+.ai-piece-type.G { background-color: #808080; }
+
+/* 探索中を示すスピナー */
+.ai-loading-spinner {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  vertical-align: middle;
+  border: 0.2em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border .75s linear infinite;
+}
+
+/* Ask AIボタンのスタイル調整 */
+#ask-ai-button {
+  transition: all 0.3s ease;
+}
+
+#ask-ai-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* エラーメッセージの強調表示 */
+.ai-error-message {
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
 }

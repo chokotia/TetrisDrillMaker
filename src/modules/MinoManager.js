@@ -512,4 +512,44 @@ export class MinoManager {
   static isSamePosition(pos1, pos2) {
     return pos1.x === pos2.x && pos1.y === pos2.y;
   }
+
+  /**
+   * AI用にネクスト情報を取得
+   * @returns {Array} AI用のネクスト配列
+   */
+  static getQueueForAI() {
+    // 使用済みでない残りのピースを取得
+    const remainingPieces = this.currentPieces.filter((_, index) => !this.usedPieces[index]);
+    
+    // AI用に7種のミノタイプ（I, O, T, L, J, S, Z）の配列に変換
+    // return remainingPieces.map(piece => piece.type);
+    return remainingPieces;
+  }
+
+  /**
+   * AIからの結果を元にネクスト情報を更新
+   * @param {HTMLElement} nextContainer - NEXTコンテナ要素
+   * @param {Array} aiNext - AIから返されたネクスト配列（ホールドを含む場合あり）
+   * @param {number} nextCount - 表示するネクスト数（省略時は5）
+   */
+  static applyAINext(nextContainer, aiNext, nextCount = 5) {
+    if (!nextContainer || !aiNext) return;
+    
+    // AIから返されたネクスト情報が少なくとも1つ以上あることを確認
+    if (!aiNext || aiNext.length === 0) {
+      console.error('AIから返されたネクスト情報がありません');
+      return;
+    }
+    
+    // ネクスト情報をコピー（既にホールドが含まれている前提）
+    let displayPieces = [...aiNext];
+    
+    // 現在のネクスト情報を更新（現在の実装に合わせた形で）
+    // this.currentPieces = displayPieces.map(type => ({ type }));
+    this.currentPieces = displayPieces;
+    this.usedPieces = {}; // 使用済みピースをクリア
+    
+    // 設定されたネクスト数だけ表示
+    this.renderVisibleNextPieces(nextContainer, nextCount);
+  }
 } 
