@@ -35,15 +35,31 @@ export class MinoManager {
   }
 
   /**
+   * 内部用のNEXTピース生成関数
+   * @param {Object} settings - 設定
+   * @param {Function} randomGenerator - 乱数生成関数
+   * @param {number} count - 生成するピース数
+   * @returns {Array} 生成されたピース配列
+   * @private
+   */
+  static _generateNextPiecesInternal(settings, randomGenerator, count) {
+    if (settings.minoMode === '7bag-random' || settings.minoMode === '7bag') {
+      return this.generate7BagPieces(count, randomGenerator, true);
+    } else if (settings.minoMode === '7bag-pure') {
+      return this.generate7BagPieces(count, randomGenerator, false);
+    } else {
+      return this.generateRandomPieces(count, randomGenerator);
+    }
+  }
+
+  /**
    * 大量のNEXTピースを生成
    * @param {Object} settings - 設定
    * @param {Function} randomGenerator - 乱数生成関数
    * @returns {Array} 生成されたピース配列
    */
   static generateLargeNextPieces(settings, randomGenerator) {
-    return settings.minoMode === '7bag'
-      ? this.generate7BagPieces(this.TOTAL_NEXT_COUNT, randomGenerator)
-      : this.generateRandomPieces(this.TOTAL_NEXT_COUNT, randomGenerator);
+    return this._generateNextPiecesInternal(settings, randomGenerator, this.TOTAL_NEXT_COUNT);
   }
 
   /**
@@ -54,26 +70,31 @@ export class MinoManager {
    */
   static generateNextPieces(settings, randomGenerator) {
     const nextCount = settings.nextCount;
-    return settings.minoMode === '7bag'
-      ? this.generate7BagPieces(nextCount, randomGenerator)
-      : this.generateRandomPieces(nextCount, randomGenerator);
+    return this._generateNextPiecesInternal(settings, randomGenerator, nextCount);
   }
 
   /**
    * 7-bagシステムによるピース生成
    * @param {number} count - 生成するピース数
    * @param {Function} randomGenerator - 乱数生成関数
+   * @param {boolean} useRandomOffset - ランダムなオフセットを使用するかどうか
    * @returns {Array} 生成されたピース配列
    */
-  static generate7BagPieces(count, randomGenerator) {
+  static generate7BagPieces(count, randomGenerator, useRandomOffset = true) {
     const tetrominoes = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
     const pieces = [];
-    const offset = this.calculateBagOffset(randomGenerator);
     
-    // 最初のバッグを生成してオフセットを適用
-    let bag = this.generateShuffledBag(tetrominoes, randomGenerator);
-    bag = this.applyOffset(bag, offset);
-    pieces.push(...bag);
+    if (useRandomOffset) {
+      const offset = this.calculateBagOffset(randomGenerator);
+      
+      // 最初のバッグを生成してオフセットを適用
+      let bag = this.generateShuffledBag(tetrominoes, randomGenerator);
+      bag = this.applyOffset(bag, offset);
+      pieces.push(...bag);
+    } else {
+      // 純粋な7種一巡: オフセットなしで最初から順番に使用
+      pieces.push(...this.generateShuffledBag(tetrominoes, randomGenerator));
+    }
 
     // 必要な数になるまで新しいバッグを追加
     while (pieces.length < count) {
