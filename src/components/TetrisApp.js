@@ -944,7 +944,7 @@ export class TetrisApp {
       }
       
       // 通知を表示
-      this.showNotification('AIの手を適用しました', 'success');
+      // this.showNotification('AIの手を適用しました', 'success');
     } catch (error) {
       console.error('AI手の適用エラー:', error);
       this.showNotification('AIの手を適用できませんでした', 'danger');
