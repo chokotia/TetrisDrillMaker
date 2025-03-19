@@ -14,7 +14,7 @@ export class TetrisAIManager {
         this.isCalculating = false;
         this.aiSettings = {
             searchTimePerMove: 500, // ミリ秒
-            movesToCalculate: 20
+            movesToCalculate: 10
         };
         this.eventListeners = new Map();
     }

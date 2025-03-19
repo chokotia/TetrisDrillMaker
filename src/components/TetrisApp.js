@@ -846,6 +846,8 @@ export class TetrisApp {
     this.renderAIMoveHistory();
     // ボタンの状態を更新
     this.updateAIButtonStates();
+    // 現在の手を更新
+    this.updateCurrentMove();
   }
 
   /**
@@ -1027,6 +1029,7 @@ export class TetrisApp {
       this.applyAIMove(prevMove);
       this.aiManager.selectedMoveIndex = currentIndex - 1;
       this.updateAIButtonStates();
+      this.updateCurrentMove();
     }
   }
 
@@ -1044,6 +1047,7 @@ export class TetrisApp {
       this.applyAIMove(nextMove);
       this.aiManager.selectedMoveIndex = currentIndex + 1;
       this.updateAIButtonStates();
+      this.updateCurrentMove();
     }
   }
 
@@ -1063,5 +1067,46 @@ export class TetrisApp {
     const currentIndex = this.aiManager.selectedMoveIndex;
     if (undoButton) undoButton.disabled = currentIndex <= 0;
     if (redoButton) redoButton.disabled = currentIndex >= this.aiManager.moveHistory.length - 1;
+  }
+
+  /**
+   * 現在の手を更新
+   */
+  updateCurrentMove() {
+    if (!this.aiManager || !this.aiManager.moveHistory || this.aiManager.moveHistory.length === 0) {
+      const display = document.querySelector('.ai-move-display');
+      if (display) {
+        display.style.display = 'none';
+      }
+      return;
+    }
+
+    const display = document.querySelector('.ai-move-display');
+    if (!display) return;
+
+    display.style.display = 'flex';
+    const currentIndex = this.aiManager.selectedMoveIndex;
+    const history = this.aiManager.moveHistory;
+
+    if (currentIndex >= 0 && currentIndex < history.length) {
+      const move = history[currentIndex];
+      const moveLocation = move.suggestion.move.location;
+      const minoType = moveLocation.type;
+      const orientation = moveLocation.orientation;
+      const position = `x:${moveLocation.range.x}, y:${moveLocation.range.y}`;
+      
+      const currentElement = display.querySelector('.ai-move-current');
+      if (currentElement) {
+        currentElement.innerHTML = `
+          <span class="ai-piece-type ${minoType}">${minoType}</span>
+          <span>${orientation}, ${position}</span>
+        `;
+        currentElement.style.display = 'flex';
+        currentElement.style.alignItems = 'center';
+        currentElement.style.gap = '4px';
+      }
+    } else {
+      display.style.display = 'none';
+    }
   }
 } 

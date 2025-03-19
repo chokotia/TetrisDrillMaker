@@ -68,33 +68,43 @@
 
       <footer id="edit-nav" class="navbar navbar-dark bg-dark fixed-bottom">
         <div class="container-fluid">
-          <div class="btn-group">
+          <div class="d-flex justify-content-between w-100 mb-2">
+            <div class="btn-group">
+              <button
+                id="auto-button"
+                class="btn btn-secondary edit-option"
+                data-action="auto"
+                type="button"
+              >
+                Auto
+              </button>
+              <button
+                id="del-button"
+                class="btn btn-secondary edit-option"
+                data-action="delete"
+                type="button"
+              >
+                Del
+              </button>
+              <button
+                id="gray-button"
+                class="btn btn-secondary edit-option"
+                data-action="gray"
+                type="button"
+              >
+                Gray
+              </button>
+            </div>
             <button
-              id="auto-button"
-              class="btn btn-secondary edit-option"
-              data-action="auto"
+              id="clear-board"
+              class="btn btn-outline-light edit-toggle"
               type="button"
+              aria-label="盤面をクリアする"
             >
-              Auto
-            </button>
-            <button
-              id="del-button"
-              class="btn btn-secondary edit-option"
-              data-action="delete"
-              type="button"
-            >
-              Del
-            </button>
-            <button
-              id="gray-button"
-              class="btn btn-secondary edit-option"
-              data-action="gray"
-              type="button"
-            >
-              Gray
+              Clear
             </button>
           </div>
-          <div class="d-flex">
+          <div class="d-flex justify-content-center w-100">
             <button
               id="undo-ai-move"
               class="btn btn-outline-light me-2"
@@ -104,6 +114,9 @@
             >
               <i class="bi bi-chevron-left"></i>
             </button>
+            <div class="ai-move-display d-flex align-items-center mx-3">
+              <div class="ai-move-current"></div>
+            </div>
             <button
               id="redo-ai-move"
               class="btn btn-outline-light me-2"
@@ -112,14 +125,6 @@
               disabled
             >
               <i class="bi bi-chevron-right"></i>
-            </button>
-            <button
-              id="clear-board"
-              class="btn btn-outline-light edit-toggle ms-3"
-              type="button"
-              aria-label="盤面をクリアする"
-            >
-              Clear
             </button>
           </div>
         </div>
@@ -240,9 +245,9 @@
                     class="form-range flex-grow-1"
                     min="1"
                     max="20"
-                    value="20"
+                    value="10"
                   />
-                  <output for="ai-moves-count" id="ai-moves-count-value" class="badge bg-secondary">20</output>
+                  <output for="ai-moves-count" id="ai-moves-count-value" class="badge bg-secondary">10</output>
                 </div>
               </div>
             </form>
