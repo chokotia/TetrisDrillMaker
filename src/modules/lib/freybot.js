@@ -427,7 +427,19 @@ Game.prototype.ai_legalMoves = function(t, e) {
     };
     for (let a = 0; a < 4; a++) {
         let o = s;
-        1 == a ? o = this.ai_simulateAction(o, "cw", t, e, !0) : 2 == a ? o = this.ai_simulateAction(o, "180", t, e, !0) : 3 == a && (o = o = this.ai_simulateAction(o, "ccw", t, e, !0));
+        //1 == a ? o = this.ai_simulateAction(o, "cw", t, e, !0) : 2 == a && (o = o = this.ai_simulateAction(o, "ccw", t, e, !0));
+        if (a == 1) {
+            // aが1の場合、時計回りに回転
+            o = this.ai_simulateAction(o, "cw", t, e, true);
+        } else if (a == 2) {
+            // aが2の場合、180度回転
+            //o = this.ai_simulateAction(o, "180", t, e, true);
+        } else if (a == 3) {
+            // aが3の場合、反時計回りに回転
+            o = this.ai_simulateAction(o, "ccw", t, e, true);
+        }
+        // aが0の場合は何もしない（初期状態のまま）
+        
         let r = {
             x: o.x,
             y: o.y,
@@ -460,7 +472,6 @@ Game.prototype.ai_legalMoves = function(t, e) {
             a.push(this.ai_simulateAction(o, "<", t, e, !0)),
             a.push(this.ai_simulateAction(o, ">", t, e, !0)),
             a.push(this.ai_simulateAction(o, "sd", t, e, !0)),
-            a.push(this.ai_simulateAction(o, "180", t, e, !0)),
             a.push(this.ai_simulateAction(o, "cw", t, e, !0)),
             a.push(this.ai_simulateAction(o, "ccw", t, e, !0));
             for (let o of a)
