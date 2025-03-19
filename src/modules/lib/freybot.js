@@ -427,7 +427,19 @@ Game.prototype.ai_legalMoves = function(t, e) {
     };
     for (let a = 0; a < 4; a++) {
         let o = s;
-        1 == a ? o = this.ai_simulateAction(o, "cw", t, e, !0) : 2 == a ? o = this.ai_simulateAction(o, "180", t, e, !0) : 3 == a && (o = o = this.ai_simulateAction(o, "ccw", t, e, !0));
+        //1 == a ? o = this.ai_simulateAction(o, "cw", t, e, !0) : 2 == a && (o = o = this.ai_simulateAction(o, "ccw", t, e, !0));
+        if (a == 1) {
+            // aが1の場合、時計回りに回転
+            o = this.ai_simulateAction(o, "cw", t, e, true);
+        } else if (a == 2) {
+            // aが2の場合、180度回転
+            //o = this.ai_simulateAction(o, "180", t, e, true);
+        } else if (a == 3) {
+            // aが3の場合、反時計回りに回転
+            o = this.ai_simulateAction(o, "ccw", t, e, true);
+        }
+        // aが0の場合は何もしない（初期状態のまま）
+        
         let r = {
             x: o.x,
             y: o.y,
@@ -460,7 +472,6 @@ Game.prototype.ai_legalMoves = function(t, e) {
             a.push(this.ai_simulateAction(o, "<", t, e, !0)),
             a.push(this.ai_simulateAction(o, ">", t, e, !0)),
             a.push(this.ai_simulateAction(o, "sd", t, e, !0)),
-            a.push(this.ai_simulateAction(o, "180", t, e, !0)),
             a.push(this.ai_simulateAction(o, "cw", t, e, !0)),
             a.push(this.ai_simulateAction(o, "ccw", t, e, !0));
             for (let o of a)
@@ -936,28 +947,30 @@ class Bot {
                 height: -39,
                 top_half: -150,
                 top_quarter: -511,
-                cavity_cells: -173,
-                cavity_cells_sq: -3,
-                overhang_cells: -34,
-                overhang_cells_sq: -1,
-                covered_cells: -17,
-                covered_cells_sq: -1,
-                tslot: [8, 148, 192, 407],
+                cavity_cells: -500,
+                cavity_cells_sq: -500,
+                overhang_cells: -500,
+                overhang_cells_sq: -500,
+                covered_cells: -500,
+                covered_cells_sq: -500,
+                // tslot: [8, 148, 192, 407],
+                tslot: [-9999, -9999, -9999, -9999],
                 well_depth: 57,
                 max_well_depth: 17,
-                well_column: [-30, -50, 20, 50, 60, 60, 50, 20, -50, -30],
-                wasted_t: -152,
+                // well_column: [-30, -50, 20, 50, 60, 60, 50, 20, -50, -30],
+                well_column: [-9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, -9999, 0],// 右端空けの積み方のみ評価するように修正
+                wasted_t: 0, // TスピンできなかったTミノにペナルティは与えないようにする。
                 b2b_clear: 104,
-                clear1: -143,
-                clear2: -100,
-                clear3: -58,
-                clear4: 390,
-                tspin1: -999,
-                tspin2: -999,
-                tspin3: -999,
-                mini_tspin1: -158,
-                mini_tspin2: -93,
-                perfect_clear: 999,
+                clear1: -500,
+                clear2: -500,
+                clear3: -500,
+                clear4: 500,
+                tspin1: -9999,
+                tspin2: -9999,
+                tspin3: -9999,
+                mini_tspin1: -9999,
+                mini_tspin2: -9999,
+                perfect_clear: 0,
                 combo_garbage: 200,
                 tank: [17, 4],
                 spike: 115
@@ -1225,10 +1238,7 @@ function addAbsoluteBlockPositions(move) {
     const xMin = Math.min(...xValues);
     const xMax = Math.max(...xValues);
     const yMin = Math.min(...yValues);
-    const yMax = Math.max(...yValues);
-    
-    // 各ブロックの位置をログに表示
-    const blockPositionsStr = blockPositions.map(pos => `(${pos[0].toString().padStart(2)},${pos[1].toString().padStart(2)})`).join('  ');
+    const yMax = Math.max(...yValues);   
     
     // 元のmoveオブジェクトに情報を追加
     const enhancedMove = {
@@ -1236,8 +1246,8 @@ function addAbsoluteBlockPositions(move) {
         location: {
             ...move.location,
             range: {
-                x: `${xMin+1}-${xMax+1}`,
-                y: `${yMin+1}-${yMax+1}`
+                x: { from: xMin, to: xMax },
+                y: { from: yMin, to: yMax }
             },
             blockPositions: blockPositions
         },

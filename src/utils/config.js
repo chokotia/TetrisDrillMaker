@@ -42,6 +42,28 @@ export const minoColors = {
   default: '#B0C4DE',
 };
 
+/**
+ * 16進数カラーコードをRGBカラー形式に変換
+ * @param {string} hex - 16進数カラーコード (#RRGGBB または #RGB 形式)
+ * @returns {string} rgb(R, G, B)形式の文字列
+ */
+export function hexToRgb(hex) {
+  // #を削除
+  hex = hex.replace(/^#/, '');
+  
+  // 3桁の場合は6桁に展開 (#RGB → #RRGGBB)
+  if (hex.length === 3) {
+    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+  }
+  
+  // 16進数を10進数に変換
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 // ミノの形状パターン定義
 export const MINO_PATTERNS = {
   I: [

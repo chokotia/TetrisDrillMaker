@@ -1,5 +1,5 @@
 import { generateBaseSeed, createSeededGenerator, getSavedSeed, saveSeed, isValidSeed } from '../utils/random.js';
-import { config } from '../utils/config.js';
+import { config, minoColors } from '../utils/config.js';
 import { SettingsManager } from '../modules/SettingsManager.js';
 import { BoardManager } from '../modules/BoardManager.js';
 import { MinoManager } from '../modules/MinoManager.js';
@@ -32,33 +32,50 @@ export class TetrisApp {
    * @returns {Object} DOM要素オブジェクト
    */
   initializeDOMElements() {
-    return {
-      settingsButton: document.getElementById('settings-button'),
-      saveAndCloseBtn: document.getElementById('save-and-close-settings'),
-      closeIconBtn: document.getElementById('close-settings-without-save'),
-      editOptionButtons: document.querySelectorAll('.edit-option'),
-      clearButton: document.getElementById('clear-board'),
-      removeUsedButton: document.getElementById('remove-used'),
-      problemCounter: document.getElementById('current-problem'),
+    this.dom = {
+      app: document.getElementById('app'),
       board: document.getElementById('board'),
+      currentProblem: document.getElementById('current-problem'),
       nextContainer: document.getElementById('next'),
-      mainView: document.getElementById('main-view'),
-      boardContainer: document.getElementById('board-container'),
-      seedValue: document.getElementById('seed-value'),
-      regenerateSeedBtn: document.getElementById('regenerate-seed'),
+      holdContainer: document.getElementById('hold'),
+      editNav: document.getElementById('edit-nav'),
+      toggleBoard: document.getElementById('toggle-board'),
+      removeUsed: document.getElementById('remove-used'),
+      fillColumnButton: document.getElementById('fill-column-button'),
+      clearColumnButton: document.getElementById('clear-column-button'),
+      titleBar: document.getElementById('title-bar'),
+      clearBoard: document.getElementById('clear-board'),
+      settingsButton: document.getElementById('settings-button'),
+      settingsModal: document.getElementById('settings-modal'),
+      settingsForm: document.getElementById('settings-form'),
+      saveCloseButton: document.getElementById('save-and-close-settings'),
+      closeWithoutSaveButton: document.getElementById('close-settings-without-save'),
+      autoButton: document.getElementById('auto-button'),
+      delButton: document.getElementById('del-button'),
+      grayButton: document.getElementById('gray-button'),
+      editOptionButtons: document.querySelectorAll('.edit-option'),
       sliders: {
         width: document.getElementById('width'),
         height: document.getElementById('height'),
         nextCount: document.getElementById('next-count'),
-        blockRange: document.getElementById('block-range-slider'),
+        aiSearchTime: document.getElementById('ai-search-time'),
+        aiMovesCount: document.getElementById('ai-moves-count')
       },
       sliderValues: {
         width: document.getElementById('width-value'),
         height: document.getElementById('height-value'),
         nextCount: document.getElementById('next-count-value'),
-        blockRange: document.getElementById('block-range-values'),
+        aiSearchTime: document.getElementById('ai-search-time-value'),
+        aiMovesCount: document.getElementById('ai-moves-count-value'),
+        blockRange: document.getElementById('block-range-values')
       },
+      minoMode: document.getElementById('mino-mode'),
+      seedValue: document.getElementById('seed-value'),
+      regenerateSeedButton: document.getElementById('regenerate-seed'),
+      blockRangeSlider: document.getElementById('block-range-slider'),
     };
+
+    return this.dom;
   }
 
   /**
@@ -72,6 +89,9 @@ export class TetrisApp {
       this.initializeControls();
       this.generateFirstProblem();
       this.logInitializationInfo();
+      
+      // 初期状態では空のホールド表示を作成
+      this.updateHoldDisplay(null);
       
       // AI機能の初期化
       this.initializeAI();
@@ -138,8 +158,11 @@ export class TetrisApp {
     this.setupModalListeners();
     this.setupEditOptionListeners();
     this.setupClearButtonListener();
+    this.setupFillColumnButtonListener();
+    this.setupClearColumnButtonListener();
     this.setupRemoveUsedButtonListener();
     this.setupSeedRegenerateListener();
+    this.setupToggleBoardListener();
     this.setupGestureControls();
   }
 
@@ -171,14 +194,14 @@ export class TetrisApp {
       });
     }
 
-    if (this.dom.saveAndCloseBtn) {
-      this.dom.saveAndCloseBtn.addEventListener('click', () => {
+    if (this.dom.saveCloseButton) {
+      this.dom.saveCloseButton.addEventListener('click', () => {
         this.handleSaveAndClose();
       });
     }
 
-    if (this.dom.closeIconBtn) {
-      this.dom.closeIconBtn.addEventListener('click', () => {
+    if (this.dom.closeWithoutSaveButton) {
+      this.dom.closeWithoutSaveButton.addEventListener('click', () => {
         this.handleCloseWithoutSave();
       });
     }
@@ -188,6 +211,17 @@ export class TetrisApp {
    * 編集オプション関連のイベントリスナー
    */
   setupEditOptionListeners() {
+    // editOptionButtonsがない場合は再取得を試みる
+    if (!this.dom.editOptionButtons || this.dom.editOptionButtons.length === 0) {
+      this.dom.editOptionButtons = document.querySelectorAll('.edit-option');
+    }
+    
+    // それでもない場合はエラーログを出して処理を中断
+    if (!this.dom.editOptionButtons || this.dom.editOptionButtons.length === 0) {
+      console.error('編集オプションボタンが見つかりません');
+      return;
+    }
+    
     this.dom.editOptionButtons.forEach(button => {
       button.addEventListener('click', () => {
         const action = button.dataset.action;
@@ -201,8 +235,8 @@ export class TetrisApp {
    * クリアボタンのイベントリスナー
    */
   setupClearButtonListener() {
-    if (this.dom.clearButton) {
-      this.dom.clearButton.addEventListener('click', () => 
+    if (this.dom.clearBoard) {
+      this.dom.clearBoard.addEventListener('click', () => 
         this.resetToInitialBoard()
       );
     }
@@ -212,8 +246,8 @@ export class TetrisApp {
    * 使用済みピース削除ボタンのリスナーを設定
    */
   setupRemoveUsedButtonListener() {
-    if (this.dom.removeUsedButton) {
-      this.dom.removeUsedButton.addEventListener('click', () => this.removeUsedPieces());
+    if (this.dom.removeUsed) {
+      this.dom.removeUsed.addEventListener('click', () => this.removeUsedPieces());
     }
   }
 
@@ -221,7 +255,7 @@ export class TetrisApp {
    * ブロック数レンジスライダーの初期化
    */
   initializeBlockRangeSlider() {
-    const blockRangeSlider = this.dom.sliders.blockRange;
+    const blockRangeSlider = this.dom.blockRangeSlider;
     if (!blockRangeSlider) return;
     
     noUiSlider.create(blockRangeSlider, {
@@ -266,8 +300,8 @@ export class TetrisApp {
    * シード再生成ボタンのイベントリスナーを設定
    */
   setupSeedRegenerateListener() {
-    if (this.dom.regenerateSeedBtn) {
-      this.dom.regenerateSeedBtn.addEventListener('click', () => {
+    if (this.dom.regenerateSeedButton) {
+      this.dom.regenerateSeedButton.addEventListener('click', () => {
         this.regenerateSeed();
       });
     }
@@ -342,8 +376,8 @@ export class TetrisApp {
    * 問題番号ラベル更新
    */
   updateProblemCounter() {
-    if (this.dom.problemCounter) {
-      this.dom.problemCounter.textContent = `問題 #${this.currentProblemNumber}`;
+    if (this.dom.currentProblem) {
+      this.dom.currentProblem.textContent = `問題 #${this.currentProblemNumber}`;
     }
   }
 
@@ -362,8 +396,8 @@ export class TetrisApp {
    */
   setupGestureControls() {
     GestureManager.setupGestureControls(
-      this.dom.mainView,
-      this.dom.boardContainer,
+      document.getElementById('main-view'),
+      document.getElementById('board-container'),
       () => this.goToNextProblem(),
       () => this.goToPreviousProblem(),
       (event) => this.handleCellPaint(event),
@@ -624,6 +658,22 @@ export class TetrisApp {
         this.confirmResetAIHistory();
       });
     }
+
+    // AIの手を進める/戻るボタン
+    const undoButton = document.getElementById('undo-ai-move');
+    const redoButton = document.getElementById('redo-ai-move');
+
+    if (undoButton) {
+      undoButton.addEventListener('click', () => {
+        this.undoAIMove();
+      });
+    }
+
+    if (redoButton) {
+      redoButton.addEventListener('click', () => {
+        this.redoAIMove();
+      });
+    }
   }
 
   /**
@@ -737,8 +787,15 @@ export class TetrisApp {
           return;
         }
         
-        // 新規にAI探索を開始
-        await this.aiManager.startSearch(gameState);
+        // 左端からグレーのミノ列数を計算
+        const grayColumnCount = BoardManager.countGrayColumns(
+          this.dom.board,
+          this.currentWidth,
+          this.currentHeight
+        );
+        
+        // 新規にAI探索を開始（グレーの列数を引数として渡す）
+        await this.aiManager.startSearch(gameState, grayColumnCount);
       }
       
       // 進捗表示を開始
@@ -828,6 +885,10 @@ export class TetrisApp {
   updateAIMoveHistory(moves) {
     // 履歴UIを更新
     this.renderAIMoveHistory();
+    // ボタンの状態を更新
+    this.updateAIButtonStates();
+    // 現在の手を更新
+    this.updateCurrentMove();
   }
 
   /**
@@ -866,7 +927,7 @@ export class TetrisApp {
       const moveLocation = item.suggestion.move.location;
       const minoType = moveLocation.type;
       const orientation = moveLocation.orientation;
-      const position = `x:${moveLocation.range.x}, y:${moveLocation.range.y}`;
+      const position = `x:${moveLocation.adjustedRange.x}, y:${moveLocation.adjustedRange.y}`;
       
       // アイテムの内容を設定
       moveItem.innerHTML = `
@@ -915,6 +976,9 @@ export class TetrisApp {
    */
   applyAIMove(move) {
     try {
+      // 現在の表示状態を記憶
+      const isBoardHidden = this.dom.board.getAttribute('data-visible') === 'false';
+      
       // ボードを更新
       if (move.suggestion && move.suggestion.board) {
         BoardManager.applyAIBoard(
@@ -930,21 +994,47 @@ export class TetrisApp {
         // 設定されたネクスト数を取得
         const nextCount = parseInt(this.dom.sliderValues.nextCount.textContent) || 5;
         
-        // ネクスト配列を作成（ホールド情報がある場合は先頭に追加）
+        // ネクスト配列を作成
         let nextArray = [...move.suggestion.next];
-        if (move.suggestion.hold) {
-          nextArray.unshift(move.suggestion.hold);
-        }
         
         MinoManager.applyAINext(
           this.dom.nextContainer,
           nextArray,
           nextCount
         );
+        
+        // ホールドがある場合はホールド表示を更新
+        if (move.suggestion.hold) {
+          this.updateHoldDisplay(move.suggestion.hold);
+        }
       }
       
-      // 通知を表示
-      // this.showNotification('AIの手を適用しました', 'success');
+      // 盤面が非表示状態だった場合は、更新後も非表示状態を維持
+      if (isBoardHidden) {
+        // 非表示状態を維持するため、セルを空の状態に戻す
+        const cells = this.dom.board.querySelectorAll('.cell');
+        cells.forEach(cell => {
+          // 一時的にクラス情報を保存
+          cell.setAttribute('data-original-classes', cell.className);
+          // 背景色を保存
+          cell.setAttribute('data-original-bg', cell.style.backgroundColor || '');
+          
+          // セルを空の状態に変更
+          cell.className = 'cell';
+          cell.style.backgroundColor = '';
+          
+          // セル内部の要素を一時的に非表示
+          Array.from(cell.children).forEach(child => {
+            child.style.display = 'none';
+          });
+        });
+        
+        // 非表示状態を保持
+        this.dom.board.setAttribute('data-visible', 'false');
+      }
+      
+      // ボタンの状態を更新
+      this.updateAIButtonStates();
     } catch (error) {
       console.error('AI手の適用エラー:', error);
       this.showNotification('AIの手を適用できませんでした', 'danger');
@@ -993,5 +1083,301 @@ export class TetrisApp {
       console.log(`[${type}] ${message}`);
       alert(message);
     }
+  }
+
+  /**
+   * AIの手を一手戻す
+   */
+  undoAIMove() {
+    if (!this.aiManager || !this.aiManager.moveHistory || this.aiManager.moveHistory.length === 0) {
+      return;
+    }
+
+    const currentIndex = this.aiManager.selectedMoveIndex;
+    if (currentIndex > 0) {
+      const prevMove = this.aiManager.moveHistory[currentIndex - 1];
+      this.applyAIMove(prevMove);
+      this.aiManager.selectedMoveIndex = currentIndex - 1;
+      this.updateAIButtonStates();
+      this.updateCurrentMove();
+    }
+  }
+
+  /**
+   * AIの手を一手進める
+   */
+  redoAIMove() {
+    if (!this.aiManager || !this.aiManager.moveHistory || this.aiManager.moveHistory.length === 0) {
+      return;
+    }
+
+    const currentIndex = this.aiManager.selectedMoveIndex;
+    if (currentIndex < this.aiManager.moveHistory.length - 1) {
+      const nextMove = this.aiManager.moveHistory[currentIndex + 1];
+      this.applyAIMove(nextMove);
+      this.aiManager.selectedMoveIndex = currentIndex + 1;
+      this.updateAIButtonStates();
+      this.updateCurrentMove();
+    }
+  }
+
+  /**
+   * AIの手を進める/戻るボタンの状態を更新
+   */
+  updateAIButtonStates() {
+    const undoButton = document.getElementById('undo-ai-move');
+    const redoButton = document.getElementById('redo-ai-move');
+
+    if (!this.aiManager || !this.aiManager.moveHistory || this.aiManager.moveHistory.length === 0) {
+      if (undoButton) undoButton.disabled = true;
+      if (redoButton) redoButton.disabled = true;
+      return;
+    }
+
+    const currentIndex = this.aiManager.selectedMoveIndex;
+    if (undoButton) undoButton.disabled = currentIndex <= 0;
+    if (redoButton) redoButton.disabled = currentIndex >= this.aiManager.moveHistory.length - 1;
+  }
+
+  /**
+   * 現在の手を更新
+   */
+  updateCurrentMove() {
+    if (!this.aiManager || !this.aiManager.moveHistory || this.aiManager.moveHistory.length === 0) {
+      const display = document.querySelector('.ai-move-display');
+      if (display) {
+        display.style.display = 'none';
+      }
+      return;
+    }
+
+    const display = document.querySelector('.ai-move-display');
+    if (!display) return;
+
+    display.style.display = 'flex';
+    const currentIndex = this.aiManager.selectedMoveIndex;
+    const history = this.aiManager.moveHistory;
+
+    if (currentIndex >= 0 && currentIndex < history.length) {
+      const move = history[currentIndex];
+      const moveLocation = move.suggestion.move.location;
+      const minoType = moveLocation.type;
+      const orientation = moveLocation.orientation;
+      const position = `x:${moveLocation.adjustedRange.x}, y:${moveLocation.adjustedRange.y}`;
+      
+      const currentElement = display.querySelector('.ai-move-current');
+      if (currentElement) {
+        currentElement.innerHTML = `
+          <span class="ai-piece-type ${minoType}">${minoType}</span>
+          <span>${orientation}, ${position}</span>
+        `;
+        currentElement.style.display = 'flex';
+        currentElement.style.alignItems = 'center';
+        currentElement.style.gap = '4px';
+      }
+    } else {
+      display.style.display = 'none';
+    }
+  }
+
+  /**
+   * 盤面表示/非表示ボタンのイベントリスナー
+   */
+  setupToggleBoardListener() {
+    if (this.dom.toggleBoard) {
+      this.dom.toggleBoard.addEventListener('click', () => this.toggleBoardVisibility());
+    }
+  }
+
+  /**
+   * 盤面の表示/非表示を切り替え
+   */
+  toggleBoardVisibility() {
+    if (this.dom.board) {
+      // 現在の表示状態を確認（カスタム属性を使用）
+      const isVisible = this.dom.board.getAttribute('data-visible') !== 'false';
+      
+      if (isVisible) {
+        // 盤面のセルを空の状態にする（内部データは保持）
+        const cells = this.dom.board.querySelectorAll('.cell');
+        cells.forEach(cell => {
+          // セルのクラスを保存
+          cell.setAttribute('data-original-classes', cell.className);
+          // セルの元の背景色を保存
+          cell.setAttribute('data-original-bg', cell.style.backgroundColor || '');
+          
+          // セルを空の状態に変更
+          cell.className = 'cell';
+          cell.style.backgroundColor = ''; // 背景色をリセット
+          
+          // セル内部の要素を一時的に非表示
+          Array.from(cell.children).forEach(child => {
+            child.style.display = 'none';
+          });
+        });
+        
+        // 状態を非表示に設定
+        this.dom.board.setAttribute('data-visible', 'false');
+        
+        // アイコンを表示アイコンに変更
+        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye"></i>';
+        this.dom.toggleBoard.setAttribute('aria-label', '盤面を表示する');
+      } else {
+        // 元のセルの状態を復元
+        const cells = this.dom.board.querySelectorAll('.cell');
+        cells.forEach(cell => {
+          // 保存していたクラスを復元
+          const originalClasses = cell.getAttribute('data-original-classes');
+          if (originalClasses) {
+            cell.className = originalClasses;
+          }
+          
+          // 背景色を復元
+          const originalBg = cell.getAttribute('data-original-bg');
+          if (originalBg) {
+            cell.style.backgroundColor = originalBg;
+          }
+          
+          // セル内部の要素を再表示
+          Array.from(cell.children).forEach(child => {
+            child.style.display = '';
+          });
+        });
+        
+        // 状態を表示に設定
+        this.dom.board.setAttribute('data-visible', 'true');
+        
+        // アイコンを非表示アイコンに変更
+        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye-slash"></i>';
+        this.dom.toggleBoard.setAttribute('aria-label', '盤面の表示/非表示を切り替える');
+      }
+    }
+  }
+
+  /**
+   * 列グレー化ボタンのイベントリスナー
+   */
+  setupFillColumnButtonListener() {
+    if (this.dom.fillColumnButton) {
+      this.dom.fillColumnButton.addEventListener('click', () => this.fillColumn());
+    }
+  }
+
+  /**
+   * 列クリアボタンのイベントリスナー
+   */
+  setupClearColumnButtonListener() {
+    if (this.dom.clearColumnButton) {
+      this.dom.clearColumnButton.addEventListener('click', () => this.clearColumn());
+    }
+  }
+
+  /**
+   * 次の列をグレーで埋める
+   */
+  fillColumn() {
+    const boardElement = this.dom.board;
+    if (!boardElement) return;
+    
+    const width = this.currentWidth;
+    const height = this.currentHeight;
+    const cells = boardElement.querySelectorAll('.cell');
+    
+    // 左から順にチェックして、グレーでない列を探す
+    for (let col = 0; col < width; col++) {
+      let allGray = true;
+      
+      // この列のすべてのセルをチェック
+      for (let row = 0; row < height; row++) {
+        const index = row * width + col;
+        const cell = cells[index];
+        
+        // グレーでないセルが見つかった場合
+        if (!cell.classList.contains('block') || 
+            !BoardManager.isGrayBlock(window.getComputedStyle(cell).backgroundColor)) {
+          allGray = false;
+          break;
+        }
+      }
+      
+      // グレーでない列が見つかった場合、その列をすべてグレーにする
+      if (!allGray) {
+        for (let row = 0; row < height; row++) {
+          const index = row * width + col;
+          const cell = cells[index];
+          
+          // セルをグレーに設定
+          cell.classList.add('block');
+          cell.style.backgroundColor = minoColors.gray;
+        }
+        return; // 1列処理したら終了
+      }
+    }
+  }
+
+  /**
+   * 全部灰色の列を右側から削除する
+   */
+  clearColumn() {
+    const boardElement = this.dom.board;
+    if (!boardElement) return;
+    
+    const width = this.currentWidth;
+    const height = this.currentHeight;
+    const cells = boardElement.querySelectorAll('.cell');
+    
+    // 右から順にチェックして、すべてグレーの列を探す
+    for (let col = width - 1; col >= 0; col--) {
+      let allGray = true;
+      
+      // この列のすべてのセルをチェック
+      for (let row = 0; row < height; row++) {
+        const index = row * width + col;
+        const cell = cells[index];
+        
+        // グレーでないセルが見つかった場合
+        if (!cell.classList.contains('block') || 
+            !BoardManager.isGrayBlock(window.getComputedStyle(cell).backgroundColor)) {
+          allGray = false;
+          break;
+        }
+      }
+      
+      // すべてグレーの列が見つかった場合、その列を空にする
+      if (allGray) {
+        for (let row = 0; row < height; row++) {
+          const index = row * width + col;
+          const cell = cells[index];
+          
+          // セルをクリア
+          BoardManager.clearCell(cell);
+        }
+        return; // 1列処理したら終了
+      }
+    }
+  }
+
+  /**
+   * ホールドミノを表示
+   * @param {String} holdType - ホールドミノのタイプ
+   */
+  updateHoldDisplay(holdType) {
+    if (!this.dom.holdContainer) return;
+    
+    // ホールドコンテナをクリア
+    this.dom.holdContainer.innerHTML = '';
+    
+    // ホールド用のコンテナを作成（ネクストと同じスタイルを使用）
+    const holdPieceContainer = document.createElement('div');
+    holdPieceContainer.className = 'next-piece-container';
+    
+    // holdTypeがあれば描画、なければ空のコンテナを表示
+    if (holdType) {
+      // MinoManagerのdrawMino関数を使ってミノを描画
+      MinoManager.drawMino(holdType, holdPieceContainer);
+    }
+    
+    // ホールドコンテナに追加
+    this.dom.holdContainer.appendChild(holdPieceContainer);
   }
 } 

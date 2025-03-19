@@ -305,3 +305,83 @@ body {
   border: 1px solid transparent;
   border-radius: 0.25rem;
 }
+
+.ai-move-drumroll {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 4px 8px;
+  min-width: 300px;
+  justify-content: space-between;
+}
+
+.ai-move-drumroll > div {
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ai-move-drumroll > div span:last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-move-drumroll > div:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ai-move-current {
+  background: rgba(255, 255, 255, 0.3);
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.ai-move-prev-3,
+.ai-move-prev-2,
+.ai-move-prev-1,
+.ai-move-next-1,
+.ai-move-next-2,
+.ai-move-next-3 {
+  opacity: 0.8;
+}
+
+.ai-move-display {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 4px 8px;
+  min-width: 200px;
+  justify-content: center;
+}
+
+.ai-move-display > div {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ai-move-display > div span:last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-move-current {
+  background: rgba(255, 255, 255, 0.3);
+  font-weight: bold;
+  color: #ffffff;
+}
