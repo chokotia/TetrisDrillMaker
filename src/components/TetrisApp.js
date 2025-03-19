@@ -396,8 +396,8 @@ export class TetrisApp {
    */
   setupGestureControls() {
     GestureManager.setupGestureControls(
-      this.dom.mainView,
-      this.dom.boardContainer,
+      document.getElementById('main-view'),
+      document.getElementById('board-container'),
       () => this.goToNextProblem(),
       () => this.goToPreviousProblem(),
       (event) => this.handleCellPaint(event),

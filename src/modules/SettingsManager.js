@@ -99,12 +99,12 @@ export class SettingsManager {
   }
 
   /**
-   * ブロック数スライダーの有効性チェック
+   * 有効なブロック数範囲スライダーがあるか確認
    * @param {Object} dom - DOMオブジェクト
-   * @returns {boolean} 有効な場合はtrue
+   * @returns {boolean} 有効なスライダーがある場合はtrue
    */
   static hasValidBlockRangeSlider(dom) {
-    return dom.sliders.blockRange && dom.sliders.blockRange.noUiSlider;
+    return dom.blockRangeSlider && dom.blockRangeSlider.noUiSlider;
   }
 
   /**
@@ -124,7 +124,7 @@ export class SettingsManager {
    * @returns {Object} パースされたブロック数範囲
    */
   static parseBlockRangeValues(dom) {
-    const values = dom.sliders.blockRange.noUiSlider.get();
+    const values = dom.blockRangeSlider.noUiSlider.get();
     return {
       blockCountMin: Math.round(parseFloat(values[0])),
       blockCountMax: Math.round(parseFloat(values[1])),
@@ -322,7 +322,7 @@ export class SettingsManager {
   static applyBlockRangeSettings(settings, dom) {
     const { blockCountMin, blockCountMax } = settings;
     if (this.hasValidBlockRangeSlider(dom)) {
-      dom.sliders.blockRange.noUiSlider.set([blockCountMin, blockCountMax]);
+      dom.blockRangeSlider.noUiSlider.set([blockCountMin, blockCountMax]);
     }
   }
 
