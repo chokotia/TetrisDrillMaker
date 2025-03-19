@@ -39,6 +39,7 @@ export class TetrisApp {
       editOptionButtons: document.querySelectorAll('.edit-option'),
       clearButton: document.getElementById('clear-board'),
       fillColumnButton: document.getElementById('fill-column-button'),
+      clearColumnButton: document.getElementById('clear-column-button'),
       removeUsedButton: document.getElementById('remove-used'),
       problemCounter: document.getElementById('current-problem'),
       board: document.getElementById('board'),
@@ -141,6 +142,7 @@ export class TetrisApp {
     this.setupEditOptionListeners();
     this.setupClearButtonListener();
     this.setupFillColumnButtonListener();
+    this.setupClearColumnButtonListener();
     this.setupRemoveUsedButtonListener();
     this.setupSeedRegenerateListener();
     this.setupToggleBoardListener();
@@ -1225,6 +1227,15 @@ export class TetrisApp {
   }
 
   /**
+   * 列クリアボタンのイベントリスナー
+   */
+  setupClearColumnButtonListener() {
+    if (this.dom.clearColumnButton) {
+      this.dom.clearColumnButton.addEventListener('click', () => this.clearColumn());
+    }
+  }
+
+  /**
    * 次の列をグレーで埋める
    */
   fillColumn() {
@@ -1261,6 +1272,48 @@ export class TetrisApp {
           // セルをグレーに設定
           cell.classList.add('block');
           cell.style.backgroundColor = minoColors.gray;
+        }
+        return; // 1列処理したら終了
+      }
+    }
+  }
+
+  /**
+   * 全部灰色の列を右側から削除する
+   */
+  clearColumn() {
+    const boardElement = this.dom.board;
+    if (!boardElement) return;
+    
+    const width = this.currentWidth;
+    const height = this.currentHeight;
+    const cells = boardElement.querySelectorAll('.cell');
+    
+    // 右から順にチェックして、すべてグレーの列を探す
+    for (let col = width - 1; col >= 0; col--) {
+      let allGray = true;
+      
+      // この列のすべてのセルをチェック
+      for (let row = 0; row < height; row++) {
+        const index = row * width + col;
+        const cell = cells[index];
+        
+        // グレーでないセルが見つかった場合
+        if (!cell.classList.contains('block') || 
+            !BoardManager.isGrayBlock(window.getComputedStyle(cell).backgroundColor)) {
+          allGray = false;
+          break;
+        }
+      }
+      
+      // すべてグレーの列が見つかった場合、その列を空にする
+      if (allGray) {
+        for (let row = 0; row < height; row++) {
+          const index = row * width + col;
+          const cell = cells[index];
+          
+          // セルをクリア
+          BoardManager.clearCell(cell);
         }
         return; // 1列処理したら終了
       }

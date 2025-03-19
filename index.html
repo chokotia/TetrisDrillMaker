@@ -96,14 +96,34 @@
               </button>
             </div>
             <div>
-              <button
-                id="fill-column-button"
-                class="btn btn-outline-light me-2"
-                type="button"
-                aria-label="列を順番にグレーで埋める"
-              >
-                Fill Column
-              </button>
+              <!-- 列操作ボタン -->
+              <div class="btn-group me-2">
+                <button
+                  id="fill-column-button"
+                  class="btn btn-outline-light d-flex align-items-center"
+                  style="font-size: 0.8rem;"
+                  type="button"
+                  aria-label="列を順番にグレーで埋める"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="列を埋める"
+                >
+                  <i class="bi bi-arrow-bar-right me-1"></i>列+
+                </button>
+                <button
+                  id="clear-column-button"
+                  class="btn btn-outline-light d-flex align-items-center"
+                  style="font-size: 0.8rem;"
+                  type="button"
+                  aria-label="全部灰色の列を右側から削除する"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="列を削除"
+                >
+                  <i class="bi bi-arrow-bar-left me-1"></i>列-
+                </button>
+              </div>
+
               <button
                 id="clear-board"
                 class="btn btn-outline-light edit-toggle"
@@ -355,4 +375,15 @@
       </div>
     </div>
   </body>
+
+  <!-- ツールチップ初期化用のスクリプト -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Bootstrapのツールチップを初期化
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    });
+  </script>
 </html>
