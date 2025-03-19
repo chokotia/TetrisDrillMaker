@@ -51,7 +51,18 @@
       <main id="main-view" class="screen">
         <div id="board-container" class="d-flex flex-row justify-content-center align-items-start">
           <div id="board" class="tetris-board"></div>
-          <aside id="next" class="ms-3 next-container"></aside>
+          <div class="ms-3 d-flex flex-column">
+            <aside id="next" class="next-container"></aside>
+            <button
+              id="remove-used"
+              class="btn btn-outline-secondary btn-sm mt-2 d-flex align-items-center justify-content-center"
+              data-action="remove-used"
+              type="button"
+              aria-label="使用済みのネクストピースを削除する"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         </div>
       </main>
 
@@ -74,14 +85,6 @@
             >
               Del
             </button>
-            <button
-              id="gray-button"
-              class="btn btn-secondary edit-option"
-              data-action="gray"
-              type="button"
-            >
-              Gray
-            </button>
           </div>
           <div class="d-flex">
             <button
@@ -91,14 +94,6 @@
               aria-label="盤面をクリアする"
             >
               Clear
-            </button>
-            <button
-              id="remove-used"
-              class="btn btn-outline-light edit-toggle ms-2"
-              type="button"
-              aria-label="使用済みのネクストピースを削除する"
-            >
-              Remove Used
             </button>
           </div>
         </div>
