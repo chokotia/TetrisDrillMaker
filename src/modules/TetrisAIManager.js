@@ -140,8 +140,9 @@ export class TetrisAIManager {
     /**
      * AI探索を開始
      * @param {Object} gameState - ゲームの現在状態
+     * @param {number} grayColumnCount - 左端から連続して存在するグレーミノの列数
      */
-    async startSearch(gameState) {
+    async startSearch(gameState, grayColumnCount = 0) {
         if (this.isCalculating) {
             this.stopSearch();
         }
@@ -167,9 +168,10 @@ export class TetrisAIManager {
             this.emit('statusMessage', '現在の盤面から探索を開始します');
             
             // 指定された手数分の計算を依頼
+            this.aiManager.setRangeOffset(-grayColumnCount+1, 1); //人が読みやすいように0-9ではなく1-10で返すように調整するため+1する
             this.aiManager.calculateMoves(
                 this.aiSettings.movesToCalculate,
-                this.aiSettings.searchTimePerMove
+                this.aiSettings.searchTimePerMove,
             );
             
             return true;
@@ -214,7 +216,7 @@ export class TetrisAIManager {
             // 既存の履歴から続きの手を計算するよう指示
             this.aiManager.calculateMoves(
                 this.aiSettings.movesToCalculate,
-                this.aiSettings.searchTimePerMove
+                this.aiSettings.searchTimePerMove,
             );
             
             return true;

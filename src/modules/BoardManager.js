@@ -343,4 +343,43 @@ export class BoardManager {
       }
     }
   }
+
+  /**
+   * 左端からグレーのミノ列がいくつ通っているかを返す
+   * @param {HTMLElement} boardElement - ボード要素
+   * @param {number} width - ボードの幅
+   * @param {number} height - ボードの高さ
+   * @returns {number} 左端から連続して存在するグレーミノの列数
+   */
+  static countGrayColumns(boardElement, width, height) {
+    if (!boardElement) return 0;
+    
+    // 現在のボード状態を取得
+    const board = this.getCurrentBoard(boardElement, width, height);
+    
+    let grayColumnCount = 0;
+    
+    // 左端から順に各列をチェック
+    for (let x = 0; x < width; x++) {
+      let isFullGrayColumn = true;
+      
+      // 1列が全てグレーかチェック
+      for (let y = 0; y < board.length; y++) {
+        if (board[y][x] !== 'G') {
+          isFullGrayColumn = false;
+          break;
+        }
+      }
+      
+      // グレーで埋まっていれば、カウントを増やす
+      if (isFullGrayColumn) {
+        grayColumnCount++;
+      } else {
+        // 一度でも連続していない列があれば終了
+        break;
+      }
+    }
+    
+    return grayColumnCount;
+  }
 } 

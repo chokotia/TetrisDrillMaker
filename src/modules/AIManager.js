@@ -9,6 +9,8 @@ export class AIManager {
         this.isInitialized = false;
         this.eventListeners = new Map();
         this.gameStateProvider = null;
+        this.xOffset = 1;
+        this.yOffset = 0;
     }
 
     /**
@@ -225,6 +227,12 @@ export class AIManager {
         }
     }
 
+
+    setRangeOffset(rangeOffsetX=1, rangeOffsetY=0) {
+        this.xOffset = rangeOffsetX;
+        this.yOffset = rangeOffsetY;
+    }
+
     /**
      * n手先までの計算を実行
      * @param {number} moves - 計算する手数
@@ -245,11 +253,19 @@ export class AIManager {
                 
                 const suggestion = await this.requestSuggestion();
                 const result = await this.applyMove(suggestion);
+                
+                // 位置情報にオフセットを適用したrangeを追加
+                if (result.move && result.move.location && result.move.location.range) {
+                    // オフセットを適用した新しいrangeを作成
+                    result.move.location.adjustedRange = {
+                        x: `${result.move.location.range.x.from + this.xOffset}-${result.move.location.range.x.to + this.xOffset}`,
+                        y: `${result.move.location.range.y.from + this.yOffset}-${result.move.location.range.y.to + this.yOffset}`
+                    };
+                }
+
                 results.push({
                     moveNumber: i + 1,
-                    suggestion: result,
-                    evaluation: result.value,
-                    action: result.action
+                    suggestion: result
                 });
             } catch (error) {
                 this.emit('error', `${i + 1}手目の計算中にエラー: ${error.message}`);

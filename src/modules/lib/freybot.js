@@ -1238,10 +1238,7 @@ function addAbsoluteBlockPositions(move) {
     const xMin = Math.min(...xValues);
     const xMax = Math.max(...xValues);
     const yMin = Math.min(...yValues);
-    const yMax = Math.max(...yValues);
-    
-    // 各ブロックの位置をログに表示
-    const blockPositionsStr = blockPositions.map(pos => `(${pos[0].toString().padStart(2)},${pos[1].toString().padStart(2)})`).join('  ');
+    const yMax = Math.max(...yValues);   
     
     // 元のmoveオブジェクトに情報を追加
     const enhancedMove = {
@@ -1249,8 +1246,8 @@ function addAbsoluteBlockPositions(move) {
         location: {
             ...move.location,
             range: {
-                x: `${xMin+1}-${xMax+1}`,
-                y: `${yMin+1}-${yMax+1}`
+                x: { from: xMin, to: xMax },
+                y: { from: yMin, to: yMax }
             },
             blockPositions: blockPositions
         },

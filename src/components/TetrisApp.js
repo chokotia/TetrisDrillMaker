@@ -787,8 +787,15 @@ export class TetrisApp {
           return;
         }
         
-        // 新規にAI探索を開始
-        await this.aiManager.startSearch(gameState);
+        // 左端からグレーのミノ列数を計算
+        const grayColumnCount = BoardManager.countGrayColumns(
+          this.dom.board,
+          this.currentWidth,
+          this.currentHeight
+        );
+        
+        // 新規にAI探索を開始（グレーの列数を引数として渡す）
+        await this.aiManager.startSearch(gameState, grayColumnCount);
       }
       
       // 進捗表示を開始
@@ -920,7 +927,7 @@ export class TetrisApp {
       const moveLocation = item.suggestion.move.location;
       const minoType = moveLocation.type;
       const orientation = moveLocation.orientation;
-      const position = `x:${moveLocation.range.x}, y:${moveLocation.range.y}`;
+      const position = `x:${moveLocation.adjustedRange.x}, y:${moveLocation.adjustedRange.y}`;
       
       // アイテムの内容を設定
       moveItem.innerHTML = `
@@ -1156,7 +1163,7 @@ export class TetrisApp {
       const moveLocation = move.suggestion.move.location;
       const minoType = moveLocation.type;
       const orientation = moveLocation.orientation;
-      const position = `x:${moveLocation.range.x}, y:${moveLocation.range.y}`;
+      const position = `x:${moveLocation.adjustedRange.x}, y:${moveLocation.adjustedRange.y}`;
       
       const currentElement = display.querySelector('.ai-move-current');
       if (currentElement) {
