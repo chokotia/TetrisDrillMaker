@@ -70,6 +70,24 @@
         <div class="container-fluid">
           <div class="btn-group">
             <button
+              id="undo-ai-move"
+              class="btn btn-outline-light me-2"
+              type="button"
+              aria-label="AIの手を一手戻す"
+              disabled
+            >
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <button
+              id="redo-ai-move"
+              class="btn btn-outline-light me-2"
+              type="button"
+              aria-label="AIの手を一手進める"
+              disabled
+            >
+              <i class="bi bi-chevron-right"></i>
+            </button>
+            <button
               id="auto-button"
               class="btn btn-secondary edit-option"
               data-action="auto"

@@ -624,6 +624,22 @@ export class TetrisApp {
         this.confirmResetAIHistory();
       });
     }
+
+    // AIの手を進める/戻るボタン
+    const undoButton = document.getElementById('undo-ai-move');
+    const redoButton = document.getElementById('redo-ai-move');
+
+    if (undoButton) {
+      undoButton.addEventListener('click', () => {
+        this.undoAIMove();
+      });
+    }
+
+    if (redoButton) {
+      redoButton.addEventListener('click', () => {
+        this.redoAIMove();
+      });
+    }
   }
 
   /**
@@ -828,6 +844,8 @@ export class TetrisApp {
   updateAIMoveHistory(moves) {
     // 履歴UIを更新
     this.renderAIMoveHistory();
+    // ボタンの状態を更新
+    this.updateAIButtonStates();
   }
 
   /**
@@ -943,8 +961,8 @@ export class TetrisApp {
         );
       }
       
-      // 通知を表示
-      // this.showNotification('AIの手を適用しました', 'success');
+      // ボタンの状態を更新
+      this.updateAIButtonStates();
     } catch (error) {
       console.error('AI手の適用エラー:', error);
       this.showNotification('AIの手を適用できませんでした', 'danger');
@@ -993,5 +1011,57 @@ export class TetrisApp {
       console.log(`[${type}] ${message}`);
       alert(message);
     }
+  }
+
+  /**
+   * AIの手を一手戻す
+   */
+  undoAIMove() {
+    if (!this.aiManager || !this.aiManager.moveHistory || this.aiManager.moveHistory.length === 0) {
+      return;
+    }
+
+    const currentIndex = this.aiManager.selectedMoveIndex;
+    if (currentIndex > 0) {
+      const prevMove = this.aiManager.moveHistory[currentIndex - 1];
+      this.applyAIMove(prevMove);
+      this.aiManager.selectedMoveIndex = currentIndex - 1;
+      this.updateAIButtonStates();
+    }
+  }
+
+  /**
+   * AIの手を一手進める
+   */
+  redoAIMove() {
+    if (!this.aiManager || !this.aiManager.moveHistory || this.aiManager.moveHistory.length === 0) {
+      return;
+    }
+
+    const currentIndex = this.aiManager.selectedMoveIndex;
+    if (currentIndex < this.aiManager.moveHistory.length - 1) {
+      const nextMove = this.aiManager.moveHistory[currentIndex + 1];
+      this.applyAIMove(nextMove);
+      this.aiManager.selectedMoveIndex = currentIndex + 1;
+      this.updateAIButtonStates();
+    }
+  }
+
+  /**
+   * AIの手を進める/戻るボタンの状態を更新
+   */
+  updateAIButtonStates() {
+    const undoButton = document.getElementById('undo-ai-move');
+    const redoButton = document.getElementById('redo-ai-move');
+
+    if (!this.aiManager || !this.aiManager.moveHistory || this.aiManager.moveHistory.length === 0) {
+      if (undoButton) undoButton.disabled = true;
+      if (redoButton) redoButton.disabled = true;
+      return;
+    }
+
+    const currentIndex = this.aiManager.selectedMoveIndex;
+    if (undoButton) undoButton.disabled = currentIndex <= 0;
+    if (redoButton) redoButton.disabled = currentIndex >= this.aiManager.moveHistory.length - 1;
   }
 } 
