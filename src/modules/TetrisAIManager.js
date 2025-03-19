@@ -13,8 +13,8 @@ export class TetrisAIManager {
         this.selectedMoveIndex = -1;
         this.isCalculating = false;
         this.aiSettings = {
-            searchTimePerMove: 2000, // ミリ秒
-            movesToCalculate: 5
+            searchTimePerMove: 500, // ミリ秒
+            movesToCalculate: 20
         };
         this.eventListeners = new Map();
     }
