@@ -102,6 +102,18 @@
               <!-- 列操作ボタン -->
               <div class="btn-group me-2">
                 <button
+                id="clear-column-button"
+                class="btn btn-outline-light d-flex align-items-center"
+                style="font-size: 0.8rem;"
+                type="button"
+                aria-label="全部灰色の列を右側から削除する"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="列を削除"
+              >
+                <i class="bi bi-arrow-bar-left me-1"></i>列-
+              </button>
+                <button
                   id="fill-column-button"
                   class="btn btn-outline-light d-flex align-items-center"
                   style="font-size: 0.8rem;"
@@ -112,18 +124,6 @@
                   title="列を埋める"
                 >
                   <i class="bi bi-arrow-bar-right me-1"></i>列+
-                </button>
-                <button
-                  id="clear-column-button"
-                  class="btn btn-outline-light d-flex align-items-center"
-                  style="font-size: 0.8rem;"
-                  type="button"
-                  aria-label="全部灰色の列を右側から削除する"
-                  data-bs-toggle="tooltip"
-                  data-bs-placement="top"
-                  title="列を削除"
-                >
-                  <i class="bi bi-arrow-bar-left me-1"></i>列-
                 </button>
               </div>
 
