@@ -44,6 +44,7 @@ export class TetrisApp {
       nextContainer: document.getElementById('next'),
       mainView: document.getElementById('main-view'),
       boardContainer: document.getElementById('board-container'),
+      toggleBoardButton: document.getElementById('toggle-board'),
       seedValue: document.getElementById('seed-value'),
       regenerateSeedBtn: document.getElementById('regenerate-seed'),
       sliders: {
@@ -140,6 +141,7 @@ export class TetrisApp {
     this.setupClearButtonListener();
     this.setupRemoveUsedButtonListener();
     this.setupSeedRegenerateListener();
+    this.setupToggleBoardListener();
     this.setupGestureControls();
   }
 
@@ -935,6 +937,9 @@ export class TetrisApp {
    */
   applyAIMove(move) {
     try {
+      // 現在の表示状態を記憶
+      const isBoardHidden = this.dom.board.getAttribute('data-visible') === 'false';
+      
       // ボードを更新
       if (move.suggestion && move.suggestion.board) {
         BoardManager.applyAIBoard(
@@ -961,6 +966,30 @@ export class TetrisApp {
           nextArray,
           nextCount
         );
+      }
+      
+      // 盤面が非表示状態だった場合は、更新後も非表示状態を維持
+      if (isBoardHidden) {
+        // 非表示状態を維持するため、セルを空の状態に戻す
+        const cells = this.dom.board.querySelectorAll('.cell');
+        cells.forEach(cell => {
+          // 一時的にクラス情報を保存
+          cell.setAttribute('data-original-classes', cell.className);
+          // 背景色を保存
+          cell.setAttribute('data-original-bg', cell.style.backgroundColor || '');
+          
+          // セルを空の状態に変更
+          cell.className = 'cell';
+          cell.style.backgroundColor = '';
+          
+          // セル内部の要素を一時的に非表示
+          Array.from(cell.children).forEach(child => {
+            child.style.display = 'none';
+          });
+        });
+        
+        // 非表示状態を保持
+        this.dom.board.setAttribute('data-visible', 'false');
       }
       
       // ボタンの状態を更新
@@ -1107,6 +1136,80 @@ export class TetrisApp {
       }
     } else {
       display.style.display = 'none';
+    }
+  }
+
+  /**
+   * 盤面表示/非表示ボタンのイベントリスナー
+   */
+  setupToggleBoardListener() {
+    if (this.dom.toggleBoardButton) {
+      this.dom.toggleBoardButton.addEventListener('click', () => this.toggleBoardVisibility());
+    }
+  }
+
+  /**
+   * 盤面の表示/非表示を切り替え
+   */
+  toggleBoardVisibility() {
+    if (this.dom.board) {
+      // 現在の表示状態を確認（カスタム属性を使用）
+      const isVisible = this.dom.board.getAttribute('data-visible') !== 'false';
+      
+      if (isVisible) {
+        // 盤面のセルを空の状態にする（内部データは保持）
+        const cells = this.dom.board.querySelectorAll('.cell');
+        cells.forEach(cell => {
+          // セルのクラスを保存
+          cell.setAttribute('data-original-classes', cell.className);
+          // セルの元の背景色を保存
+          cell.setAttribute('data-original-bg', cell.style.backgroundColor || '');
+          
+          // セルを空の状態に変更
+          cell.className = 'cell';
+          cell.style.backgroundColor = ''; // 背景色をリセット
+          
+          // セル内部の要素を一時的に非表示
+          Array.from(cell.children).forEach(child => {
+            child.style.display = 'none';
+          });
+        });
+        
+        // 状態を非表示に設定
+        this.dom.board.setAttribute('data-visible', 'false');
+        
+        // アイコンを表示アイコンに変更
+        this.dom.toggleBoardButton.innerHTML = '<i class="bi bi-eye"></i>';
+        this.dom.toggleBoardButton.setAttribute('aria-label', '盤面を表示する');
+      } else {
+        // 元のセルの状態を復元
+        const cells = this.dom.board.querySelectorAll('.cell');
+        cells.forEach(cell => {
+          // 保存していたクラスを復元
+          const originalClasses = cell.getAttribute('data-original-classes');
+          if (originalClasses) {
+            cell.className = originalClasses;
+          }
+          
+          // 背景色を復元
+          const originalBg = cell.getAttribute('data-original-bg');
+          if (originalBg) {
+            cell.style.backgroundColor = originalBg;
+          }
+          
+          // セル内部の要素を再表示
+          Array.from(cell.children).forEach(child => {
+            child.style.display = '';
+          });
+        });
+        
+        // 状態を表示に設定
+        this.dom.board.setAttribute('data-visible', 'true');
+        
+        // アイコンを非表示アイコンに変更
+        this.dom.toggleBoardButton.innerHTML = '<i class="bi bi-eye-slash"></i>';
+        this.dom.toggleBoardButton.setAttribute('aria-label', '盤面の表示/非表示を切り替える');
+      }
     }
   }
 } 
