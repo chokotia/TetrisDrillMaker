@@ -32,36 +32,50 @@ export class TetrisApp {
    * @returns {Object} DOM要素オブジェクト
    */
   initializeDOMElements() {
-    return {
-      settingsButton: document.getElementById('settings-button'),
-      saveAndCloseBtn: document.getElementById('save-and-close-settings'),
-      closeIconBtn: document.getElementById('close-settings-without-save'),
-      editOptionButtons: document.querySelectorAll('.edit-option'),
-      clearButton: document.getElementById('clear-board'),
+    this.dom = {
+      app: document.getElementById('app'),
+      board: document.getElementById('board'),
+      currentProblem: document.getElementById('current-problem'),
+      nextContainer: document.getElementById('next'),
+      holdContainer: document.getElementById('hold'),
+      editNav: document.getElementById('edit-nav'),
+      toggleBoard: document.getElementById('toggle-board'),
+      removeUsed: document.getElementById('remove-used'),
       fillColumnButton: document.getElementById('fill-column-button'),
       clearColumnButton: document.getElementById('clear-column-button'),
-      removeUsedButton: document.getElementById('remove-used'),
-      problemCounter: document.getElementById('current-problem'),
-      board: document.getElementById('board'),
-      nextContainer: document.getElementById('next'),
-      mainView: document.getElementById('main-view'),
-      boardContainer: document.getElementById('board-container'),
-      toggleBoardButton: document.getElementById('toggle-board'),
-      seedValue: document.getElementById('seed-value'),
-      regenerateSeedBtn: document.getElementById('regenerate-seed'),
+      titleBar: document.getElementById('title-bar'),
+      clearBoard: document.getElementById('clear-board'),
+      settingsButton: document.getElementById('settings-button'),
+      settingsModal: document.getElementById('settings-modal'),
+      settingsForm: document.getElementById('settings-form'),
+      saveCloseButton: document.getElementById('save-and-close-settings'),
+      closeWithoutSaveButton: document.getElementById('close-settings-without-save'),
+      autoButton: document.getElementById('auto-button'),
+      delButton: document.getElementById('del-button'),
+      grayButton: document.getElementById('gray-button'),
+      editOptionButtons: document.querySelectorAll('.edit-option'),
       sliders: {
         width: document.getElementById('width'),
         height: document.getElementById('height'),
         nextCount: document.getElementById('next-count'),
-        blockRange: document.getElementById('block-range-slider'),
+        aiSearchTime: document.getElementById('ai-search-time'),
+        aiMovesCount: document.getElementById('ai-moves-count')
       },
       sliderValues: {
         width: document.getElementById('width-value'),
         height: document.getElementById('height-value'),
         nextCount: document.getElementById('next-count-value'),
-        blockRange: document.getElementById('block-range-values'),
+        aiSearchTime: document.getElementById('ai-search-time-value'),
+        aiMovesCount: document.getElementById('ai-moves-count-value'),
+        blockRange: document.getElementById('block-range-values')
       },
+      minoMode: document.getElementById('mino-mode'),
+      seedValue: document.getElementById('seed-value'),
+      regenerateSeedButton: document.getElementById('regenerate-seed'),
+      blockRangeSlider: document.getElementById('block-range-slider'),
     };
+
+    return this.dom;
   }
 
   /**
@@ -75,6 +89,9 @@ export class TetrisApp {
       this.initializeControls();
       this.generateFirstProblem();
       this.logInitializationInfo();
+      
+      // 初期状態では空のホールド表示を作成
+      this.updateHoldDisplay(null);
       
       // AI機能の初期化
       this.initializeAI();
@@ -177,14 +194,14 @@ export class TetrisApp {
       });
     }
 
-    if (this.dom.saveAndCloseBtn) {
-      this.dom.saveAndCloseBtn.addEventListener('click', () => {
+    if (this.dom.saveCloseButton) {
+      this.dom.saveCloseButton.addEventListener('click', () => {
         this.handleSaveAndClose();
       });
     }
 
-    if (this.dom.closeIconBtn) {
-      this.dom.closeIconBtn.addEventListener('click', () => {
+    if (this.dom.closeWithoutSaveButton) {
+      this.dom.closeWithoutSaveButton.addEventListener('click', () => {
         this.handleCloseWithoutSave();
       });
     }
@@ -194,6 +211,17 @@ export class TetrisApp {
    * 編集オプション関連のイベントリスナー
    */
   setupEditOptionListeners() {
+    // editOptionButtonsがない場合は再取得を試みる
+    if (!this.dom.editOptionButtons || this.dom.editOptionButtons.length === 0) {
+      this.dom.editOptionButtons = document.querySelectorAll('.edit-option');
+    }
+    
+    // それでもない場合はエラーログを出して処理を中断
+    if (!this.dom.editOptionButtons || this.dom.editOptionButtons.length === 0) {
+      console.error('編集オプションボタンが見つかりません');
+      return;
+    }
+    
     this.dom.editOptionButtons.forEach(button => {
       button.addEventListener('click', () => {
         const action = button.dataset.action;
@@ -207,8 +235,8 @@ export class TetrisApp {
    * クリアボタンのイベントリスナー
    */
   setupClearButtonListener() {
-    if (this.dom.clearButton) {
-      this.dom.clearButton.addEventListener('click', () => 
+    if (this.dom.clearBoard) {
+      this.dom.clearBoard.addEventListener('click', () => 
         this.resetToInitialBoard()
       );
     }
@@ -218,8 +246,8 @@ export class TetrisApp {
    * 使用済みピース削除ボタンのリスナーを設定
    */
   setupRemoveUsedButtonListener() {
-    if (this.dom.removeUsedButton) {
-      this.dom.removeUsedButton.addEventListener('click', () => this.removeUsedPieces());
+    if (this.dom.removeUsed) {
+      this.dom.removeUsed.addEventListener('click', () => this.removeUsedPieces());
     }
   }
 
@@ -227,7 +255,7 @@ export class TetrisApp {
    * ブロック数レンジスライダーの初期化
    */
   initializeBlockRangeSlider() {
-    const blockRangeSlider = this.dom.sliders.blockRange;
+    const blockRangeSlider = this.dom.blockRangeSlider;
     if (!blockRangeSlider) return;
     
     noUiSlider.create(blockRangeSlider, {
@@ -272,8 +300,8 @@ export class TetrisApp {
    * シード再生成ボタンのイベントリスナーを設定
    */
   setupSeedRegenerateListener() {
-    if (this.dom.regenerateSeedBtn) {
-      this.dom.regenerateSeedBtn.addEventListener('click', () => {
+    if (this.dom.regenerateSeedButton) {
+      this.dom.regenerateSeedButton.addEventListener('click', () => {
         this.regenerateSeed();
       });
     }
@@ -348,8 +376,8 @@ export class TetrisApp {
    * 問題番号ラベル更新
    */
   updateProblemCounter() {
-    if (this.dom.problemCounter) {
-      this.dom.problemCounter.textContent = `問題 #${this.currentProblemNumber}`;
+    if (this.dom.currentProblem) {
+      this.dom.currentProblem.textContent = `問題 #${this.currentProblemNumber}`;
     }
   }
 
@@ -959,17 +987,19 @@ export class TetrisApp {
         // 設定されたネクスト数を取得
         const nextCount = parseInt(this.dom.sliderValues.nextCount.textContent) || 5;
         
-        // ネクスト配列を作成（ホールド情報がある場合は先頭に追加）
+        // ネクスト配列を作成
         let nextArray = [...move.suggestion.next];
-        if (move.suggestion.hold) {
-          nextArray.unshift(move.suggestion.hold);
-        }
         
         MinoManager.applyAINext(
           this.dom.nextContainer,
           nextArray,
           nextCount
         );
+        
+        // ホールドがある場合はホールド表示を更新
+        if (move.suggestion.hold) {
+          this.updateHoldDisplay(move.suggestion.hold);
+        }
       }
       
       // 盤面が非表示状態だった場合は、更新後も非表示状態を維持
@@ -1147,8 +1177,8 @@ export class TetrisApp {
    * 盤面表示/非表示ボタンのイベントリスナー
    */
   setupToggleBoardListener() {
-    if (this.dom.toggleBoardButton) {
-      this.dom.toggleBoardButton.addEventListener('click', () => this.toggleBoardVisibility());
+    if (this.dom.toggleBoard) {
+      this.dom.toggleBoard.addEventListener('click', () => this.toggleBoardVisibility());
     }
   }
 
@@ -1183,8 +1213,8 @@ export class TetrisApp {
         this.dom.board.setAttribute('data-visible', 'false');
         
         // アイコンを表示アイコンに変更
-        this.dom.toggleBoardButton.innerHTML = '<i class="bi bi-eye"></i>';
-        this.dom.toggleBoardButton.setAttribute('aria-label', '盤面を表示する');
+        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye"></i>';
+        this.dom.toggleBoard.setAttribute('aria-label', '盤面を表示する');
       } else {
         // 元のセルの状態を復元
         const cells = this.dom.board.querySelectorAll('.cell');
@@ -1211,8 +1241,8 @@ export class TetrisApp {
         this.dom.board.setAttribute('data-visible', 'true');
         
         // アイコンを非表示アイコンに変更
-        this.dom.toggleBoardButton.innerHTML = '<i class="bi bi-eye-slash"></i>';
-        this.dom.toggleBoardButton.setAttribute('aria-label', '盤面の表示/非表示を切り替える');
+        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye-slash"></i>';
+        this.dom.toggleBoard.setAttribute('aria-label', '盤面の表示/非表示を切り替える');
       }
     }
   }
@@ -1318,5 +1348,29 @@ export class TetrisApp {
         return; // 1列処理したら終了
       }
     }
+  }
+
+  /**
+   * ホールドミノを表示
+   * @param {String} holdType - ホールドミノのタイプ
+   */
+  updateHoldDisplay(holdType) {
+    if (!this.dom.holdContainer) return;
+    
+    // ホールドコンテナをクリア
+    this.dom.holdContainer.innerHTML = '';
+    
+    // ホールド用のコンテナを作成（ネクストと同じスタイルを使用）
+    const holdPieceContainer = document.createElement('div');
+    holdPieceContainer.className = 'next-piece-container';
+    
+    // holdTypeがあれば描画、なければ空のコンテナを表示
+    if (holdType) {
+      // MinoManagerのdrawMino関数を使ってミノを描画
+      MinoManager.drawMino(holdType, holdPieceContainer);
+    }
+    
+    // ホールドコンテナに追加
+    this.dom.holdContainer.appendChild(holdPieceContainer);
   }
 } 

@@ -398,6 +398,32 @@ export class MinoManager {
   }
 
   /**
+   * 指定されたミノタイプの形状データを取得
+   * @param {string} minoType - ミノのタイプ（I, O, T, L, J, S, Z）
+   * @returns {Object} ミノの形状と色のデータ
+   */
+  static getMinoPatternAndColor(minoType) {
+    if (!minoType || !minoColors[minoType]) {
+      console.error('無効なミノタイプ:', minoType);
+      return { pattern: [], color: '#555555' };
+    }
+    
+    // ミノのパターンを決定（パターンはMINO_PATTERNSの最初のを使用）
+    let pattern = [];
+    if (MINO_PATTERNS[minoType] && MINO_PATTERNS[minoType].length > 0) {
+      const templatePattern = MINO_PATTERNS[minoType][0];
+      
+      // 4x4グリッド上でのインデックスに変換
+      pattern = templatePattern.map(pos => pos.y * 4 + pos.x);
+    }
+    
+    return {
+      pattern: pattern,
+      color: minoColors[minoType]
+    };
+  }
+
+  /**
    * ミノ形状を検出
    * @param {Array} positions - 位置の配列
    * @returns {string|null} 検出されたミノタイプ、または null
