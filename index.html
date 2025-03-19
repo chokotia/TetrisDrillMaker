@@ -27,14 +27,24 @@
           <h1 id="current-problem" class="navbar-brand problem-counter m-0">
             問題 #1
           </h1>
-          <button
-            id="settings-button"
-            class="btn btn-outline-light d-flex align-items-center"
-            type="button"
-            aria-label="設定を開く"
-          >
-            <i class="bi bi-gear"></i>
-          </button>
+          <div class="d-flex align-items-center">
+            <button
+              id="ask-ai-button"
+              class="btn btn-outline-light me-2"
+              type="button"
+              aria-label="AIに最適な手を求める"
+            >
+              <i class="bi bi-robot"></i>
+            </button>
+            <button
+              id="settings-button"
+              class="btn btn-outline-light d-flex align-items-center"
+              type="button"
+              aria-label="設定を開く"
+            >
+              <i class="bi bi-gear"></i>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -89,14 +99,6 @@
               aria-label="使用済みのネクストピースを削除する"
             >
               Remove Used
-            </button>
-            <button
-              id="ask-ai-button"
-              class="btn btn-primary edit-toggle ms-2"
-              type="button"
-              aria-label="AIに最適な手を求める"
-            >
-              Ask AI
             </button>
           </div>
         </div>
