@@ -1,5 +1,5 @@
 import { generateBaseSeed, createSeededGenerator, getSavedSeed, saveSeed, isValidSeed } from '../utils/random.js';
-import { config } from '../utils/config.js';
+import { config, minoColors } from '../utils/config.js';
 import { SettingsManager } from '../modules/SettingsManager.js';
 import { BoardManager } from '../modules/BoardManager.js';
 import { MinoManager } from '../modules/MinoManager.js';
@@ -38,6 +38,7 @@ export class TetrisApp {
       closeIconBtn: document.getElementById('close-settings-without-save'),
       editOptionButtons: document.querySelectorAll('.edit-option'),
       clearButton: document.getElementById('clear-board'),
+      fillColumnButton: document.getElementById('fill-column-button'),
       removeUsedButton: document.getElementById('remove-used'),
       problemCounter: document.getElementById('current-problem'),
       board: document.getElementById('board'),
@@ -139,6 +140,7 @@ export class TetrisApp {
     this.setupModalListeners();
     this.setupEditOptionListeners();
     this.setupClearButtonListener();
+    this.setupFillColumnButtonListener();
     this.setupRemoveUsedButtonListener();
     this.setupSeedRegenerateListener();
     this.setupToggleBoardListener();
@@ -1209,6 +1211,58 @@ export class TetrisApp {
         // アイコンを非表示アイコンに変更
         this.dom.toggleBoardButton.innerHTML = '<i class="bi bi-eye-slash"></i>';
         this.dom.toggleBoardButton.setAttribute('aria-label', '盤面の表示/非表示を切り替える');
+      }
+    }
+  }
+
+  /**
+   * 列グレー化ボタンのイベントリスナー
+   */
+  setupFillColumnButtonListener() {
+    if (this.dom.fillColumnButton) {
+      this.dom.fillColumnButton.addEventListener('click', () => this.fillColumn());
+    }
+  }
+
+  /**
+   * 次の列をグレーで埋める
+   */
+  fillColumn() {
+    const boardElement = this.dom.board;
+    if (!boardElement) return;
+    
+    const width = this.currentWidth;
+    const height = this.currentHeight;
+    const cells = boardElement.querySelectorAll('.cell');
+    
+    // 左から順にチェックして、グレーでない列を探す
+    for (let col = 0; col < width; col++) {
+      let allGray = true;
+      
+      // この列のすべてのセルをチェック
+      for (let row = 0; row < height; row++) {
+        const index = row * width + col;
+        const cell = cells[index];
+        
+        // グレーでないセルが見つかった場合
+        if (!cell.classList.contains('block') || 
+            !BoardManager.isGrayBlock(window.getComputedStyle(cell).backgroundColor)) {
+          allGray = false;
+          break;
+        }
+      }
+      
+      // グレーでない列が見つかった場合、その列をすべてグレーにする
+      if (!allGray) {
+        for (let row = 0; row < height; row++) {
+          const index = row * width + col;
+          const cell = cells[index];
+          
+          // セルをグレーに設定
+          cell.classList.add('block');
+          cell.style.backgroundColor = minoColors.gray;
+        }
+        return; // 1列処理したら終了
       }
     }
   }

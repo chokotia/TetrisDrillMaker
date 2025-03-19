@@ -1,4 +1,4 @@
-import { config, minoColors } from '../utils/config.js';
+import { config, minoColors, hexToRgb } from '../utils/config.js';
 
 /**
  * ボード管理クラス
@@ -221,6 +221,20 @@ export class BoardManager {
    */
   static isWhiteBlock(color) {
     return color && color.toLowerCase() === minoColors.white.toLowerCase();
+  }
+
+  /**
+   * グレーブロックかどうかの判定
+   * @param {string} color - 色
+   * @returns {boolean} グレーブロックの場合はtrue
+   */
+  static isGrayBlock(color) {
+    if (!color) return false;
+    
+    const grayHex = minoColors.gray.toLowerCase();
+    const grayRgb = hexToRgb(grayHex).toLowerCase();
+    
+    return color.toLowerCase() === grayHex || color.toLowerCase() === grayRgb;
   }
 
   /**
