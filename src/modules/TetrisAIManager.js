@@ -109,12 +109,34 @@ export class TetrisAIManager {
             return [...board];
         }
         
-        // 高さが20行未満の場合は空行を追加
+        // 高さが20行未満の場合は空行を追加（各列のグレー状態に応じて）
         if (currentHeight < requiredHeight) {
             const width = board[0].length;
-            const emptyRows = Array(requiredHeight - currentHeight)
-                .fill()
-                .map(() => Array(width).fill(null));
+            const rowsToAdd = requiredHeight - currentHeight;
+            
+            // 各列がすべてグレーかどうかをチェック
+            const isColumnAllGray = new Array(width).fill(true);
+            
+            // 各列について、すべてがグレー('G')かどうかを確認
+            for (let col = 0; col < width; col++) {
+                for (let row = 0; row < currentHeight; row++) {
+                    if (board[row][col] !== 'G') {
+                        isColumnAllGray[col] = false;
+                        break;
+                    }
+                }
+            }
+            
+            // 新しい空行を作成
+            const emptyRows = [];
+            for (let i = 0; i < rowsToAdd; i++) {
+                const newRow = [];
+                for (let col = 0; col < width; col++) {
+                    // グレーの列は上部も'G'で埋める
+                    newRow.push(isColumnAllGray[col] ? 'G' : null);
+                }
+                emptyRows.push(newRow);
+            }
                 
             return [...emptyRows, ...board];
         }

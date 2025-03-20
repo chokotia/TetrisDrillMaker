@@ -330,7 +330,7 @@ export class BoardManager {
           let color = minoColors[cellValue];
           if (!color && cellValue === 'G') {
             // お邪魔ブロックの場合
-            color = config.BLOCKS.GRAY;
+            this.paintCell(cell, minoColors.gray);
           }
           
           if (color) {
