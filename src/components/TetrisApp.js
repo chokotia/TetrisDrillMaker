@@ -120,6 +120,14 @@ export class TetrisApp {
     const settingsModalElement = document.getElementById('settings-modal');
     if (settingsModalElement) {
       this.bsSettingsModal = new bootstrap.Modal(settingsModalElement);
+      
+      // モーダルが閉じる直前のイベントをリッスン
+      settingsModalElement.addEventListener('hide.bs.modal', () => {
+        // モーダル内の要素からフォーカスを外す
+        document.activeElement.blur();
+        // フォーカスをボディに移す
+        document.body.focus();
+      });
     }
   }
 
@@ -587,6 +595,14 @@ export class TetrisApp {
 
     // AIモーダルの初期化
     this.bsAIModal = new bootstrap.Modal(this.aiDom.aiModal);
+    
+    // AIモーダルが閉じる直前のイベントをリッスン
+    this.aiDom.aiModal.addEventListener('hide.bs.modal', () => {
+      // モーダル内の要素からフォーカスを外す
+      document.activeElement.blur();
+      // フォーカスをボディに移す
+      document.body.focus();
+    });
 
     // AI設定スライダーのイベントリスナーを追加
     this.setupAISettingsListeners();
@@ -599,7 +615,6 @@ export class TetrisApp {
 
     // AIマネージャーを初期化
     await this.aiManager.initialize();
-
   }
 
   /**
