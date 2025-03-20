@@ -1,9 +1,9 @@
-import { AIManager } from './AIManager.js';
+import { AIManager } from './core/ai/AIManager.js';
 
 /**
  * テトリスアプリケーションとAIを連携するマネージャークラス
  */
-export class TetrisAIManager {
+export class AIManagerWrapper {
     /**
      * コンストラクタ
      */

@@ -610,9 +610,9 @@ export class TetrisApp {
    */
   initializeAI() {
     try {
-      // TetrisAIManagerをインポート
-      import('../modules/TetrisAIManager.js').then(module => {
-        this.aiManager = new module.TetrisAIManager();
+      // AIManagerWrapperをインポート
+      import('../modules/AIManagerWrapper.js').then(module => {
+        this.aiManager = new module.AIManagerWrapper();
         this.initializeAIComponents();
       }).catch(error => {
         console.error('AIモジュールのロードに失敗しました:', error);
