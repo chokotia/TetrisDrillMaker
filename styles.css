@@ -74,13 +74,7 @@ html, body {
   justify-content: center; /* 横方向の中央寄せ */
   align-items: center; /* 縦方向の中央寄せ */
   overflow: hidden;
-  
-  /* ヘッダーとフッターの間にメインビューを配置 */
-  position: absolute;
-  top: var(--header-height);
-  bottom: var(--footer-height);
-  left: 0;
-  right: 0;
+  /* JavaScriptで動的に高さを設定するため、position: absoluteとtop/bottom/left/rightの指定を削除 */
 }
 
 /* 問題番号（ナビバー左端に表示） */

@@ -87,11 +87,18 @@ export class TetrisApp {
       this.initializeGameState();
       this.initializeSettingsModal();
       this.initializeControls();
+      this.setupAllEventListeners();
       this.generateFirstProblem();
       this.logInitializationInfo();
       
       // 初期状態では空のホールド表示を作成
       this.updateHoldDisplay(null);
+      
+      // main-viewの高さを動的に計算
+      this.adjustMainViewHeight();
+      
+      // リサイズイベントを追加
+      window.addEventListener('resize', () => this.adjustMainViewHeight());
       
       // AI機能の初期化
       this.initializeAI();
@@ -159,19 +166,34 @@ export class TetrisApp {
   }
 
   /**
-   * イベントリスナーのセットアップ
+   * すべてのイベントリスナーの設定
    */
   setupAllEventListeners() {
     this.setupSliderListeners();
     this.setupModalListeners();
     this.setupEditOptionListeners();
     this.setupClearButtonListener();
+    this.setupRemoveUsedButtonListener();
+    this.setupGestureControls();
+    this.setupToggleBoardListener();
     this.setupFillColumnButtonListener();
     this.setupClearColumnButtonListener();
-    this.setupRemoveUsedButtonListener();
     this.setupSeedRegenerateListener();
-    this.setupToggleBoardListener();
-    this.setupGestureControls();
+    
+    // 画面回転イベントのリスナーを追加
+    window.addEventListener('orientationchange', () => {
+      // 回転アニメーションが完了するのを待ってから高さを調整
+      setTimeout(() => this.adjustMainViewHeight(), 300);
+    });
+    
+    // DOM変更監視のためのMutationObserverを設定
+    const observer = new MutationObserver(() => {
+      this.adjustMainViewHeight();
+    });
+    
+    // ヘッダーとフッターの変更を監視
+    observer.observe(this.dom.titleBar, { attributes: true, childList: true, subtree: true });
+    observer.observe(this.dom.editNav, { attributes: true, childList: true, subtree: true });
   }
 
   /**
@@ -1205,68 +1227,53 @@ export class TetrisApp {
   }
 
   /**
-   * 盤面の表示/非表示を切り替え
+   * 盤面の表示/非表示を切り替える
    */
   toggleBoardVisibility() {
-    if (this.dom.board) {
-      // 現在の表示状態を確認（カスタム属性を使用）
-      const isVisible = this.dom.board.getAttribute('data-visible') !== 'false';
+    const titleBar = this.dom.titleBar;
+    const editNav = this.dom.editNav;
+    const boardContainer = document.getElementById('board-container');
+    const toggleBoardButton = this.dom.toggleBoard;
+    const isVisible = !titleBar.classList.contains('hidden');
+
+    if (isVisible) {
+      // 盤面を非表示にする
+      titleBar.classList.add('hidden');
+      editNav.classList.add('hidden');
+      boardContainer.classList.add('fullscreen');
+      toggleBoardButton.innerHTML = '<i class="bi bi-eye"></i>';
+      toggleBoardButton.setAttribute('aria-label', '盤面を表示する');
+
+      // 全画面表示のスタイルを適用
+      document.documentElement.style.setProperty('--header-height', '0px');
+      document.documentElement.style.setProperty('--footer-height', '0px');
       
-      if (isVisible) {
-        // 盤面のセルを空の状態にする（内部データは保持）
-        const cells = this.dom.board.querySelectorAll('.cell');
-        cells.forEach(cell => {
-          // セルのクラスを保存
-          cell.setAttribute('data-original-classes', cell.className);
-          // セルの元の背景色を保存
-          cell.setAttribute('data-original-bg', cell.style.backgroundColor || '');
-          
-          // セルを空の状態に変更
-          cell.className = 'cell';
-          cell.style.backgroundColor = ''; // 背景色をリセット
-          
-          // セル内部の要素を一時的に非表示
-          Array.from(cell.children).forEach(child => {
-            child.style.display = 'none';
-          });
-        });
-        
-        // 状態を非表示に設定
-        this.dom.board.setAttribute('data-visible', 'false');
-        
-        // アイコンを表示アイコンに変更
-        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye"></i>';
-        this.dom.toggleBoard.setAttribute('aria-label', '盤面を表示する');
-      } else {
-        // 元のセルの状態を復元
-        const cells = this.dom.board.querySelectorAll('.cell');
-        cells.forEach(cell => {
-          // 保存していたクラスを復元
-          const originalClasses = cell.getAttribute('data-original-classes');
-          if (originalClasses) {
-            cell.className = originalClasses;
-          }
-          
-          // 背景色を復元
-          const originalBg = cell.getAttribute('data-original-bg');
-          if (originalBg) {
-            cell.style.backgroundColor = originalBg;
-          }
-          
-          // セル内部の要素を再表示
-          Array.from(cell.children).forEach(child => {
-            child.style.display = '';
-          });
-        });
-        
-        // 状態を表示に設定
-        this.dom.board.setAttribute('data-visible', 'true');
-        
-        // アイコンを非表示アイコンに変更
-        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye-slash"></i>';
-        this.dom.toggleBoard.setAttribute('aria-label', '盤面の表示/非表示を切り替える');
-      }
+      // ボタンを右下に固定表示
+      toggleBoardButton.style.position = 'fixed';
+      toggleBoardButton.style.bottom = '10px';
+      toggleBoardButton.style.right = '10px';
+      toggleBoardButton.style.zIndex = '1050';
+    } else {
+      // 盤面を表示する
+      titleBar.classList.remove('hidden');
+      editNav.classList.remove('hidden');
+      boardContainer.classList.remove('fullscreen');
+      toggleBoardButton.innerHTML = '<i class="bi bi-eye-slash"></i>';
+      toggleBoardButton.setAttribute('aria-label', '盤面の表示/非表示を切り替える');
+
+      // 元のスタイルに戻す
+      document.documentElement.style.removeProperty('--header-height');
+      document.documentElement.style.removeProperty('--footer-height');
+      
+      // ボタンを元の位置に戻す
+      toggleBoardButton.style.position = '';
+      toggleBoardButton.style.bottom = '';
+      toggleBoardButton.style.right = '';
+      toggleBoardButton.style.zIndex = '';
     }
+    
+    // main-viewの高さを再計算
+    this.adjustMainViewHeight();
   }
 
   /**
@@ -1394,5 +1401,21 @@ export class TetrisApp {
     
     // ホールドコンテナに追加
     this.dom.holdContainer.appendChild(holdPieceContainer);
+  }
+
+  /**
+   * main-viewの高さを動的に計算
+   */
+  adjustMainViewHeight() {
+    const titleBarHeight = this.dom.titleBar.offsetHeight;
+    const editNavHeight = this.dom.editNav.offsetHeight;
+    const windowHeight = window.innerHeight;
+    
+    // メインビューの高さを計算（ウィンドウの高さ - ヘッダーの高さ - フッターの高さ）
+    const mainViewHeight = windowHeight - titleBarHeight - editNavHeight;
+    
+    // メインビューに高さを設定
+    const mainView = document.getElementById('main-view');
+    mainView.style.height = `${mainViewHeight}px`;
   }
 } 
