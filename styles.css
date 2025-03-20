@@ -16,14 +16,28 @@
   --color-ai-history-item: #f8f9fa;
   --color-ai-history-selected: #d1e7ff;
   --color-ai-history-hover: #e2e6ea;
+  
+  /* レイアウト用CSS変数 */
+  --header-height: 56px;
+  --footer-height: 100px;
+}
+
+/* 全体レイアウト */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 /* 全体ラッパ */
 #app {
   width: 100%;
-  height: 100vh;
-  position: relative;
+  height: 100vh; /* ビューポート全体を使用 */
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  position: relative; /* 子要素の位置指定の基準 */
 }
 
 /* 画面(ビュー)切り替え用の隠しクラス */
@@ -37,14 +51,22 @@
   display: none;
 }
 
-/* 問題番号（ナビバー左端に表示） */
-.problem-counter {
-  font-size: 16px;
+/* ヘッダーとフッターのスタイル */
+#title-bar {
+  height: var(--header-height);
+  min-height: var(--header-height);
+  z-index: 1030; /* Bootstrapのz-indexと同じ */
+}
+
+#edit-nav {
+  height: var(--footer-height);
+  min-height: var(--footer-height);
+  z-index: 1030; /* Bootstrapのz-indexと同じ */
 }
 
 /* メインビュー */
 #main-view.screen {
-  height: 100%;
+  flex: 1; /* 残りのスペースを埋める */
   width: 100%;
   box-sizing: border-box;
   background-color: var(--color-bg);
@@ -52,6 +74,18 @@
   justify-content: center; /* 横方向の中央寄せ */
   align-items: center; /* 縦方向の中央寄せ */
   overflow: hidden;
+  
+  /* ヘッダーとフッターの間にメインビューを配置 */
+  position: absolute;
+  top: var(--header-height);
+  bottom: var(--footer-height);
+  left: 0;
+  right: 0;
+}
+
+/* 問題番号（ナビバー左端に表示） */
+.problem-counter {
+  font-size: 16px;
 }
 
 /* 盤面コンテナ */
@@ -160,8 +194,13 @@
   font-weight: bold;
 }
 
-/* レスポンシブ対応の微調整 */
+/* レスポンシブ対応 */
 @media (max-width: 576px) {
+  :root {
+    --header-height: 50px;
+    --footer-height: 120px; /* モバイルでは少し大きめに */
+  }
+  
   .next-piece-container {
     width: 60px;
     height: 30px;
