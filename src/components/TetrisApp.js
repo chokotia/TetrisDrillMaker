@@ -86,7 +86,6 @@ export class TetrisApp {
       this.initializeGameState();
       this.initializeSettingsModal();
       this.initializeControls();
-      this.setupAllEventListeners();
       this.generateFirstProblem();
       this.logInitializationInfo();
       
@@ -172,6 +171,7 @@ export class TetrisApp {
     this.setupFillColumnButtonListener();
     this.setupClearColumnButtonListener();
     this.setupSeedRegenerateListener();
+    this.setupToggleBoardListener();
   }
 
   /**
@@ -343,10 +343,9 @@ export class TetrisApp {
    * 問題の生成
    */
   generateProblem() {
-    // 前回のAuto選択状態をリセット
-    this.editState = EditManager.resetAutoCells(this.editState);
-
+    // 保存されている設定を取得
     const settings = SettingsManager.getSettings(this.dom);
+    
     let { blockCountMin, blockCountMax } = settings;
     
     if (blockCountMin > blockCountMax) {
@@ -363,6 +362,29 @@ export class TetrisApp {
       this.randomGenerator,
       (cell, index, width, height) => this.handleCellClick(cell, index, width, height)
     );
+    
+    // ダミーボードにも同じサイズの空のボードを作成（ブロックなし、クリックイベントなし）
+    const dummyBoard = document.getElementById('dummy-board');
+    if (dummyBoard) {
+      // ダミーボードのスタイル設定
+      dummyBoard.style.setProperty('--width', settings.width);
+      dummyBoard.style.setProperty('--height', settings.height);
+      dummyBoard.innerHTML = '';
+      
+      // 空のセルを作成
+      const totalCells = settings.width * settings.height;
+      const fragment = document.createDocumentFragment();
+      
+      for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.style.width = `${config.CELL_SIZE}px`;
+        cell.style.height = `${config.CELL_SIZE}px`;
+        fragment.appendChild(cell);
+      }
+      
+      dummyBoard.appendChild(fragment);
+    }
     
     this.currentWidth = settings.width;
     this.currentHeight = settings.height;
@@ -1321,5 +1343,45 @@ export class TetrisApp {
     
     // ホールドコンテナに追加
     this.dom.holdContainer.appendChild(holdPieceContainer);
+  }
+
+  /**
+   * ボード表示/非表示切り替えボタンのリスナーを設定
+   */
+  setupToggleBoardListener() {
+    if (this.dom.toggleBoard) {
+      this.dom.toggleBoard.addEventListener('click', () => {
+        this.toggleBoardVisibility();
+      });
+    }
+  }
+
+  /**
+   * ボードの表示/非表示を切り替える
+   */
+  toggleBoardVisibility() {
+    const board = document.getElementById('board');
+    const dummyBoard = document.getElementById('dummy-board');
+    
+    if (board && dummyBoard) {
+      // 現在のボードの状態をチェック
+      const isMainBoardActive = !board.classList.contains('d-none');
+      
+      if (isMainBoardActive) {
+        // メインボードを非表示にしてダミーボードを表示
+        board.classList.add('d-none');
+        dummyBoard.classList.remove('d-none');
+        
+        // アイコンを変更（目の表示に）
+        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye"></i>';
+      } else {
+        // ダミーボードを非表示にしてメインボードを表示
+        dummyBoard.classList.add('d-none');
+        board.classList.remove('d-none');
+        
+        // アイコンを変更（目に斜線を入れた表示に）
+        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye-slash"></i>';
+      }
+    }
   }
 } 
