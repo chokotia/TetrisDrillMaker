@@ -33,21 +33,13 @@ html, body {
 /* 全体ラッパ */
 #app {
   width: 100%;
-  height: 100vh; /* ビューポート全体を使用 */
-  display: flex;
-  flex-direction: column;
+  height: 100vh; /* 古いブラウザ用 */
+  height: 100dvh; /* 新しいブラウザ用 */
   overflow: hidden;
   position: relative; /* 子要素の位置指定の基準 */
 }
 
-/* 画面(ビュー)切り替え用の隠しクラス */
 .hidden {
-  display: none;
-}
-
-/* ナビバー隠し用 */
-#title-bar.hidden,
-#edit-nav.hidden {
   display: none;
 }
 
@@ -58,33 +50,22 @@ html, body {
   z-index: 1030; /* Bootstrapのz-indexと同じ */
 }
 
-#edit-nav {
+#control-panel {
   height: var(--footer-height);
   min-height: var(--footer-height);
   z-index: 1030; /* Bootstrapのz-indexと同じ */
 }
 
 /* メインビュー */
-#main-view.screen {
-  flex: 1; /* 残りのスペースを埋める */
-  width: 100%;
-  box-sizing: border-box;
-  background-color: var(--color-bg);
-  display: flex;
-  justify-content: center; /* 横方向の中央寄せ */
-  align-items: center; /* 縦方向の中央寄せ */
-  overflow: hidden;
-  /* JavaScriptで動的に高さを設定するため、position: absoluteとtop/bottom/left/rightの指定を削除 */
+#main-view {
+  height: 100%;
+  padding-top: var(--header-height);
+  padding-bottom: var(--footer-height);
 }
 
 /* 問題番号（ナビバー左端に表示） */
 .problem-counter {
-  font-size: 16px;
-}
-
-/* 盤面コンテナ */
-#board-container {
-  margin: 0;
+  font-size: 1rem;
 }
 
 /* テトリス盤面 */
@@ -103,10 +84,6 @@ html, body {
   box-sizing: border-box;
 }
 
-/* ブロック状態のマス */
-.tetris-board .block {
-  /* 背景色はインラインスタイルで設定 */
-}
 
 /* NEXT コンテナ */
 .next-container {

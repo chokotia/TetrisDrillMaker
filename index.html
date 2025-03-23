@@ -48,17 +48,16 @@
         </div>
       </header>
 
-      <main id="main-view" class="screen">
+      <main id="main-view" class="d-flex flex-column justify-content-center overflow-y-auto">
         <div id="board-container" class="d-flex flex-row justify-content-center align-items-start">
+ 
           <div id="board" class="tetris-board"></div>
-          <div class="ms-3 d-flex flex-column">
-            <!-- ホールドミノ表示エリア -->
+          <div class="d-flex flex-column ms-3">
             <aside id="hold" class="next-container mb-3"></aside>
-            <!-- ネクストピース表示エリア -->
             <aside id="next" class="next-container"></aside>
             <button
               id="remove-used"
-              class="btn btn-outline-secondary btn-sm mt-2 d-flex align-items-center justify-content-center"
+              class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center mt-2"
               data-action="remove-used"
               type="button"
               aria-label="使用済みのネクストピースを削除する"
@@ -69,7 +68,7 @@
         </div>
       </main>
 
-      <footer id="edit-nav" class="navbar navbar-dark bg-dark fixed-bottom">
+      <footer id="control-panel" class="navbar navbar-dark bg-dark fixed-bottom">
         <div class="container-fluid">
           <div class="d-flex justify-content-between w-100 mb-2">
             <div class="btn-group">

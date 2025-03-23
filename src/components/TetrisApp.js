@@ -38,7 +38,7 @@ export class TetrisApp {
       currentProblem: document.getElementById('current-problem'),
       nextContainer: document.getElementById('next'),
       holdContainer: document.getElementById('hold'),
-      editNav: document.getElementById('edit-nav'),
+      editNav: document.getElementById('control-panel'),
       toggleBoard: document.getElementById('toggle-board'),
       removeUsed: document.getElementById('remove-used'),
       fillColumnButton: document.getElementById('fill-column-button'),
@@ -1475,7 +1475,7 @@ export class TetrisApp {
     console.log(`レイアウト再計算: ウィンドウ高さ=${windowHeight}px, ヘッダー高さ=${titleBarHeight}px, フッター高さ=${editNavHeight}px, メインビュー高さ=${mainViewHeight}px`);
     
     // メインビューに高さを設定
-    mainView.style.height = `${mainViewHeight}px`;
+    //mainView.style.height = `${mainViewHeight}px`;
     
     // 追加の安定化: スクロール位置をリセット
     window.scrollTo(0, 0);

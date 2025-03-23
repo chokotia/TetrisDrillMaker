@@ -86,11 +86,11 @@ describe('テトリスドリルメーカー - UIコンポーネントテスト',
 
   test('編集ナビゲーションが正しく表示される', async () => {
     // 編集ナビゲーションの存在を確認
-    const editNavExists = await page.$('#edit-nav') !== null;
+    const editNavExists = await page.$('#control-panel') !== null;
     expect(editNavExists).toBeTruthy();
     
     // 編集ナビゲーションの位置が固定されているか確認
-    const editNavPosition = await page.$eval('#edit-nav', el => {
+    const editNavPosition = await page.$eval('#control-panel', el => {
       const style = window.getComputedStyle(el);
       return style.position;
     });
