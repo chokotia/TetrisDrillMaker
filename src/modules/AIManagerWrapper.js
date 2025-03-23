@@ -1,6 +1,76 @@
 import { AIManager } from './core/ai/AIManager.js';
 
 /**
+ * アプリのボード状態をAI用のフォーマットに変換
+ * @param {Array} board - アプリのボード状態
+ * @param {Array} queue - アプリのネクスト情報
+ * @param {String|null} hold - アプリのホールド状態
+ * @returns {Object} - AI用のデータ形式
+ */
+function convertToAIFormat(board, queue, hold = null) {
+    // 高さをチェックし、必要に応じて調整（20行に満たない場合は空行を追加）
+    const aiBoard = adjustBoardHeight(board);
+    
+    return {
+        board: aiBoard,
+        queue: queue,
+        hold: hold,
+        combo: 0,          // コンボ数は固定値0
+        back_to_back: false // B2B状態は固定値false
+    };
+}
+
+/**
+ * 盤面の高さを調整（20行に調整）
+ * @param {Array} board - 元の盤面
+ * @returns {Array} - 高さ調整後の盤面
+ */
+function adjustBoardHeight(board) {
+    const requiredHeight = 20;
+    const currentHeight = board.length;
+    
+    // 高さが20行の場合はそのまま返す
+    if (currentHeight === requiredHeight) {
+        return [...board];
+    }
+    
+    // 高さが20行未満の場合は空行を追加（各列のグレー状態に応じて）
+    if (currentHeight < requiredHeight) {
+        const width = board[0].length;
+        const rowsToAdd = requiredHeight - currentHeight;
+        
+        // 各列がすべてグレーかどうかをチェック
+        const isColumnAllGray = new Array(width).fill(true);
+        
+        // 各列について、すべてがグレー('G')かどうかを確認
+        for (let col = 0; col < width; col++) {
+            for (let row = 0; row < currentHeight; row++) {
+                if (board[row][col] !== 'G') {
+                    isColumnAllGray[col] = false;
+                    break;
+                }
+            }
+        }
+        
+        // 新しい空行を作成
+        const emptyRows = [];
+        for (let i = 0; i < rowsToAdd; i++) {
+            const newRow = [];
+            for (let col = 0; col < width; col++) {
+                // グレーの列は上部も'G'で埋める
+                newRow.push(isColumnAllGray[col] ? 'G' : null);
+            }
+            emptyRows.push(newRow);
+        }
+            
+        return [...emptyRows, ...board];
+    }
+    
+    // 高さが20行を超える場合は上部を切り捨て
+    return board.slice(0, requiredHeight);
+}
+
+/**
  * テトリスアプリケーションとAIを連携するマネージャークラス
  */
 export class AIManagerWrapper {
@@ -76,90 +146,6 @@ export class AIManagerWrapper {
     }
 
     /**
-     * アプリのボード状態をAI用のフォーマットに変換
-     * @param {Array} board - アプリのボード状態
-     * @param {Array} queue - アプリのネクスト情報
-     * @param {String|null} hold - アプリのホールド状態
-     * @returns {Object} - AI用のデータ形式
-     */
-    convertToAIFormat(board, queue, hold = null) {
-        // 高さをチェックし、必要に応じて調整（20行に満たない場合は空行を追加）
-        const aiBoard = this.adjustBoardHeight(board);
-        
-        return {
-            board: aiBoard,
-            queue: queue,
-            hold: hold,
-            combo: 0,          // コンボ数は固定値0
-            back_to_back: false // B2B状態は固定値false
-        };
-    }
-
-    /**
-     * 盤面の高さを調整（20行に調整）
-     * @param {Array} board - 元の盤面
-     * @returns {Array} - 高さ調整後の盤面
-     */
-    adjustBoardHeight(board) {
-        const requiredHeight = 20;
-        const currentHeight = board.length;
-        
-        // 高さが20行の場合はそのまま返す
-        if (currentHeight === requiredHeight) {
-            return [...board];
-        }
-        
-        // 高さが20行未満の場合は空行を追加（各列のグレー状態に応じて）
-        if (currentHeight < requiredHeight) {
-            const width = board[0].length;
-            const rowsToAdd = requiredHeight - currentHeight;
-            
-            // 各列がすべてグレーかどうかをチェック
-            const isColumnAllGray = new Array(width).fill(true);
-            
-            // 各列について、すべてがグレー('G')かどうかを確認
-            for (let col = 0; col < width; col++) {
-                for (let row = 0; row < currentHeight; row++) {
-                    if (board[row][col] !== 'G') {
-                        isColumnAllGray[col] = false;
-                        break;
-                    }
-                }
-            }
-            
-            // 新しい空行を作成
-            const emptyRows = [];
-            for (let i = 0; i < rowsToAdd; i++) {
-                const newRow = [];
-                for (let col = 0; col < width; col++) {
-                    // グレーの列は上部も'G'で埋める
-                    newRow.push(isColumnAllGray[col] ? 'G' : null);
-                }
-                emptyRows.push(newRow);
-            }
-                
-            return [...emptyRows, ...board];
-        }
-        
-        // 高さが20行を超える場合は上部を切り捨て
-        return board.slice(0, requiredHeight);
-    }
-
-    /**
-     * AIからの結果をアプリ形式に変換
-     * @param {Object} aiResult - AIからの結果
-     * @returns {Object} - アプリ形式の結果
-     */
-    convertFromAIFormat(aiResult) {
-        return {
-            board: aiResult.board,
-            next: aiResult.next,
-            hold: aiResult.hold,
-            move: aiResult.move
-        };
-    }
-
-    /**
      * AI探索を開始
      * @param {Object} gameState - ゲームの現在状態
      * @param {number} grayColumnCount - 左端から連続して存在するグレーミノの列数
@@ -177,7 +163,7 @@ export class AIManagerWrapper {
             this.emit('searchStarted');
             
             // ゲーム状態をAI形式に変換
-            const aiGameState = this.convertToAIFormat(
+            const aiGameState = convertToAIFormat(
                 gameState.board,
                 gameState.queue,
                 gameState.hold

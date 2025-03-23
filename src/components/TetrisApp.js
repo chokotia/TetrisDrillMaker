@@ -43,7 +43,6 @@ export class TetrisApp {
       removeUsed: document.getElementById('remove-used'),
       fillColumnButton: document.getElementById('fill-column-button'),
       clearColumnButton: document.getElementById('clear-column-button'),
-      titleBar: document.getElementById('title-bar'),
       clearBoard: document.getElementById('clear-board'),
       settingsButton: document.getElementById('settings-button'),
       settingsModal: document.getElementById('settings-modal'),
@@ -170,7 +169,6 @@ export class TetrisApp {
     this.setupClearButtonListener();
     this.setupRemoveUsedButtonListener();
     this.setupGestureControls();
-    this.setupToggleBoardListener();
     this.setupFillColumnButtonListener();
     this.setupClearColumnButtonListener();
     this.setupSeedRegenerateListener();
@@ -406,7 +404,7 @@ export class TetrisApp {
    */
   setupGestureControls() {
     GestureManager.setupGestureControls(
-      document.getElementById('main-view'),
+      document.querySelector('.tetris-app__main'),
       document.getElementById('board-container'),
       () => this.goToNextProblem(),
       () => this.goToPreviousProblem(),
@@ -1197,61 +1195,6 @@ export class TetrisApp {
     }
   }
 
-  /**
-   * 盤面表示/非表示ボタンのイベントリスナー
-   */
-  setupToggleBoardListener() {
-    if (this.dom.toggleBoard) {
-      this.dom.toggleBoard.addEventListener('click', () => this.toggleBoardVisibility());
-    }
-  }
-
-  /**
-   * 盤面の表示/非表示を切り替える
-   */
-  toggleBoardVisibility() {
-    const titleBar = this.dom.titleBar;
-    const editNav = this.dom.editNav;
-    const boardContainer = document.getElementById('board-container');
-    const toggleBoardButton = this.dom.toggleBoard;
-    const isVisible = !titleBar.classList.contains('hidden');
-
-    if (isVisible) {
-      // 盤面を非表示にする
-      titleBar.classList.add('hidden');
-      editNav.classList.add('hidden');
-      boardContainer.classList.add('fullscreen');
-      toggleBoardButton.innerHTML = '<i class="bi bi-eye"></i>';
-      toggleBoardButton.setAttribute('aria-label', '盤面を表示する');
-
-      // 全画面表示のスタイルを適用
-      document.documentElement.style.setProperty('--layout-header-height', '0px');
-      document.documentElement.style.setProperty('--layout-footer-height', '0px');
-      
-      // ボタンを右下に固定表示
-      toggleBoardButton.style.position = 'fixed';
-      toggleBoardButton.style.bottom = '10px';
-      toggleBoardButton.style.right = '10px';
-      toggleBoardButton.style.zIndex = '1050';
-    } else {
-      // 盤面を表示する
-      titleBar.classList.remove('hidden');
-      editNav.classList.remove('hidden');
-      boardContainer.classList.remove('fullscreen');
-      toggleBoardButton.innerHTML = '<i class="bi bi-eye-slash"></i>';
-      toggleBoardButton.setAttribute('aria-label', '盤面の表示/非表示を切り替える');
-
-      // 元のスタイルに戻す
-      document.documentElement.style.removeProperty('--layout-header-height');
-      document.documentElement.style.removeProperty('--layout-footer-height');
-      
-      // ボタンを元の位置に戻す
-      toggleBoardButton.style.position = '';
-      toggleBoardButton.style.bottom = '';
-      toggleBoardButton.style.right = '';
-      toggleBoardButton.style.zIndex = '';
-    }
-  }
 
   /**
    * 列グレー化ボタンのイベントリスナー

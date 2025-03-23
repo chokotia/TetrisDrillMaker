@@ -22,9 +22,9 @@
 
   <body>
     <div class="tetris-app">
-      <header id="title-bar" class="navbar navbar-dark bg-dark fixed-top">
+      <header class="tetris-app__header navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
-          <h1 id="current-problem" class="navbar-brand problem-counter m-0">
+          <h1 id="current-problem" class="tetris-app__problem-counter navbar-brand m-0">
             問題 #1
           </h1>
           <div class="d-flex align-items-center">
@@ -48,7 +48,7 @@
         </div>
       </header>
 
-      <main id="main-view" class="d-flex flex-column justify-content-center overflow-y-auto">
+      <main class="tetris-app__main d-flex flex-column justify-content-center overflow-y-auto">
         <div id="board-container" class="d-flex flex-row justify-content-center align-items-start">
  
           <div id="board" class="tetris-board"></div>

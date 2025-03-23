@@ -89,8 +89,7 @@ html, body {
   display: none;
 }
 
-/* ヘッダーとフッターのスタイル */
-#title-bar {
+.tetris-app__header {
   height: var(--layout-header-height);
   min-height: var(--layout-header-height);
   z-index: 1030; /* Bootstrapのz-indexと同じ */
@@ -103,7 +102,7 @@ html, body {
 }
 
 /* メインビュー */
-#main-view {
+.tetris-app__main {
   height: 100%;
   padding-top: var(--layout-header-height);
   padding-bottom: var(--layout-footer-height);
@@ -121,7 +120,7 @@ html, body {
 }
 
 /* 問題番号（ナビバー左端に表示） */
-.problem-counter {
+.tetris-app__problem-counter {
   font-size: 1rem;
 }
 
