@@ -94,22 +94,9 @@ export class TetrisApp {
       // 初期状態では空のホールド表示を作成
       this.updateHoldDisplay(null);
       
-      // main-viewの高さを動的に計算（少し遅延させて実行）
-      setTimeout(() => {
-        this.adjustMainViewHeight();
-      }, 100);
-      
       // AI機能の初期化
       this.initializeAI();
       
-      // pageshow イベントを使用してブラウザキャッシュからの復元時にもリサイズを行う
-      window.addEventListener('pageshow', (event) => {
-        // bfcache から復元された場合も含めて処理
-        if (event.persisted) {
-          console.log('ページがキャッシュから復元されました。レイアウトを再計算します。');
-          setTimeout(() => this.adjustMainViewHeight(), 100);
-        }
-      });
     } catch (error) {
       console.error('初期化に失敗しました:', error);
     }
@@ -187,43 +174,6 @@ export class TetrisApp {
     this.setupFillColumnButtonListener();
     this.setupClearColumnButtonListener();
     this.setupSeedRegenerateListener();
-    
-    // 画面回転イベントのリスナーを追加
-    window.addEventListener('orientationchange', () => {
-      // 回転アニメーションが完了するのを待ってから高さを調整
-      setTimeout(() => this.adjustMainViewHeight(), 300);
-    });
-    
-    // ブラウザのバックグラウンド/フォアグラウンド切り替えを監視
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        // 少し遅延させて実行（ブラウザのレンダリングを待つ）
-        setTimeout(() => {
-          console.log('バックグラウンドから復帰しました。レイアウトを再計算します。');
-          this.adjustMainViewHeight();
-        }, 100);
-      }
-    });
-    
-    // resize イベントのリスナーを追加（デバイスがリサイズされたとき）
-    window.addEventListener('resize', () => {
-      // 遅延させて実行（連続的なリサイズイベントで何度も実行されるのを防ぐ）
-      if (this.resizeTimeout) {
-        clearTimeout(this.resizeTimeout);
-      }
-      this.resizeTimeout = setTimeout(() => {
-        this.adjustMainViewHeight();
-      }, 100);
-    });
-    
-    // DOM変更監視のためのMutationObserverを設定
-    const observer = new MutationObserver(() => {
-      this.adjustMainViewHeight();
-    });
-    
-    // ヘッダーとフッターの変更を監視
-    observer.observe(this.dom.titleBar, { attributes: true, childList: true, subtree: true });
-    observer.observe(this.dom.editNav, { attributes: true, childList: true, subtree: true });
   }
 
   /**
@@ -1301,9 +1251,6 @@ export class TetrisApp {
       toggleBoardButton.style.right = '';
       toggleBoardButton.style.zIndex = '';
     }
-    
-    // main-viewの高さを再計算
-    this.adjustMainViewHeight();
   }
 
   /**
@@ -1431,53 +1378,5 @@ export class TetrisApp {
     
     // ホールドコンテナに追加
     this.dom.holdContainer.appendChild(holdPieceContainer);
-  }
-
-  /**
-   * main-viewの高さを動的に計算
-   */
-  adjustMainViewHeight() {
-    // DOM要素の参照が存在しない場合は処理しない
-    if (!this.dom || !this.dom.titleBar || !this.dom.editNav) {
-      console.warn('DOM要素の参照が不足しているため、高さ計算をスキップします');
-      return;
-    }
-    
-    // メインビューの取得
-    const mainView = document.getElementById('main-view');
-    if (!mainView) {
-      console.warn('main-view要素が見つかりません');
-      return;
-    }
-    
-    // 現在の表示状態を確認
-    const isHeaderHidden = this.dom.titleBar.classList.contains('hidden');
-    const isFooterHidden = this.dom.editNav.classList.contains('hidden');
-    
-    // ヘッダー、フッターの高さを取得
-    let titleBarHeight = isHeaderHidden ? 0 : this.dom.titleBar.offsetHeight;
-    let editNavHeight = isFooterHidden ? 0 : this.dom.editNav.offsetHeight;
-    
-    // 非表示の場合にCSSの変数値を考慮
-    if (isHeaderHidden) {
-      titleBarHeight = 0;
-    }
-    
-    if (isFooterHidden) {
-      editNavHeight = 0;
-    }
-    
-    const windowHeight = window.innerHeight;
-    
-    // メインビューの高さを計算（ウィンドウの高さ - ヘッダーの高さ - フッターの高さ）
-    const mainViewHeight = windowHeight - titleBarHeight - editNavHeight;
-    
-    console.log(`レイアウト再計算: ウィンドウ高さ=${windowHeight}px, ヘッダー高さ=${titleBarHeight}px, フッター高さ=${editNavHeight}px, メインビュー高さ=${mainViewHeight}px`);
-    
-    // メインビューに高さを設定
-    //mainView.style.height = `${mainViewHeight}px`;
-    
-    // 追加の安定化: スクロール位置をリセット
-    window.scrollTo(0, 0);
   }
 } 
