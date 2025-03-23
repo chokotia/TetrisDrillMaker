@@ -102,8 +102,7 @@
               <div class="btn-group me-2">
                 <button
                 id="clear-column-button"
-                class="btn btn-outline-light d-flex align-items-center"
-                style="font-size: 0.8rem;"
+                class="btn btn-outline-light d-flex align-items-center btn-small"
                 type="button"
                 aria-label="全部灰色の列を右側から削除する"
                 data-bs-toggle="tooltip"
@@ -114,8 +113,7 @@
               </button>
                 <button
                   id="fill-column-button"
-                  class="btn btn-outline-light d-flex align-items-center"
-                  style="font-size: 0.8rem;"
+                  class="btn btn-outline-light d-flex align-items-center btn-small"
                   type="button"
                   aria-label="列を順番にグレーで埋める"
                   data-bs-toggle="tooltip"
@@ -378,14 +376,4 @@
     </div>
   </body>
 
-  <!-- ツールチップ初期化用のスクリプト -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Bootstrapのツールチップを初期化
-      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-      });
-    });
-  </script>
 </html>

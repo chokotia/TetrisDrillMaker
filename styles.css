@@ -1,5 +1,5 @@
-/* CSS変数の導入によるカラー管理の一元化 */
 :root {
+  /* カラー変数 */
   --color-bg: #f4f4f4;
   --color-board-bg: #333333;
   --color-board-border: #cccccc;
@@ -17,9 +17,41 @@
   --color-ai-history-selected: #d1e7ff;
   --color-ai-history-hover: #e2e6ea;
   
-  /* レイアウト用CSS変数 */
-  --header-height: 56px;
-  --footer-height: 100px;
+  /* フォントサイズ */
+  --font-size-small: 0.8rem;
+  --font-size-base: 1rem;
+  --font-size-large: 1.25rem;
+
+  /* 間隔 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+
+  /* モバイル用ベース設定 - すべてのサイズ関連変数をここで定義 */
+  /* レイアウト変数 */
+  --header-height: 50px;
+  --footer-height: 120px;
+
+  /* ゲーム要素のサイズ */
+  --cell-size: 24px;
+  --next-piece-width: 50px; 
+  --next-piece-height: 25px;
+  --next-piece-block-size: 8px;
+  
+  /* パディングとマージン */
+  --modal-padding: 1rem;
+  --container-padding: 8px;
+  --button-padding: 0.25rem 0.5rem;
+  --button-font-size: 0.875rem;
+  
+  /* その他のサイズ */
+  --ai-piece-type-size: 18px;
+  --ai-piece-type-font-size: 0.8rem;
+  --ai-move-font-size: 0.85em;
+  --ai-drumroll-min-width: 250px;
+  --ai-move-max-width: 100px;
+  --ai-display-min-width: 150px;
 }
 
 /* 全体レイアウト */
@@ -28,6 +60,10 @@ html, body {
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+.btn-small {
+  font-size: var(--font-size-small);
 }
 
 /* 全体ラッパ */
@@ -63,6 +99,17 @@ html, body {
   padding-bottom: var(--footer-height);
 }
 
+/* ボードコンテナ */
+#board-container {
+  flex-direction: column;
+  align-items: center;
+}
+
+#board-container > div:nth-child(2) {
+  margin-top: 1rem;
+  margin-left: 0;
+}
+
 /* 問題番号（ナビバー左端に表示） */
 .problem-counter {
   font-size: 1rem;
@@ -76,22 +123,26 @@ html, body {
   grid-template-rows: repeat(var(--height), 1fr);
   gap: 1px; /* 1pxの隙間を線として表示 */
   border: 2px solid var(--color-board-border);
+  width: max-content;
+  max-width: 100%;
+  height: max-content;
 }
 
 /* 盤面の1マス */
 .tetris-board .cell {
   background-color: var(--color-cell-default);
   box-sizing: border-box;
+  width: var(--cell-size);
+  height: var(--cell-size);
 }
-
 
 /* NEXT コンテナ */
 .next-container {
   background-color: var(--color-next-bg);
-  padding: 10px;
+  padding: var(--container-padding);
   border-radius: 4px;
   border: 1px solid var(--color-next-border);
-  max-height: 400px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
@@ -101,8 +152,8 @@ html, body {
   justify-content: center;
   align-items: center;
   background-color: var(--color-next-piece-bg);
-  width: 80px;
-  height: 40px;
+  width: var(--next-piece-width);
+  height: var(--next-piece-height);
   border: 1px solid var(--color-next-border);
   margin-bottom: 5px;
   position: relative;
@@ -137,7 +188,7 @@ html, body {
   left: 50%;
   transform: translate(-50%, -50%);
   color: var(--color-used-mark);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: bold;
   z-index: 2;
 }
@@ -149,8 +200,8 @@ html, body {
 }
 
 .next-piece div {
-  width: 10px;
-  height: 10px;
+  width: var(--next-piece-block-size);
+  height: var(--next-piece-block-size);
   background-color: transparent;
 }
 
@@ -165,28 +216,18 @@ html, body {
   font-weight: bold;
 }
 
-/* レスポンシブ対応 */
-@media (max-width: 576px) {
-  :root {
-    --header-height: 50px;
-    --footer-height: 120px; /* モバイルでは少し大きめに */
-  }
-  
-  .next-piece-container {
-    width: 60px;
-    height: 30px;
-  }
+.modal-body {
+  padding: var(--modal-padding);
+}
 
-  .next-piece div {
-    width: 8px;
-    height: 8px;
-  }
+.modal-header {
+  background-color: var(--color-modal-header);
+  padding: 0.75rem var(--modal-padding);
+}
 
-  /* 盤面のセルサイズを調整 */
-  .tetris-board .cell {
-    width: 24px;
-    height: 24px;
-  }
+.modal-footer {
+  background-color: var(--color-bg);
+  padding: 0.75rem var(--modal-padding);
 }
 
 /* 追加のアクセシビリティとインタラクション向上 */
@@ -196,14 +237,6 @@ button:focus {
 }
 
 .modal-content {
-  background-color: var(--color-bg);
-}
-
-.modal-header {
-  background-color: var(--color-modal-header);
-}
-
-.modal-footer {
   background-color: var(--color-bg);
 }
 
@@ -220,13 +253,6 @@ button:focus {
     color 0.3s;
 }
 
-/* テトリス盤面のレスポンス向上 */
-.tetris-board {
-  width: max-content;
-  max-width: 100%;
-  height: max-content;
-}
-
 /* スクロール防止 */
 body {
   overflow: hidden;
@@ -234,7 +260,7 @@ body {
 
 /* AI関連スタイル */
 .ai-history-container {
-  max-height: 400px;
+  max-height: 300px;
   overflow-y: auto;
   border: 1px solid rgba(0, 0, 0, 0.125);
   border-radius: 0.25rem;
@@ -242,7 +268,7 @@ body {
 
 .ai-history-item {
   cursor: pointer;
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 1rem;
   background-color: var(--color-ai-history-item);
   border-bottom: 1px solid rgba(0, 0, 0, 0.125);
   transition: background-color 0.2s ease;
@@ -263,15 +289,16 @@ body {
 
 .ai-piece-type {
   display: inline-block;
-  width: 20px;
-  height: 20px;
+  width: var(--ai-piece-type-size);
+  height: var(--ai-piece-type-size);
   border-radius: 3px;
-  margin-right: 8px;
+  margin-right: 6px;
   vertical-align: middle;
   text-align: center;
   color: white;
   font-weight: bold;
-  line-height: 20px;
+  line-height: var(--ai-piece-type-size);
+  font-size: var(--ai-piece-type-font-size);
 }
 
 .ai-piece-type.I { background-color: #00f0f0; }
@@ -320,20 +347,20 @@ body {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   padding: 4px 8px;
-  min-width: 300px;
+  min-width: var(--ai-drumroll-min-width);
   justify-content: space-between;
 }
 
 .ai-move-drumroll > div {
-  padding: 4px 8px;
+  padding: 4px 6px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9em;
+  font-size: var(--ai-move-font-size);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
+  max-width: var(--ai-move-max-width);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -368,14 +395,14 @@ body {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   padding: 4px 8px;
-  min-width: 200px;
+  min-width: var(--ai-display-min-width);
   justify-content: center;
 }
 
 .ai-move-display > div {
-  padding: 4px 8px;
+  padding: 4px 6px;
   border-radius: 4px;
-  font-size: 0.9em;
+  font-size: var(--ai-move-font-size);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -390,8 +417,24 @@ body {
   min-width: 0;
 }
 
-.ai-move-current {
-  background: rgba(255, 255, 255, 0.3);
-  font-weight: bold;
-  color: #ffffff;
+/* フッターのコントロールパネル */
+#control-panel .btn {
+  padding: var(--button-padding);
+  font-size: var(--button-font-size);
+}
+
+#control-panel .btn-group {
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+#control-panel .container-fluid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* 子要素間に0.5remの間隔を設定 */
+}
+
+/* レスポンシブ対応 */
+/* 必要に応じて別途実施する。現状モバイルのみで良いため行わない。 */
+
 }
