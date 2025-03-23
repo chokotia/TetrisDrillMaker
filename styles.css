@@ -17,6 +17,16 @@
   --color-ai-history-selected: #d1e7ff;
   --color-ai-history-hover: #e2e6ea;
   
+  /* テトリスピースの色 */
+  --color-piece-i: #00f0f0;
+  --color-piece-o: #f0f000;
+  --color-piece-t: #a000f0;
+  --color-piece-l: #f0a000;
+  --color-piece-j: #0000f0;
+  --color-piece-s: #00f000;
+  --color-piece-z: #f00000;
+  --color-piece-g: #808080;
+
   /* フォントサイズ */
   --font-size-small: 0.8rem;
   --font-size-base: 1rem;
@@ -30,28 +40,28 @@
 
   /* モバイル用ベース設定 - すべてのサイズ関連変数をここで定義 */
   /* レイアウト変数 */
-  --header-height: 50px;
-  --footer-height: 120px;
+  --layout-header-height: 50px;
+  --layout-footer-height: 120px; 
 
   /* ゲーム要素のサイズ */
-  --cell-size: 24px;
-  --next-piece-width: 50px; 
-  --next-piece-height: 25px;
-  --next-piece-block-size: 8px;
+  --size-cell-size: 24px;
+  --size-next-piece-width: 50px; 
+  --size-next-piece-height: 25px;
+  --size-next-piece-block-size: 8px;
   
   /* パディングとマージン */
-  --modal-padding: 1rem;
-  --container-padding: 8px;
-  --button-padding: 0.25rem 0.5rem;
-  --button-font-size: 0.875rem;
+  --spacing-modal: 1rem;
+  --spacing-container: 8px;
+  --spacing-button: 0.25rem 0.5rem;
+  --font-size-button: 0.875rem;
   
   /* その他のサイズ */
-  --ai-piece-type-size: 18px;
-  --ai-piece-type-font-size: 0.8rem;
-  --ai-move-font-size: 0.85em;
-  --ai-drumroll-min-width: 250px;
-  --ai-move-max-width: 100px;
-  --ai-display-min-width: 150px;
+  --size-ai-piece-type: 18px;
+  --font-size-ai-piece-type: 0.8rem;
+  --font-size-ai-move: 0.85em;
+  --size-ai-drumroll-min-width: 250px;
+  --size-ai-move-max-width: 100px;
+  --size-ai-display-min-width: 150px;
 }
 
 /* 全体レイアウト */
@@ -81,22 +91,22 @@ html, body {
 
 /* ヘッダーとフッターのスタイル */
 #title-bar {
-  height: var(--header-height);
-  min-height: var(--header-height);
+  height: var(--layout-header-height);
+  min-height: var(--layout-header-height);
   z-index: 1030; /* Bootstrapのz-indexと同じ */
 }
 
 #control-panel {
-  height: var(--footer-height);
-  min-height: var(--footer-height);
+  height: var(--layout-footer-height);
+  min-height: var(--layout-footer-height);
   z-index: 1030; /* Bootstrapのz-indexと同じ */
 }
 
 /* メインビュー */
 #main-view {
   height: 100%;
-  padding-top: var(--header-height);
-  padding-bottom: var(--footer-height);
+  padding-top: var(--layout-header-height);
+  padding-bottom: var(--layout-footer-height);
 }
 
 /* ボードコンテナ */
@@ -132,14 +142,14 @@ html, body {
 .tetris-board .cell {
   background-color: var(--color-cell-default);
   box-sizing: border-box;
-  width: var(--cell-size);
-  height: var(--cell-size);
+  width: var(--size-cell-size);
+  height: var(--size-cell-size);
 }
 
 /* NEXT コンテナ */
 .next-container {
   background-color: var(--color-next-bg);
-  padding: var(--container-padding);
+  padding: var(--spacing-container);
   border-radius: 4px;
   border: 1px solid var(--color-next-border);
   max-height: 300px;
@@ -152,8 +162,8 @@ html, body {
   justify-content: center;
   align-items: center;
   background-color: var(--color-next-piece-bg);
-  width: var(--next-piece-width);
-  height: var(--next-piece-height);
+  width: var(--size-next-piece-width);
+  height: var(--size-next-piece-height);
   border: 1px solid var(--color-next-border);
   margin-bottom: 5px;
   position: relative;
@@ -200,8 +210,8 @@ html, body {
 }
 
 .next-piece div {
-  width: var(--next-piece-block-size);
-  height: var(--next-piece-block-size);
+  width: var(--size-next-piece-block-size);
+  height: var(--size-next-piece-block-size);
   background-color: transparent;
 }
 
@@ -217,17 +227,17 @@ html, body {
 }
 
 .modal-body {
-  padding: var(--modal-padding);
+  padding: var(--spacing-modal);
 }
 
 .modal-header {
   background-color: var(--color-modal-header);
-  padding: 0.75rem var(--modal-padding);
+  padding: 0.75rem var(--spacing-modal);
 }
 
 .modal-footer {
   background-color: var(--color-bg);
-  padding: 0.75rem var(--modal-padding);
+  padding: 0.75rem var(--spacing-modal);
 }
 
 /* 追加のアクセシビリティとインタラクション向上 */
@@ -289,26 +299,26 @@ body {
 
 .ai-piece-type {
   display: inline-block;
-  width: var(--ai-piece-type-size);
-  height: var(--ai-piece-type-size);
+  width: var(--size-ai-piece-type);
+  height: var(--size-ai-piece-type);
   border-radius: 3px;
   margin-right: 6px;
   vertical-align: middle;
   text-align: center;
   color: white;
   font-weight: bold;
-  line-height: var(--ai-piece-type-size);
-  font-size: var(--ai-piece-type-font-size);
+  line-height: var(--size-ai-piece-type);
+  font-size: var(--font-size-ai-piece-type);
 }
 
-.ai-piece-type.I { background-color: #00f0f0; }
-.ai-piece-type.O { background-color: #f0f000; }
-.ai-piece-type.T { background-color: #a000f0; }
-.ai-piece-type.L { background-color: #f0a000; }
-.ai-piece-type.J { background-color: #0000f0; }
-.ai-piece-type.S { background-color: #00f000; }
-.ai-piece-type.Z { background-color: #f00000; }
-.ai-piece-type.G { background-color: #808080; }
+.ai-piece-type.I { background-color: var(--color-piece-i); }
+.ai-piece-type.O { background-color: var(--color-piece-o); }
+.ai-piece-type.T { background-color: var(--color-piece-t); }
+.ai-piece-type.L { background-color: var(--color-piece-l); }
+.ai-piece-type.J { background-color: var(--color-piece-j); }
+.ai-piece-type.S { background-color: var(--color-piece-s); }
+.ai-piece-type.Z { background-color: var(--color-piece-z); }
+.ai-piece-type.G { background-color: var(--color-piece-g); }
 
 /* 探索中を示すスピナー */
 .ai-loading-spinner {
@@ -332,50 +342,6 @@ body {
   cursor: not-allowed;
 }
 
-/* エラーメッセージの強調表示 */
-.ai-error-message {
-  color: #721c24;
-  background-color: #f8d7da;
-  border-color: #f5c6cb;
-  padding: 0.75rem 1.25rem;
-  margin-bottom: 1rem;
-  border: 1px solid transparent;
-  border-radius: 0.25rem;
-}
-
-.ai-move-drumroll {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  padding: 4px 8px;
-  min-width: var(--ai-drumroll-min-width);
-  justify-content: space-between;
-}
-
-.ai-move-drumroll > div {
-  padding: 4px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: var(--ai-move-font-size);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: var(--ai-move-max-width);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.ai-move-drumroll > div span:last-child {
-  flex: 1;
-  min-width: 0;
-}
-
-.ai-move-drumroll > div:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 .ai-move-current {
   background: rgba(255, 255, 255, 0.3);
   font-weight: bold;
@@ -395,14 +361,14 @@ body {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   padding: 4px 8px;
-  min-width: var(--ai-display-min-width);
+  min-width: var(--size-ai-display-min-width);
   justify-content: center;
 }
 
 .ai-move-display > div {
   padding: 4px 6px;
   border-radius: 4px;
-  font-size: var(--ai-move-font-size);
+  font-size: var(--font-size-ai-move);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -419,8 +385,8 @@ body {
 
 /* フッターのコントロールパネル */
 #control-panel .btn {
-  padding: var(--button-padding);
-  font-size: var(--button-font-size);
+  padding: var(--spacing-button);
+  font-size: var(--font-size-button);
 }
 
 #control-panel .btn-group {
@@ -435,6 +401,34 @@ body {
 }
 
 /* レスポンシブ対応 */
-/* 必要に応じて別途実施する。現状モバイルのみで良いため行わない。 */
 
+/* タブレット向け */
+@media (min-width: 768px) {
+  :root {
+    --size-cell-size: 30px;
+    --size-next-piece-width: 60px;
+    --size-next-piece-height: 30px;
+    --size-next-piece-block-size: 10px;
+  }
+  
+  /* ボードコンテナの向きを変更 */
+  #board-container {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  
+  #board-container > div:nth-child(2) {
+    margin-top: 0;
+    margin-left: 1rem;
+  }
+}
+
+/* デスクトップ向け */
+@media (min-width: 1024px) {
+  :root {
+    --size-cell-size: 36px;
+    --size-next-piece-width: 70px;
+    --size-next-piece-height: 35px;
+    --size-next-piece-block-size: 12px;
+  }
 }

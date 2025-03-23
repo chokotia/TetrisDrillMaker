@@ -1275,8 +1275,8 @@ export class TetrisApp {
       toggleBoardButton.setAttribute('aria-label', '盤面を表示する');
 
       // 全画面表示のスタイルを適用
-      document.documentElement.style.setProperty('--header-height', '0px');
-      document.documentElement.style.setProperty('--footer-height', '0px');
+      document.documentElement.style.setProperty('--layout-header-height', '0px');
+      document.documentElement.style.setProperty('--layout-footer-height', '0px');
       
       // ボタンを右下に固定表示
       toggleBoardButton.style.position = 'fixed';
@@ -1292,8 +1292,8 @@ export class TetrisApp {
       toggleBoardButton.setAttribute('aria-label', '盤面の表示/非表示を切り替える');
 
       // 元のスタイルに戻す
-      document.documentElement.style.removeProperty('--header-height');
-      document.documentElement.style.removeProperty('--footer-height');
+      document.documentElement.style.removeProperty('--layout-header-height');
+      document.documentElement.style.removeProperty('--layout-footer-height');
       
       // ボタンを元の位置に戻す
       toggleBoardButton.style.position = '';
