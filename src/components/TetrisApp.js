@@ -38,12 +38,11 @@ export class TetrisApp {
       currentProblem: document.getElementById('current-problem'),
       nextContainer: document.getElementById('next'),
       holdContainer: document.getElementById('hold'),
-      editNav: document.getElementById('edit-nav'),
+      editNav: document.getElementById('control-panel'),
       toggleBoard: document.getElementById('toggle-board'),
       removeUsed: document.getElementById('remove-used'),
       fillColumnButton: document.getElementById('fill-column-button'),
       clearColumnButton: document.getElementById('clear-column-button'),
-      titleBar: document.getElementById('title-bar'),
       clearBoard: document.getElementById('clear-board'),
       settingsButton: document.getElementById('settings-button'),
       settingsModal: document.getElementById('settings-modal'),
@@ -87,29 +86,15 @@ export class TetrisApp {
       this.initializeGameState();
       this.initializeSettingsModal();
       this.initializeControls();
-      this.setupAllEventListeners();
       this.generateFirstProblem();
       this.logInitializationInfo();
       
       // 初期状態では空のホールド表示を作成
       this.updateHoldDisplay(null);
       
-      // main-viewの高さを動的に計算（少し遅延させて実行）
-      setTimeout(() => {
-        this.adjustMainViewHeight();
-      }, 100);
-      
       // AI機能の初期化
       this.initializeAI();
       
-      // pageshow イベントを使用してブラウザキャッシュからの復元時にもリサイズを行う
-      window.addEventListener('pageshow', (event) => {
-        // bfcache から復元された場合も含めて処理
-        if (event.persisted) {
-          console.log('ページがキャッシュから復元されました。レイアウトを再計算します。');
-          setTimeout(() => this.adjustMainViewHeight(), 100);
-        }
-      });
     } catch (error) {
       console.error('初期化に失敗しました:', error);
     }
@@ -183,47 +168,10 @@ export class TetrisApp {
     this.setupClearButtonListener();
     this.setupRemoveUsedButtonListener();
     this.setupGestureControls();
-    this.setupToggleBoardListener();
     this.setupFillColumnButtonListener();
     this.setupClearColumnButtonListener();
     this.setupSeedRegenerateListener();
-    
-    // 画面回転イベントのリスナーを追加
-    window.addEventListener('orientationchange', () => {
-      // 回転アニメーションが完了するのを待ってから高さを調整
-      setTimeout(() => this.adjustMainViewHeight(), 300);
-    });
-    
-    // ブラウザのバックグラウンド/フォアグラウンド切り替えを監視
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        // 少し遅延させて実行（ブラウザのレンダリングを待つ）
-        setTimeout(() => {
-          console.log('バックグラウンドから復帰しました。レイアウトを再計算します。');
-          this.adjustMainViewHeight();
-        }, 100);
-      }
-    });
-    
-    // resize イベントのリスナーを追加（デバイスがリサイズされたとき）
-    window.addEventListener('resize', () => {
-      // 遅延させて実行（連続的なリサイズイベントで何度も実行されるのを防ぐ）
-      if (this.resizeTimeout) {
-        clearTimeout(this.resizeTimeout);
-      }
-      this.resizeTimeout = setTimeout(() => {
-        this.adjustMainViewHeight();
-      }, 100);
-    });
-    
-    // DOM変更監視のためのMutationObserverを設定
-    const observer = new MutationObserver(() => {
-      this.adjustMainViewHeight();
-    });
-    
-    // ヘッダーとフッターの変更を監視
-    observer.observe(this.dom.titleBar, { attributes: true, childList: true, subtree: true });
-    observer.observe(this.dom.editNav, { attributes: true, childList: true, subtree: true });
+    this.setupToggleBoardListener();
   }
 
   /**
@@ -395,10 +343,9 @@ export class TetrisApp {
    * 問題の生成
    */
   generateProblem() {
-    // 前回のAuto選択状態をリセット
-    this.editState = EditManager.resetAutoCells(this.editState);
-
+    // 保存されている設定を取得
     const settings = SettingsManager.getSettings(this.dom);
+    
     let { blockCountMin, blockCountMax } = settings;
     
     if (blockCountMin > blockCountMax) {
@@ -415,6 +362,29 @@ export class TetrisApp {
       this.randomGenerator,
       (cell, index, width, height) => this.handleCellClick(cell, index, width, height)
     );
+    
+    // ダミーボードにも同じサイズの空のボードを作成（ブロックなし、クリックイベントなし）
+    const dummyBoard = document.getElementById('dummy-board');
+    if (dummyBoard) {
+      // ダミーボードのスタイル設定
+      dummyBoard.style.setProperty('--width', settings.width);
+      dummyBoard.style.setProperty('--height', settings.height);
+      dummyBoard.innerHTML = '';
+      
+      // 空のセルを作成
+      const totalCells = settings.width * settings.height;
+      const fragment = document.createDocumentFragment();
+      
+      for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.style.width = `${config.CELL_SIZE}px`;
+        cell.style.height = `${config.CELL_SIZE}px`;
+        fragment.appendChild(cell);
+      }
+      
+      dummyBoard.appendChild(fragment);
+    }
     
     this.currentWidth = settings.width;
     this.currentHeight = settings.height;
@@ -456,7 +426,7 @@ export class TetrisApp {
    */
   setupGestureControls() {
     GestureManager.setupGestureControls(
-      document.getElementById('main-view'),
+      document.querySelector('.tetris-app__main'),
       document.getElementById('board-container'),
       () => this.goToNextProblem(),
       () => this.goToPreviousProblem(),
@@ -610,9 +580,9 @@ export class TetrisApp {
    */
   initializeAI() {
     try {
-      // TetrisAIManagerをインポート
-      import('../modules/TetrisAIManager.js').then(module => {
-        this.aiManager = new module.TetrisAIManager();
+      // AIManagerWrapperをインポート
+      import('../modules/AIManagerWrapper.js').then(module => {
+        this.aiManager = new module.AIManagerWrapper();
         this.initializeAIComponents();
       }).catch(error => {
         console.error('AIモジュールのロードに失敗しました:', error);
@@ -1247,64 +1217,6 @@ export class TetrisApp {
     }
   }
 
-  /**
-   * 盤面表示/非表示ボタンのイベントリスナー
-   */
-  setupToggleBoardListener() {
-    if (this.dom.toggleBoard) {
-      this.dom.toggleBoard.addEventListener('click', () => this.toggleBoardVisibility());
-    }
-  }
-
-  /**
-   * 盤面の表示/非表示を切り替える
-   */
-  toggleBoardVisibility() {
-    const titleBar = this.dom.titleBar;
-    const editNav = this.dom.editNav;
-    const boardContainer = document.getElementById('board-container');
-    const toggleBoardButton = this.dom.toggleBoard;
-    const isVisible = !titleBar.classList.contains('hidden');
-
-    if (isVisible) {
-      // 盤面を非表示にする
-      titleBar.classList.add('hidden');
-      editNav.classList.add('hidden');
-      boardContainer.classList.add('fullscreen');
-      toggleBoardButton.innerHTML = '<i class="bi bi-eye"></i>';
-      toggleBoardButton.setAttribute('aria-label', '盤面を表示する');
-
-      // 全画面表示のスタイルを適用
-      document.documentElement.style.setProperty('--header-height', '0px');
-      document.documentElement.style.setProperty('--footer-height', '0px');
-      
-      // ボタンを右下に固定表示
-      toggleBoardButton.style.position = 'fixed';
-      toggleBoardButton.style.bottom = '10px';
-      toggleBoardButton.style.right = '10px';
-      toggleBoardButton.style.zIndex = '1050';
-    } else {
-      // 盤面を表示する
-      titleBar.classList.remove('hidden');
-      editNav.classList.remove('hidden');
-      boardContainer.classList.remove('fullscreen');
-      toggleBoardButton.innerHTML = '<i class="bi bi-eye-slash"></i>';
-      toggleBoardButton.setAttribute('aria-label', '盤面の表示/非表示を切り替える');
-
-      // 元のスタイルに戻す
-      document.documentElement.style.removeProperty('--header-height');
-      document.documentElement.style.removeProperty('--footer-height');
-      
-      // ボタンを元の位置に戻す
-      toggleBoardButton.style.position = '';
-      toggleBoardButton.style.bottom = '';
-      toggleBoardButton.style.right = '';
-      toggleBoardButton.style.zIndex = '';
-    }
-    
-    // main-viewの高さを再計算
-    this.adjustMainViewHeight();
-  }
 
   /**
    * 列グレー化ボタンのイベントリスナー
@@ -1434,50 +1346,42 @@ export class TetrisApp {
   }
 
   /**
-   * main-viewの高さを動的に計算
+   * ボード表示/非表示切り替えボタンのリスナーを設定
    */
-  adjustMainViewHeight() {
-    // DOM要素の参照が存在しない場合は処理しない
-    if (!this.dom || !this.dom.titleBar || !this.dom.editNav) {
-      console.warn('DOM要素の参照が不足しているため、高さ計算をスキップします');
-      return;
+  setupToggleBoardListener() {
+    if (this.dom.toggleBoard) {
+      this.dom.toggleBoard.addEventListener('click', () => {
+        this.toggleBoardVisibility();
+      });
     }
+  }
+
+  /**
+   * ボードの表示/非表示を切り替える
+   */
+  toggleBoardVisibility() {
+    const board = document.getElementById('board');
+    const dummyBoard = document.getElementById('dummy-board');
     
-    // メインビューの取得
-    const mainView = document.getElementById('main-view');
-    if (!mainView) {
-      console.warn('main-view要素が見つかりません');
-      return;
+    if (board && dummyBoard) {
+      // 現在のボードの状態をチェック
+      const isMainBoardActive = !board.classList.contains('d-none');
+      
+      if (isMainBoardActive) {
+        // メインボードを非表示にしてダミーボードを表示
+        board.classList.add('d-none');
+        dummyBoard.classList.remove('d-none');
+        
+        // アイコンを変更（目の表示に）
+        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye"></i>';
+      } else {
+        // ダミーボードを非表示にしてメインボードを表示
+        dummyBoard.classList.add('d-none');
+        board.classList.remove('d-none');
+        
+        // アイコンを変更（目に斜線を入れた表示に）
+        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye-slash"></i>';
+      }
     }
-    
-    // 現在の表示状態を確認
-    const isHeaderHidden = this.dom.titleBar.classList.contains('hidden');
-    const isFooterHidden = this.dom.editNav.classList.contains('hidden');
-    
-    // ヘッダー、フッターの高さを取得
-    let titleBarHeight = isHeaderHidden ? 0 : this.dom.titleBar.offsetHeight;
-    let editNavHeight = isFooterHidden ? 0 : this.dom.editNav.offsetHeight;
-    
-    // 非表示の場合にCSSの変数値を考慮
-    if (isHeaderHidden) {
-      titleBarHeight = 0;
-    }
-    
-    if (isFooterHidden) {
-      editNavHeight = 0;
-    }
-    
-    const windowHeight = window.innerHeight;
-    
-    // メインビューの高さを計算（ウィンドウの高さ - ヘッダーの高さ - フッターの高さ）
-    const mainViewHeight = windowHeight - titleBarHeight - editNavHeight;
-    
-    console.log(`レイアウト再計算: ウィンドウ高さ=${windowHeight}px, ヘッダー高さ=${titleBarHeight}px, フッター高さ=${editNavHeight}px, メインビュー高さ=${mainViewHeight}px`);
-    
-    // メインビューに高さを設定
-    mainView.style.height = `${mainViewHeight}px`;
-    
-    // 追加の安定化: スクロール位置をリセット
-    window.scrollTo(0, 0);
   }
 } 

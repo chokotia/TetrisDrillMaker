@@ -21,10 +21,10 @@
   </head>
 
   <body>
-    <div id="app">
-      <header id="title-bar" class="navbar navbar-dark bg-dark fixed-top">
+    <div class="tetris-app">
+      <header class="tetris-app__header navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
-          <h1 id="current-problem" class="navbar-brand problem-counter m-0">
+          <h1 id="current-problem" class="tetris-app__problem-counter navbar-brand m-0">
             問題 #1
           </h1>
           <div class="d-flex align-items-center">
@@ -48,17 +48,18 @@
         </div>
       </header>
 
-      <main id="main-view" class="screen">
+      <main class="tetris-app__main d-flex flex-column justify-content-center overflow-y-auto">
         <div id="board-container" class="d-flex flex-row justify-content-center align-items-start">
-          <div id="board" class="tetris-board"></div>
-          <div class="ms-3 d-flex flex-column">
-            <!-- ホールドミノ表示エリア -->
+          <div class="board-wrapper position-relative">
+            <div id="board" class="tetris-board active-board"></div>
+            <div id="dummy-board" class="tetris-board dummy-board d-none"></div>
+          </div>
+          <div class="d-flex flex-column ms-3">
             <aside id="hold" class="next-container mb-3"></aside>
-            <!-- ネクストピース表示エリア -->
             <aside id="next" class="next-container"></aside>
             <button
               id="remove-used"
-              class="btn btn-outline-secondary btn-sm mt-2 d-flex align-items-center justify-content-center"
+              class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center mt-2"
               data-action="remove-used"
               type="button"
               aria-label="使用済みのネクストピースを削除する"
@@ -69,7 +70,7 @@
         </div>
       </main>
 
-      <footer id="edit-nav" class="navbar navbar-dark bg-dark fixed-bottom">
+      <footer id="control-panel" class="navbar navbar-dark bg-dark fixed-bottom">
         <div class="container-fluid">
           <div class="d-flex justify-content-between w-100 mb-2">
             <div class="btn-group">
@@ -103,8 +104,7 @@
               <div class="btn-group me-2">
                 <button
                 id="clear-column-button"
-                class="btn btn-outline-light d-flex align-items-center"
-                style="font-size: 0.8rem;"
+                class="btn btn-outline-light d-flex align-items-center btn-small"
                 type="button"
                 aria-label="全部灰色の列を右側から削除する"
                 data-bs-toggle="tooltip"
@@ -115,8 +115,7 @@
               </button>
                 <button
                   id="fill-column-button"
-                  class="btn btn-outline-light d-flex align-items-center"
-                  style="font-size: 0.8rem;"
+                  class="btn btn-outline-light d-flex align-items-center btn-small"
                   type="button"
                   aria-label="列を順番にグレーで埋める"
                   data-bs-toggle="tooltip"
@@ -143,6 +142,7 @@
               class="btn btn-outline-light me-2"
               type="button"
               aria-label="盤面の表示/非表示を切り替える"
+              data-toggle-target="board"
             >
               <i class="bi bi-eye-slash"></i>
             </button>
@@ -379,14 +379,4 @@
     </div>
   </body>
 
-  <!-- ツールチップ初期化用のスクリプト -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Bootstrapのツールチップを初期化
-      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-      });
-    });
-  </script>
 </html>
