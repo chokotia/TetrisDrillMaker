@@ -368,6 +368,7 @@ body {
   background: rgba(255, 255, 255, 0.3);
   font-weight: bold;
   color: #ffffff;
+  min-width: 200px;
 }
 
 .ai-move-prev-3,
