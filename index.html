@@ -188,12 +188,13 @@
                 class="btn-close"
                 data-bs-dismiss="modal"
                 aria-label="設定を閉じる"
-                id="close-settings-without-save"
+                id="close-settings"
               ></button>
             </div>
-            <form id="settings-form" class="modal-body">
+            <form class="modal-body">
+              <h3 class="fs-6 mb-3">盤面設定</h3>
               <div class="mb-3">
-                <label for="width" class="form-label">盤面の幅:</label>
+                <label for="width" class="form-label">幅:</label>
                 <div class="d-flex align-items-center gap-2">
                   <input
                     id="width"
@@ -207,7 +208,7 @@
                 </div>
               </div>
               <div class="mb-3">
-                <label for="height" class="form-label">盤面の高さ:</label>
+                <label for="height" class="form-label">高さ:</label>
                 <div class="d-flex align-items-center gap-2">
                   <input
                     id="height"
@@ -221,7 +222,7 @@
                 </div>
               </div>
               <div class="mb-3">
-                <label for="next-count" class="form-label">ネクスト個数:</label>
+                <label for="next-count" class="form-label">ネクスト表示数:</label>
                 <div class="d-flex align-items-center gap-2">
                   <input
                     id="next-count"
@@ -242,11 +243,11 @@
                 <output for="block-range-slider" id="block-range-values" class="badge bg-secondary mt-2">1 - 3</output>
               </div>
               <div class="mb-3">
-                <label for="mino-mode" class="form-label">ミノ取得モード:</label>
+                <label for="mino-mode" class="form-label">ネクストミノ順:</label>
                 <select id="mino-mode" class="form-select">
                   <option value="random">完全ランダム</option>
                   <option value="7bag-random">7種一巡（ランダムスタート）</option>
-                  <option value="7bag-pure">7種一巡（純粋）</option>
+                  <option value="7bag-pure">7種一巡</option>
                 </select>
               </div>
               <div class="mb-3">
@@ -292,15 +293,6 @@
                 </div>
               </div>
             </form>
-            <div class="modal-footer">
-              <button
-                id="save-and-close-settings"
-                class="btn btn-primary"
-                type="button"
-              >
-                保存して閉じる
-              </button>
-            </div>
           </div>
         </div>
       </div>

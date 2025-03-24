@@ -18,11 +18,11 @@ export class TetrisApp {
     this.baseSeed = '';
     this.currentProblemNumber = 1;
     this.randomGenerator = null;
-    this.bsSettingsModal = null;
     this.currentWidth = 0;
     this.currentHeight = 0;
     this.editState = EditManager.initialize();
     this.dom = null;
+    this.settingsManager = null;
 
     document.addEventListener('DOMContentLoaded', () => this.initializeApp());
   }
@@ -45,33 +45,10 @@ export class TetrisApp {
       clearColumnButton: document.getElementById('clear-column-button'),
       clearBoard: document.getElementById('clear-board'),
       settingsButton: document.getElementById('settings-button'),
-      settingsModal: document.getElementById('settings-modal'),
-      settingsForm: document.getElementById('settings-form'),
-      saveCloseButton: document.getElementById('save-and-close-settings'),
-      closeWithoutSaveButton: document.getElementById('close-settings-without-save'),
       autoButton: document.getElementById('auto-button'),
       delButton: document.getElementById('del-button'),
       grayButton: document.getElementById('gray-button'),
       editOptionButtons: document.querySelectorAll('.edit-option'),
-      sliders: {
-        width: document.getElementById('width'),
-        height: document.getElementById('height'),
-        nextCount: document.getElementById('next-count'),
-        aiSearchTime: document.getElementById('ai-search-time'),
-        aiMovesCount: document.getElementById('ai-moves-count')
-      },
-      sliderValues: {
-        width: document.getElementById('width-value'),
-        height: document.getElementById('height-value'),
-        nextCount: document.getElementById('next-count-value'),
-        aiSearchTime: document.getElementById('ai-search-time-value'),
-        aiMovesCount: document.getElementById('ai-moves-count-value'),
-        blockRange: document.getElementById('block-range-values')
-      },
-      minoMode: document.getElementById('mino-mode'),
-      seedValue: document.getElementById('seed-value'),
-      regenerateSeedButton: document.getElementById('regenerate-seed'),
-      blockRangeSlider: document.getElementById('block-range-slider'),
     };
 
     return this.dom;
@@ -117,18 +94,56 @@ export class TetrisApp {
    * 設定モーダルの初期化
    */
   initializeSettingsModal() {
-    const settingsModalElement = document.getElementById('settings-modal');
-    if (settingsModalElement) {
-      this.bsSettingsModal = new bootstrap.Modal(settingsModalElement);
-      
-      // モーダルが閉じる直前のイベントをリッスン
-      settingsModalElement.addEventListener('hide.bs.modal', () => {
-        // モーダル内の要素からフォーカスを外す
-        document.activeElement.blur();
-        // フォーカスをボディに移す
-        document.body.focus();
-      });
+    // SettingsManagerのインスタンス化
+    this.settingsManager = new SettingsManager();
+
+    // 設定変更イベントのリスナーを追加
+    document.addEventListener('settingsChanged', (event) => {
+      this.handleSettingsChanged(event.detail.settings);
+    });
+
+    // 設定エラーイベントのリスナーを追加
+    document.addEventListener('settingsError', (event) => {
+      this.showNotification(event.detail.error, 'danger');
+    });
+
+    // 設定モーダルが閉じられた時のイベントリスナーを追加
+    document.addEventListener('settingsModalClosed', () => {
+      // モーダル内の要素からフォーカスを外す
+      document.activeElement.blur();
+      // フォーカスをボディに移す
+      document.body.focus();
+    });
+
+    // 設定ボタンのイベントリスナーを追加
+    this.dom.settingsButton?.addEventListener('click', () => {
+      this.settingsManager.openSettingsModal();
+    });
+  
+  }
+
+  /**
+   * 設定変更時の処理
+   * @param {Object} settings - 新しい設定
+   */
+  handleSettingsChanged(settings) {
+    const { boardSettings } = settings;
+    
+    // シード値の更新
+    if (boardSettings.seed !== this.baseSeed) {
+      this.baseSeed = boardSettings.seed;
+      saveSeed(this.baseSeed);
+      this.goToFirstProblem();
     }
+
+    // 幅が変更されたかチェック
+    const oldWidth = this.currentWidth;
+    const newWidth = boardSettings.width;
+    
+    // 幅が変更された場合はAskAIボタンの状態を更新
+    // if (oldWidth !== newWidth) {
+    //   this.updateAskAIButtonState();
+    // }
   }
 
   /**
@@ -136,8 +151,6 @@ export class TetrisApp {
    */
   initializeControls() {
     this.setupAllEventListeners();
-    this.initializeBlockRangeSlider();
-    this.loadSettings();
     this.setupGestureControls();
     this.setupEditButtons();
   }
@@ -162,58 +175,16 @@ export class TetrisApp {
    * すべてのイベントリスナーの設定
    */
   setupAllEventListeners() {
-    this.setupSliderListeners();
-    this.setupModalListeners();
+         
     this.setupEditOptionListeners();
     this.setupClearButtonListener();
     this.setupRemoveUsedButtonListener();
     this.setupGestureControls();
     this.setupFillColumnButtonListener();
     this.setupClearColumnButtonListener();
-    this.setupSeedRegenerateListener();
     this.setupToggleBoardListener();
   }
 
-  /**
-   * スライダー関連のイベントリスナー
-   */
-  setupSliderListeners() {
-    Object.keys(this.dom.sliders).forEach(key => {
-      if (key === 'blockRange') return; // noUiSlider は別処理
-
-      const slider = this.dom.sliders[key];
-      const output = this.dom.sliderValues[key];
-      if (slider && output) {
-        slider.addEventListener('input', () => {
-          output.textContent = slider.value;
-          SettingsManager.updateAriaValue(slider, output);
-        });
-      }
-    });
-  }
-
-  /**
-   * モーダル関連のイベントリスナー
-   */
-  setupModalListeners() {
-    if (this.dom.settingsButton) {
-      this.dom.settingsButton.addEventListener('click', () => {
-        this.openSettingsOverlay();
-      });
-    }
-
-    if (this.dom.saveCloseButton) {
-      this.dom.saveCloseButton.addEventListener('click', () => {
-        this.handleSaveAndClose();
-      });
-    }
-
-    if (this.dom.closeWithoutSaveButton) {
-      this.dom.closeWithoutSaveButton.addEventListener('click', () => {
-        this.handleCloseWithoutSave();
-      });
-    }
-  }
 
   /**
    * 編集オプション関連のイベントリスナー
@@ -282,143 +253,6 @@ export class TetrisApp {
       const maxVal = Math.round(values[1]);
       this.dom.sliderValues.blockRange.textContent = `${minVal} - ${maxVal}`;
     });
-  }
-
-  /**
-   * 設定モーダルを開く
-   */
-  openSettingsOverlay() {
-    if (this.bsSettingsModal) {
-      this.loadSettings();
-      this.updateSeedValueDisplay();
-      this.bsSettingsModal.show();
-    }
-  }
-
-  /**
-   * 設定モーダルを閉じる
-   */
-  closeSettingsOverlay() {
-    if (this.bsSettingsModal) {
-      this.bsSettingsModal.hide();
-    }
-  }
-
-  /**
-   * シード再生成ボタンのイベントリスナーを設定
-   */
-  setupSeedRegenerateListener() {
-    if (this.dom.regenerateSeedButton) {
-      this.dom.regenerateSeedButton.addEventListener('click', () => {
-        this.regenerateSeed();
-      });
-    }
-  }
-
-  /**
-   * シード値を再生成する
-   */
-  regenerateSeed() {
-    this.baseSeed = generateBaseSeed();
-    this.updateSeedValueDisplay();
-  }
-
-  /**
-   * シード値表示を更新する
-   */
-  updateSeedValueDisplay() {
-    if (this.dom.seedValue) {
-      this.dom.seedValue.value = this.baseSeed;
-    }
-  }
-
-  /**
-   * 設定の読み込み
-   */
-  loadSettings() {
-    SettingsManager.loadSettings(this.dom);
-  }
-
-  /**
-   * 問題の生成
-   */
-  generateProblem() {
-    // 保存されている設定を取得
-    const settings = SettingsManager.getSettings(this.dom);
-    
-    let { blockCountMin, blockCountMax } = settings;
-    
-    if (blockCountMin > blockCountMax) {
-      [blockCountMin, blockCountMax] = [blockCountMax, blockCountMin];
-    }
-    
-    const blockCount = this.calculateRandomBlockCount(blockCountMin, blockCountMax);
-    
-    BoardManager.createBoard(
-      this.dom.board, 
-      settings.width, 
-      settings.height, 
-      blockCount, 
-      this.randomGenerator,
-      (cell, index, width, height) => this.handleCellClick(cell, index, width, height)
-    );
-    
-    // ダミーボードにも同じサイズの空のボードを作成（ブロックなし、クリックイベントなし）
-    const dummyBoard = document.getElementById('dummy-board');
-    if (dummyBoard) {
-      // ダミーボードのスタイル設定
-      dummyBoard.style.setProperty('--width', settings.width);
-      dummyBoard.style.setProperty('--height', settings.height);
-      dummyBoard.innerHTML = '';
-      
-      // 空のセルを作成
-      const totalCells = settings.width * settings.height;
-      const fragment = document.createDocumentFragment();
-      
-      for (let i = 0; i < totalCells; i++) {
-        const cell = document.createElement('div');
-        cell.classList.add('cell');
-        cell.style.width = `${config.CELL_SIZE}px`;
-        cell.style.height = `${config.CELL_SIZE}px`;
-        fragment.appendChild(cell);
-      }
-      
-      dummyBoard.appendChild(fragment);
-    }
-    
-    this.currentWidth = settings.width;
-    this.currentHeight = settings.height;
-    
-    // 新しい問題を生成するときにネクストピースをリセット
-    MinoManager.currentPieces = [];
-    MinoManager.usedPieces = {};
-    MinoManager.displayStartIndex = 0;
-    
-    MinoManager.updateNextPieces(this.dom.nextContainer, settings, this.randomGenerator);
-    this.updateProblemCounter();
-    
-    // Autoモードを選択状態にする
-    this.editState = EditManager.setEditAction(this.editState, 'auto');
-    EditManager.updateEditButtonState(this.dom.editOptionButtons, 'auto');
-  }
-
-  /**
-   * 問題番号ラベル更新
-   */
-  updateProblemCounter() {
-    if (this.dom.currentProblem) {
-      this.dom.currentProblem.textContent = `問題 #${this.currentProblemNumber}`;
-    }
-  }
-
-  /**
-   * ブロック数をランダムに計算
-   * @param {number} min - 最小値
-   * @param {number} max - 最大値
-   * @returns {number} 計算されたブロック数
-   */
-  calculateRandomBlockCount(min, max) {
-    return Math.floor(this.randomGenerator() * (max - min + 1)) + min;
   }
 
   /**
@@ -509,6 +343,19 @@ export class TetrisApp {
   }
 
   /**
+   * 最初の問題へ移動
+   */
+  goToFirstProblem() {   
+    this.currentProblemNumber = 1;
+    this.randomGenerator = createSeededGenerator(
+      this.baseSeed,
+      this.currentProblemNumber
+    );
+    this.generateProblem();
+    console.log(`移動後の問題番号: ${this.currentProblemNumber}`);
+  }
+
+  /**
    * 初期状態にボードをリセット
    */
   resetToInitialBoard() {
@@ -525,54 +372,253 @@ export class TetrisApp {
   }
 
   /**
-   * 設定を保存して閉じる
+   * 問題の生成
    */
-  handleSaveAndClose() {
-    const settings = SettingsManager.getSettings(this.dom);
-    SettingsManager.saveSettings(settings);
+  generateProblem() {
+    // 保存されている設定を取得
+    const settings = this.settingsManager.getSettings();
+    const { boardSettings } = settings;
     
-    // シード値を取得して検証
-    const newSeed = this.dom.seedValue.value.trim();
-    if (!isValidSeed(newSeed)) {
-      alert('シード値は1文字以上入力してください。');
-      return;
+    let { min: blockCountMin, max: blockCountMax } = boardSettings.blockRange;
+    
+    if (blockCountMin > blockCountMax) {
+      [blockCountMin, blockCountMax] = [blockCountMax, blockCountMin];
     }
     
-    // シード値を更新して保存
-    this.baseSeed = newSeed;
-    saveSeed(this.baseSeed);
+    const blockCount = this.calculateRandomBlockCount(blockCountMin, blockCountMax);
     
-    // 問題番号を1に戻し、新しい乱数生成器を初期化
-    this.currentProblemNumber = 1;
-    this.randomGenerator = createSeededGenerator(
-      this.baseSeed,
-      this.currentProblemNumber
+    BoardManager.createBoard(
+      this.dom.board, 
+      boardSettings.width, 
+      boardSettings.height, 
+      blockCount, 
+      this.randomGenerator,
+      (cell, index, width, height) => this.handleCellClick(cell, index, width, height)
     );
     
-    // ネクストピースのキャッシュをクリア
+    // ダミーボードにも同じサイズの空のボードを作成（ブロックなし、クリックイベントなし）
+    const dummyBoard = document.getElementById('dummy-board');
+    if (dummyBoard) {
+      // ダミーボードのスタイル設定
+      dummyBoard.style.setProperty('--width', boardSettings.width);
+      dummyBoard.style.setProperty('--height', boardSettings.height);
+      dummyBoard.innerHTML = '';
+      
+      // 空のセルを作成
+      const totalCells = boardSettings.width * boardSettings.height;
+      const fragment = document.createDocumentFragment();
+      
+      for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.style.width = `${config.CELL_SIZE}px`;
+        cell.style.height = `${config.CELL_SIZE}px`;
+        fragment.appendChild(cell);
+      }
+      
+      dummyBoard.appendChild(fragment);
+    }
+    
+    this.currentWidth = boardSettings.width;
+    this.currentHeight = boardSettings.height;
+    
+    // 新しい問題を生成するときにネクストピースをリセット
     MinoManager.currentPieces = [];
     MinoManager.usedPieces = {};
     MinoManager.displayStartIndex = 0;
     
-    this.closeSettingsOverlay();
-    this.generateProblem();
-
-    // 幅が変更されたかチェック
-    const oldWidth = this.currentWidth;
-    const newWidth = parseInt(this.dom.sliders.width.value);
+    MinoManager.updateNextPieces(this.dom.nextContainer, boardSettings, this.randomGenerator);
+    this.updateProblemCounter();
     
-    // 幅が変更された場合はAskAIボタンの状態を更新
-    if (oldWidth !== newWidth) {
-      this.updateAskAIButtonState();
+    // Autoモードを選択状態にする
+    this.editState = EditManager.setEditAction(this.editState, 'auto');
+    EditManager.updateEditButtonState(this.dom.editOptionButtons, 'auto');
+  }
+
+  /**
+   * 問題番号ラベル更新
+   */
+  updateProblemCounter() {
+    if (this.dom.currentProblem) {
+      this.dom.currentProblem.textContent = `問題 #${this.currentProblemNumber}`;
     }
   }
 
   /**
-   * 保存せずに閉じる処理
+   * ブロック数をランダムに計算
+   * @param {number} min - 最小値
+   * @param {number} max - 最大値
+   * @returns {number} 計算されたブロック数
    */
-  handleCloseWithoutSave() {
-    console.log('設定を保存せず閉じました。');
-    this.closeSettingsOverlay();
+  calculateRandomBlockCount(min, max) {
+    return Math.floor(this.randomGenerator() * (max - min + 1)) + min;
+  }
+
+  /**
+   * 列グレー化ボタンのイベントリスナー
+   */
+  setupFillColumnButtonListener() {
+    if (this.dom.fillColumnButton) {
+      this.dom.fillColumnButton.addEventListener('click', () => this.fillColumn());
+    }
+  }
+
+  /**
+   * 列クリアボタンのイベントリスナー
+   */
+  setupClearColumnButtonListener() {
+    if (this.dom.clearColumnButton) {
+      this.dom.clearColumnButton.addEventListener('click', () => this.clearColumn());
+    }
+  }
+
+  /**
+   * 次の列をグレーで埋める
+   */
+  fillColumn() {
+    const boardElement = this.dom.board;
+    if (!boardElement) return;
+    
+    const width = this.currentWidth;
+    const height = this.currentHeight;
+    const cells = boardElement.querySelectorAll('.cell');
+    
+    // 左から順にチェックして、グレーでない列を探す
+    for (let col = 0; col < width; col++) {
+      let allGray = true;
+      
+      // この列のすべてのセルをチェック
+      for (let row = 0; row < height; row++) {
+        const index = row * width + col;
+        const cell = cells[index];
+        
+        // グレーでないセルが見つかった場合
+        if (!cell.classList.contains('block') || 
+            !BoardManager.isGrayBlock(window.getComputedStyle(cell).backgroundColor)) {
+          allGray = false;
+          break;
+        }
+      }
+      
+      // グレーでない列が見つかった場合、その列をすべてグレーにする
+      if (!allGray) {
+        for (let row = 0; row < height; row++) {
+          const index = row * width + col;
+          const cell = cells[index];
+          
+          // セルをグレーに設定
+          cell.classList.add('block');
+          cell.style.backgroundColor = minoColors.gray;
+        }
+        return; // 1列処理したら終了
+      }
+    }
+  }
+
+  /**
+   * 全部灰色の列を右側から削除する
+   */
+  clearColumn() {
+    const boardElement = this.dom.board;
+    if (!boardElement) return;
+    
+    const width = this.currentWidth;
+    const height = this.currentHeight;
+    const cells = boardElement.querySelectorAll('.cell');
+    
+    // 右から順にチェックして、すべてグレーの列を探す
+    for (let col = width - 1; col >= 0; col--) {
+      let allGray = true;
+      
+      // この列のすべてのセルをチェック
+      for (let row = 0; row < height; row++) {
+        const index = row * width + col;
+        const cell = cells[index];
+        
+        // グレーでないセルが見つかった場合
+        if (!cell.classList.contains('block') || 
+            !BoardManager.isGrayBlock(window.getComputedStyle(cell).backgroundColor)) {
+          allGray = false;
+          break;
+        }
+      }
+      
+      // すべてグレーの列が見つかった場合、その列を空にする
+      if (allGray) {
+        for (let row = 0; row < height; row++) {
+          const index = row * width + col;
+          const cell = cells[index];
+          
+          // セルをクリア
+          BoardManager.clearCell(cell);
+        }
+        return; // 1列処理したら終了
+      }
+    }
+  }
+
+  /**
+   * ホールドミノを表示
+   * @param {String} holdType - ホールドミノのタイプ
+   */
+  updateHoldDisplay(holdType) {
+    if (!this.dom.holdContainer) return;
+    
+    // ホールドコンテナをクリア
+    this.dom.holdContainer.innerHTML = '';
+    
+    // ホールド用のコンテナを作成（ネクストと同じスタイルを使用）
+    const holdPieceContainer = document.createElement('div');
+    holdPieceContainer.className = 'next-piece-container';
+    
+    // holdTypeがあれば描画、なければ空のコンテナを表示
+    if (holdType) {
+      // MinoManagerのdrawMino関数を使ってミノを描画
+      MinoManager.drawMino(holdType, holdPieceContainer);
+    }
+    
+    // ホールドコンテナに追加
+    this.dom.holdContainer.appendChild(holdPieceContainer);
+  }
+
+  /**
+   * ボード表示/非表示切り替えボタンのリスナーを設定
+   */
+  setupToggleBoardListener() {
+    if (this.dom.toggleBoard) {
+      this.dom.toggleBoard.addEventListener('click', () => {
+        this.toggleBoardVisibility();
+      });
+    }
+  }
+
+  /**
+   * ボードの表示/非表示を切り替える
+   */
+  toggleBoardVisibility() {
+    const board = document.getElementById('board');
+    const dummyBoard = document.getElementById('dummy-board');
+    
+    if (board && dummyBoard) {
+      // 現在のボードの状態をチェック
+      const isMainBoardActive = !board.classList.contains('d-none');
+      
+      if (isMainBoardActive) {
+        // メインボードを非表示にしてダミーボードを表示
+        board.classList.add('d-none');
+        dummyBoard.classList.remove('d-none');
+        
+        // アイコンを変更（目の表示に）
+        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye"></i>';
+      } else {
+        // ダミーボードを非表示にしてメインボードを表示
+        dummyBoard.classList.add('d-none');
+        board.classList.remove('d-none');
+        
+        // アイコンを変更（目に斜線を入れた表示に）
+        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye-slash"></i>';
+      }
+    }
   }
 
   /**
@@ -1214,174 +1260,6 @@ export class TetrisApp {
       }
     } else {
       display.style.display = 'none';
-    }
-  }
-
-
-  /**
-   * 列グレー化ボタンのイベントリスナー
-   */
-  setupFillColumnButtonListener() {
-    if (this.dom.fillColumnButton) {
-      this.dom.fillColumnButton.addEventListener('click', () => this.fillColumn());
-    }
-  }
-
-  /**
-   * 列クリアボタンのイベントリスナー
-   */
-  setupClearColumnButtonListener() {
-    if (this.dom.clearColumnButton) {
-      this.dom.clearColumnButton.addEventListener('click', () => this.clearColumn());
-    }
-  }
-
-  /**
-   * 次の列をグレーで埋める
-   */
-  fillColumn() {
-    const boardElement = this.dom.board;
-    if (!boardElement) return;
-    
-    const width = this.currentWidth;
-    const height = this.currentHeight;
-    const cells = boardElement.querySelectorAll('.cell');
-    
-    // 左から順にチェックして、グレーでない列を探す
-    for (let col = 0; col < width; col++) {
-      let allGray = true;
-      
-      // この列のすべてのセルをチェック
-      for (let row = 0; row < height; row++) {
-        const index = row * width + col;
-        const cell = cells[index];
-        
-        // グレーでないセルが見つかった場合
-        if (!cell.classList.contains('block') || 
-            !BoardManager.isGrayBlock(window.getComputedStyle(cell).backgroundColor)) {
-          allGray = false;
-          break;
-        }
-      }
-      
-      // グレーでない列が見つかった場合、その列をすべてグレーにする
-      if (!allGray) {
-        for (let row = 0; row < height; row++) {
-          const index = row * width + col;
-          const cell = cells[index];
-          
-          // セルをグレーに設定
-          cell.classList.add('block');
-          cell.style.backgroundColor = minoColors.gray;
-        }
-        return; // 1列処理したら終了
-      }
-    }
-  }
-
-  /**
-   * 全部灰色の列を右側から削除する
-   */
-  clearColumn() {
-    const boardElement = this.dom.board;
-    if (!boardElement) return;
-    
-    const width = this.currentWidth;
-    const height = this.currentHeight;
-    const cells = boardElement.querySelectorAll('.cell');
-    
-    // 右から順にチェックして、すべてグレーの列を探す
-    for (let col = width - 1; col >= 0; col--) {
-      let allGray = true;
-      
-      // この列のすべてのセルをチェック
-      for (let row = 0; row < height; row++) {
-        const index = row * width + col;
-        const cell = cells[index];
-        
-        // グレーでないセルが見つかった場合
-        if (!cell.classList.contains('block') || 
-            !BoardManager.isGrayBlock(window.getComputedStyle(cell).backgroundColor)) {
-          allGray = false;
-          break;
-        }
-      }
-      
-      // すべてグレーの列が見つかった場合、その列を空にする
-      if (allGray) {
-        for (let row = 0; row < height; row++) {
-          const index = row * width + col;
-          const cell = cells[index];
-          
-          // セルをクリア
-          BoardManager.clearCell(cell);
-        }
-        return; // 1列処理したら終了
-      }
-    }
-  }
-
-  /**
-   * ホールドミノを表示
-   * @param {String} holdType - ホールドミノのタイプ
-   */
-  updateHoldDisplay(holdType) {
-    if (!this.dom.holdContainer) return;
-    
-    // ホールドコンテナをクリア
-    this.dom.holdContainer.innerHTML = '';
-    
-    // ホールド用のコンテナを作成（ネクストと同じスタイルを使用）
-    const holdPieceContainer = document.createElement('div');
-    holdPieceContainer.className = 'next-piece-container';
-    
-    // holdTypeがあれば描画、なければ空のコンテナを表示
-    if (holdType) {
-      // MinoManagerのdrawMino関数を使ってミノを描画
-      MinoManager.drawMino(holdType, holdPieceContainer);
-    }
-    
-    // ホールドコンテナに追加
-    this.dom.holdContainer.appendChild(holdPieceContainer);
-  }
-
-  /**
-   * ボード表示/非表示切り替えボタンのリスナーを設定
-   */
-  setupToggleBoardListener() {
-    if (this.dom.toggleBoard) {
-      this.dom.toggleBoard.addEventListener('click', () => {
-        this.toggleBoardVisibility();
-      });
-    }
-  }
-
-  /**
-   * ボードの表示/非表示を切り替える
-   */
-  toggleBoardVisibility() {
-    const board = document.getElementById('board');
-    const dummyBoard = document.getElementById('dummy-board');
-    
-    if (board && dummyBoard) {
-      // 現在のボードの状態をチェック
-      const isMainBoardActive = !board.classList.contains('d-none');
-      
-      if (isMainBoardActive) {
-        // メインボードを非表示にしてダミーボードを表示
-        board.classList.add('d-none');
-        dummyBoard.classList.remove('d-none');
-        
-        // アイコンを変更（目の表示に）
-        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye"></i>';
-      } else {
-        // ダミーボードを非表示にしてメインボードを表示
-        dummyBoard.classList.add('d-none');
-        board.classList.remove('d-none');
-        
-        // アイコンを変更（目に斜線を入れた表示に）
-        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye-slash"></i>';
-      }
     }
   }
 } 
