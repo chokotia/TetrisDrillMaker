@@ -813,7 +813,8 @@ export class TetrisApp {
    * AIモーダルを開く
    */
   openAIModal() {
-    const currentWidth = parseInt(this.dom.sliderValues.width.textContent);
+    const settings = this.settingsManager.getSettings();
+    const currentWidth = settings.boardSettings.width;
     
     // 幅が10でない場合は通知を表示して処理を中断
     if (currentWidth !== 10) {
