@@ -82,10 +82,6 @@ export class AIEngineController {
 
         this.isCalculating = false;
         this.eventListeners = new Map();
-        this.aiSettings = {
-            searchTimePerMove: 1000,  // デフォルトの探索時間（ミリ秒）
-            movesToCalculate: 5       // デフォルトの計算手数
-        };
         this._globalState = GlobalState.getInstance();
     }
 
@@ -174,9 +170,10 @@ export class AIEngineController {
             
             // 指定された手数分の計算を依頼
             this.aiEngine.setRangeOffset(-grayColumnCount+1, 1);
+            const settings = this._globalState.getSettings();
             this.aiEngine.calculateMoves(
-                this.aiSettings.movesToCalculate,
-                this.aiSettings.searchTimePerMove,
+                settings.aiSettings.movesCount,
+                settings.aiSettings.searchTime * 1000,
             );
             
             return true;
@@ -234,20 +231,6 @@ export class AIEngineController {
         this.isCalculating = false;
         this.emit('movesCalculated', moves);
         this.emit('statusMessage', `${moves.length}手の計算が完了しました`);
-    }
-
-    /**
-     * AI設定を更新
-     * @param {Object} settings - 新しい設定値
-     */
-    updateSettings(settings) {
-        if (settings.searchTimePerMove !== undefined) {
-            this.aiSettings.searchTimePerMove = settings.searchTimePerMove * 1000;
-        }
-        
-        if (settings.movesToCalculate !== undefined) {
-            this.aiSettings.movesToCalculate = settings.movesToCalculate;
-        }
     }
 
     /**
