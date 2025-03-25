@@ -1,4 +1,5 @@
-import { AIManager } from './core/ai/AIManager.js';
+import { AIEngine } from './core/ai/AIEngine.js';
+import { GlobalState } from './state/GlobalState.js';
 
 /**
  * アプリのボード状態をAI用のフォーマットに変換
@@ -71,38 +72,37 @@ function adjustBoardHeight(board) {
 }
 
 /**
- * テトリスアプリケーションとAIを連携するマネージャークラス
+ * AIエンジンを制御するコントローラークラス
+ * AIエンジンの初期化、探索の開始/停止、設定の管理を担当
  */
-export class AIManagerWrapper {
-    /**
-     * コンストラクタ
-     */
+export class AIEngineController {
     constructor() {
-        this.aiManager = new AIManager();
-        this.moveHistory = [];
-        this.selectedMoveIndex = -1;
+        // this.aiEngine = null;
+        this.aiEngine = new AIEngine();
+
         this.isCalculating = false;
-        this.aiSettings = {
-            searchTimePerMove: 500, // ミリ秒
-            movesToCalculate: 10
-        };
         this.eventListeners = new Map();
+        this.aiSettings = {
+            searchTimePerMove: 1000,  // デフォルトの探索時間（ミリ秒）
+            movesToCalculate: 5       // デフォルトの計算手数
+        };
+        this._globalState = GlobalState.getInstance();
     }
 
     /**
-     * AIマネージャーを初期化
+     * AIエンジンを初期化
      */
     async initialize() {
         try {
             // イベントリスナーを設定
-            this.aiManager.on('ready', () => this.emit('ready'));
-            this.aiManager.on('suggestion', suggestion => this.emit('suggestion', suggestion));
-            this.aiManager.on('error', error => this.emit('error', error));
-            this.aiManager.on('log', logData => this.emit('log', logData));
-            this.aiManager.on('movesCalculated', moves => this.handleMovesCalculated(moves));
+            this.aiEngine.on('ready', () => this.emit('ready'));
+            this.aiEngine.on('suggestion', suggestion => this.emit('suggestion', suggestion));
+            this.aiEngine.on('error', error => this.emit('error', error));
+            this.aiEngine.on('log', logData => this.emit('log', logData));
+            this.aiEngine.on('movesCalculated', moves => this.handleMovesCalculated(moves));
             
-            // AIManager本体を初期化
-            await this.aiManager.initialize();
+            // AIEngine本体を初期化
+            await this.aiEngine.initialize();
             this.emit('initialized');
             return true;
         } catch (error) {
@@ -156,9 +156,6 @@ export class AIManagerWrapper {
         }
 
         try {
-            // 新規探索を開始する前に履歴をリセット
-            this.resetHistory();
-            
             this.isCalculating = true;
             this.emit('searchStarted');
             
@@ -170,14 +167,14 @@ export class AIManagerWrapper {
             );
             
             // AIにゲーム状態を送信
-            await this.aiManager.start(aiGameState);
+            await this.aiEngine.start(aiGameState);
             
             // 探索開始メッセージを表示
             this.emit('statusMessage', '現在の盤面から探索を開始します');
             
             // 指定された手数分の計算を依頼
-            this.aiManager.setRangeOffset(-grayColumnCount+1, 1); //人が読みやすいように0-9ではなく1-10で返すように調整するため+1する
-            this.aiManager.calculateMoves(
+            this.aiEngine.setRangeOffset(-grayColumnCount+1, 1);
+            this.aiEngine.calculateMoves(
                 this.aiSettings.movesToCalculate,
                 this.aiSettings.searchTimePerMove,
             );
@@ -195,38 +192,28 @@ export class AIManagerWrapper {
      */
     stopSearch() {
         if (this.isCalculating) {
-            this.aiManager.stopCalculation();
+            this.aiEngine.stopCalculation();
             this.isCalculating = false;
             this.emit('searchStopped');
         }
     }
 
     /**
-     * 探索を継続し、次の手を計算する
-     * 既存の探索履歴がある場合にのみ使用
-     * @returns {Boolean} - 探索の開始が成功したかどうか
+     * 探索を継続
+     * @returns {Promise<boolean>} 探索継続の成否
      */
     async continueSearch() {
-        if (this.moveHistory.length === 0) {
-            this.emit('error', '探索履歴がありません。新規に探索を開始してください。');
-            return false;
-        }
-
-        if (this.isCalculating) {
-            this.stopSearch();
-        }
+        if (!this.aiEngine || this.isCalculating) return false;
 
         try {
+            const state = this._globalState.getAIState();
+            if (!state.moves || state.moves.length === 0) {
+                this.emit('error', '探索履歴がありません');
+                return false;
+            }
+
             this.isCalculating = true;
-            this.emit('searchStarted');
-            this.emit('statusMessage', '履歴の最後の手から探索を続けます');
-            
-            // 既存の履歴から続きの手を計算するよう指示
-            this.aiManager.calculateMoves(
-                this.aiSettings.movesToCalculate,
-                this.aiSettings.searchTimePerMove,
-            );
-            
+            await this.aiEngine.continueSearch();
             return true;
         } catch (error) {
             this.isCalculating = false;
@@ -241,7 +228,7 @@ export class AIManagerWrapper {
      */
     handleMovesCalculated(moves) {
         // 計算された手を履歴に追加
-        this.moveHistory.push(...moves);
+        this._globalState.addAIMoves(moves);
         
         // 計算完了を通知
         this.isCalculating = false;
@@ -250,38 +237,11 @@ export class AIManagerWrapper {
     }
 
     /**
-     * 履歴から指定した手を適用
-     * @param {number} index - 適用する手のインデックス
-     * @returns {Object|null} - 適用した手の情報、または失敗時はnull
-     */
-    applyMove(index) {
-        if (index < 0 || index >= this.moveHistory.length) {
-            this.emit('error', '無効なインデックスが指定されました');
-            return null;
-        }
-        
-        const move = this.moveHistory[index];
-        this.selectedMoveIndex = index;
-        this.emit('moveApplied', move);
-        return move;
-    }
-
-    /**
-     * 履歴をリセット
-     */
-    resetHistory() {
-        this.moveHistory = [];
-        this.selectedMoveIndex = -1;
-        this.emit('historyReset');
-    }
-
-    /**
      * AI設定を更新
      * @param {Object} settings - 新しい設定値
      */
     updateSettings(settings) {
         if (settings.searchTimePerMove !== undefined) {
-            // 秒からミリ秒に変換
             this.aiSettings.searchTimePerMove = settings.searchTimePerMove * 1000;
         }
         
@@ -291,12 +251,12 @@ export class AIManagerWrapper {
     }
 
     /**
-     * AIマネージャーを破棄
+     * AIエンジンを破棄
      */
     dispose() {
-        if (this.aiManager) {
+        if (this.aiEngine) {
             this.stopSearch();
-            this.aiManager.stop();
+            this.aiEngine.stop();
         }
         this.eventListeners.clear();
     }

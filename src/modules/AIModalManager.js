@@ -1,3 +1,8 @@
+import { GlobalState } from './state/GlobalState.js';
+import { AIEngineController } from './AIEngineController.js';
+import { BoardManager } from './BoardManager.js';
+import { MinoManager } from './MinoManager.js';
+
 /**
  * AIモーダル管理クラス
  * AIモーダルの表示、操作、状態管理を担当
@@ -6,23 +11,57 @@ export class AIModalManager {
   _state;
   _modalElement;
   _modal;
-  _aiManager;
+  _aiEngine;
   _dom;
   _gameState;
-  _aiStateManager;
+  _globalState;
 
-  constructor(aiManager, aiStateManager) {
-    this._aiManager = aiManager;
-    this._aiStateManager = aiStateManager;
+  constructor() {
+    this._aiEngine = new AIEngineController();
     this._state = {
-      selectedMoveIndex: -1,
-      isSearching: false
+      isSearching: false,
+      status: 'waiting',
+      statusMessage: ''
     };
+
+    this._globalState = GlobalState.getInstance();
 
     // DOM要素の初期化
     this._initializeDOMElements();
     this._initializeModal();
     this._initializeEventListeners();
+    this._setupAIEngineListeners();
+  }
+
+  /**
+   * AIエンジンの初期化
+   */
+  async initialize() {
+    try {
+      await this._aiEngine.initialize();
+      this.updateSearchStatus(false, 'AI待機中');
+    } catch (error) {
+      this.setError('AIエンジンの初期化に失敗しました');
+      console.error('AI初期化エラー:', error);
+    }
+  }
+
+  /**
+   * AIエンジンのイベントリスナーを設定
+   */
+  _setupAIEngineListeners() {
+    this._aiEngine.on('initialized', () => {
+      console.log('AIエンジンが初期化されました');
+      this.updateSearchStatus(false, 'AI待機中');
+    });
+
+    this._aiEngine.on('statusMessage', (message) => {
+      this.updateStatusMessage(message);
+    });
+
+    this._aiEngine.on('suggestion', (suggestion) => {
+      console.log('AI提案を受信:', suggestion);      
+    });
   }
 
   /**
@@ -45,22 +84,28 @@ export class AIModalManager {
   _initializeModal() {
     if (!this._dom.modal) {
       console.error('AIモーダルの要素が見つかりません');
+      this._modal = null;
       return;
     }
 
-    this._dom.modal.addEventListener('hidden.bs.modal', () => {
-      this._dispatchEvent('aiModalClosed', {});
-    });
-    this._modal = new bootstrap.Modal(this._dom.modal);
+    try {
+      this._modal = new bootstrap.Modal(this._dom.modal);
+      this._dom.modal.addEventListener('hidden.bs.modal', () => {
+        this._dispatchEvent('aiModalClosed', {});
+      });
+    } catch (error) {
+      console.error('モーダルの初期化に失敗しました:', error);
+      this._modal = null;
+    }
   }
 
   /**
    * イベントリスナーの初期化
    */
   _initializeEventListeners() {
-    // AIStateManagerの監視を開始
-    this._aiStateManager.addListener((state) => {
-      this._updateModalDisplay(state);
+    // AIの状態の監視を開始
+    this._globalState.addAIStateListener((state) => {
+      this._updateModalDisplay();
     });
 
     // 探索ボタン
@@ -91,24 +136,35 @@ export class AIModalManager {
   }
 
   /**
-   * AIモーダルを開く
+   * モーダルを開く
    * @param {Object} gameState - 現在のゲーム状態（board, queue, holdを含む）
    * @param {Object} boardSettings - ボードの設定情報
    */
   openAIModal(gameState, boardSettings) {
     // 幅が10でない場合は通知を表示して処理を中断
     if (boardSettings.width !== 10) {
-      this._aiStateManager.setError('AIは幅10のボードのみ対応しています');
+      this.setError('AIは幅10のボードのみ対応しています');
       return;
+    }
+    
+    // モーダルが初期化されていない場合は再初期化を試みる
+    if (!this._modal) {
+      this._initializeModal();
+      if (!this._modal) {
+        console.error('モーダルの初期化に失敗しました');
+        return;
+      }
     }
     
     // ゲーム状態を保存
     this._gameState = gameState;
     
     // モーダルを表示
-    if (this._modal) {
+    try {
       this._modal.show();
-      this._aiStateManager.updateSearchStatus(false, 'AI待機中');
+      this.updateSearchStatus(false, 'AI待機中');
+    } catch (error) {
+      console.error('モーダルの表示に失敗しました:', error);
     }
   }
 
@@ -124,87 +180,111 @@ export class AIModalManager {
    */
   _startAISearch() {
     if (!this._gameState) return;
-    this._aiManager.startSearch(this._gameState);
+    this._aiEngine.startSearch(this._gameState);
   }
 
   /**
    * 選択された手を適用
    */
   _applySelectedAIMove() {
-    const currentMove = this._aiStateManager._currentMove;
+    const currentMove = this._globalState.getCurrentMove();
     if (currentMove) {
-      this._aiManager.applyMove(currentMove);
+      this._dispatchEvent('aiMoveSelected', { move: currentMove });
       this._closeAIModal();
     }
   }
 
   /**
-   * AI履歴リセットの確認ダイアログを表示
+   * AIの探索履歴をリセット
    */
   _confirmResetAIHistory() {
     if (confirm('AIの探索履歴をリセットしますか？')) {
-      this._aiManager.resetHistory();
+      this._globalState.clearAIMoves();
     }
+  }
+
+  /**
+   * 指定されたインデックスの手を選択
+   * @param {number} index - 選択する手のインデックス
+   * @private
+   */
+  _selectMove(index) {
+    const move = this._globalState.selectAIMove(index);
+    // 選択状態の更新のみを行い、イベントは発火しない
+    this._updateModalDisplay();
   }
 
   /**
    * モーダル表示の更新
    */
-  _updateModalDisplay(state) {
-    // 進捗表示の更新
-    if (this._dom.progressContainer) {
-      this._dom.progressContainer.style.display = state.isSearching ? 'block' : 'none';
-    }
-
-    // ステータスメッセージの更新
-    if (this._dom.statusMessage) {
-      this._dom.statusMessage.textContent = state.statusMessage || state.status;
-    }
-
-    // 計算状態の更新
-    if (this._dom.calculationStatus) {
-      this._dom.calculationStatus.textContent = state.status;
-    }
-
-    // 移動履歴の更新
-    this._renderMoveHistory(state);
-  }
-
-  /**
-   * 移動履歴の描画
-   */
-  _renderMoveHistory(state) {
-    if (!this._dom.moveHistory) return;
-
-    this._dom.moveHistory.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-
-    // 履歴がない場合のメッセージを表示
-    if (!state.moveHistory || state.moveHistory.length === 0) {
-      const emptyMessage = document.createElement('div');
-      emptyMessage.className = 'text-center py-3 text-muted';
-      emptyMessage.innerHTML = '<em>まだ履歴がありません</em>';
-      this._dom.moveHistory.appendChild(emptyMessage);
+  _updateModalDisplay() {
+    if (!this._modal || !this._dom.modal) {
+      console.warn('モーダルが初期化されていません');
       return;
     }
 
-    state.moveHistory.forEach((move, index) => {
+    const aiState = this._globalState.getAIState();
+
+    // 表示用の状態を作成
+    const displayState = {
+      status: this._state.status,
+      statusMessage: this._state.statusMessage,
+      isSearching: this._state.isSearching,
+      moves: aiState.moves,
+      currentIndex: aiState.currentIndex
+    };
+
+    // ステータス表示の更新
+    const statusElement = document.getElementById('ai-status-message');
+    if (statusElement) {
+      statusElement.textContent = displayState.statusMessage || displayState.status;
+    }
+
+    // 探索中の表示制御
+    const searchingIndicator = this._dom.modal.querySelector('.searching-indicator');
+    if (searchingIndicator) {
+      searchingIndicator.style.display = displayState.isSearching ? 'block' : 'none';
+    }
+
+    // 履歴の表示更新
+    this._updateMoveHistory(displayState);
+  }
+
+  /**
+   * 手の履歴表示を更新
+   */
+  _updateMoveHistory(state) {
+    if (!this._modal || !this._dom.modal) return;
+
+    const historyContainer = this._dom.modal.querySelector('.ai-history-container');
+    if (!historyContainer) return;
+
+    // コンテナをクリア
+    historyContainer.innerHTML = '';
+
+    // 履歴がない場合のメッセージを表示
+    if (!state.moves || state.moves.length === 0) {
+      const emptyMessage = document.createElement('div');
+      emptyMessage.className = 'text-center py-3 text-muted';
+      emptyMessage.textContent = '探索履歴がありません';
+      historyContainer.appendChild(emptyMessage);
+      return;
+    }
+
+    // 各手の要素を作成
+    state.moves.forEach((move, index) => {
       const moveElement = document.createElement('div');
       moveElement.classList.add('ai-history-item');
       if (index === state.currentIndex) {
         moveElement.classList.add('selected');
       }
+     
 
-      // 移動情報の取得
-      const moveLocation = move.suggestion.move.location;
-      const minoType = moveLocation.type;
-      const orientation = moveLocation.orientation;
-      const position = `x:${moveLocation.adjustedRange.x}, y:${moveLocation.adjustedRange.y}`;
-
-      // アイテムの内容を設定
+      // 手の情報を表示
+      const formattedMove = this._formatMove(move);
       moveElement.innerHTML = `
-        <span class="ai-piece-type ${minoType}">${minoType}</span>
-        <span>${index + 1}手目: 向き${orientation}, 位置${position}</span>
+        <span class="ai-piece-type ${formattedMove.minoType}">${formattedMove.minoType}</span>
+        <span>${index + 1}手目: 向き${formattedMove.orientation}, 位置${formattedMove.position}</span>
       `;
 
       // クリックイベントを設定
@@ -212,19 +292,8 @@ export class AIModalManager {
         this._selectMove(index);
       });
 
-      // ダブルクリックイベントを設定
-      moveElement.addEventListener('dblclick', () => {
-        const currentMove = state.moveHistory[index];
-        if (currentMove) {
-          this._aiManager.applyMove(currentMove);
-          this.closeAIModal();
-        }
-      });
-
-      fragment.appendChild(moveElement);
+      historyContainer.appendChild(moveElement);
     });
-
-    this._dom.moveHistory.appendChild(fragment);
 
     // 適用ボタンの状態を更新
     if (this._dom.applyButton) {
@@ -233,13 +302,59 @@ export class AIModalManager {
   }
 
   /**
-   * 手の選択
+   * エラー状態の設定
+   * @param {string} message - エラーメッセージ
    */
-  _selectMove(index) {
-    const move = this._aiStateManager._moveHistory[index];
-    if (move) {
-      this._aiStateManager.updateState(this._aiStateManager._moveHistory, index);
-    }
+  setError(message) {
+    this._state.status = 'error';
+    this._state.statusMessage = message;
+    this._updateModalDisplay();
+  }
+
+  /**
+   * 探索状態の更新
+   * @param {boolean} isSearching - 探索中かどうか
+   * @param {string} status - 状態メッセージ
+   */
+  updateSearchStatus(isSearching, status) {
+    this._state.isSearching = isSearching;
+    this._state.status = status;
+    this._updateModalDisplay();
+  }
+
+  /**
+   * ステータスメッセージの更新
+   * @param {string} message - 表示するメッセージ
+   */
+  updateStatusMessage(message) {
+    this._state.statusMessage = message;
+    this._updateModalDisplay();
+  }
+
+  /**
+   * 手の情報を文字列にフォーマット
+   * @param {Object} move - 手の情報
+   * @returns {string} - フォーマットされた文字列
+   * @private
+   */
+  _formatMove(move) {
+    if (!move) return {
+      index: 0,
+      minoType: '不明',
+      orientation: '不明',
+      position: '不明'
+    };
+    
+    const moveLocation = move.suggestion.move.location;
+    const minoType = moveLocation.type;
+    const orientation = moveLocation.orientation;
+    const position = `x:${moveLocation.adjustedRange.x}, y:${moveLocation.adjustedRange.y}`;  
+
+    return {
+      minoType,
+      orientation,
+      position
+    };
   }
 
   /**

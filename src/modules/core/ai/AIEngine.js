@@ -1,8 +1,8 @@
 /**
- * AIとの通信を管理するクラス
- * AIとのインターフェースを提供
+ * AIエンジン本体
+ * テトリスの探索と評価を行う核となるロジック
  */
-export class AIManager {
+export class AIEngine {
     constructor() {
         this.worker = null;
         this.lastSuggestion = null;
@@ -281,5 +281,5 @@ export class AIManager {
 
 // Node.js環境でモジュールとしてエクスポート
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { AIManager };
+    module.exports = { AIEngine };
 }

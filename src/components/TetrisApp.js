@@ -6,7 +6,7 @@ import { MinoManager } from '../modules/MinoManager.js';
 import { EditManager } from '../modules/EditManager.js';
 import { GestureManager } from '../modules/GestureManager.js';
 import { AIModalManager } from '../modules/AIModalManager.js';
-import { AIStateManager } from '../modules/AIStateManager.js';
+import { GlobalState } from '../modules/state/GlobalState.js';
 
 /**
  * テトリスアプリケーションクラス
@@ -25,6 +25,7 @@ export class TetrisApp {
     this.editState = EditManager.initialize();
     this.dom = null;
     this.settingsManager = null;
+    this._globalState = GlobalState.getInstance();
 
     document.addEventListener('DOMContentLoaded', () => this.initializeApp());
   }
@@ -83,30 +84,111 @@ export class TetrisApp {
   }
 
   /**
-   * AIモーダルの初期化
+   * AIモーダルを初期化
    */
-  initializeAIModal() {
+  async initializeAIModal() {
+    this.aiModalManager = new AIModalManager();
+    await this.aiModalManager.initialize();
+
+    // AIモーダルが閉じられた時のイベントリスナーを追加
+    document.addEventListener('aiModalClosed', () => {
+      // モーダル内の要素からフォーカスを外す
+      document.activeElement.blur();
+      // フォーカスをボディに移す
+      document.body.focus();
+    });
+
+    // AIの手が選択された時のイベントリスナーを追加
+    document.addEventListener('aiMoveSelected', (event) => {
+      const move = event.detail.move;
+      this.applyAIMove(move);
+    });
+
+    // AIボタンのイベントリスナーを追加
+    this.dom.askAIButton?.addEventListener('click', () => {
+      const board = BoardManager.getCurrentBoard(
+        this.dom.board, 
+        this.currentWidth, 
+        this.currentHeight
+      );
+      const queue = MinoManager.getQueueForAI();
+      const hold = null;
+      const settings = this.settingsManager.getSettings();
+      
+      this.aiModalManager.openAIModal(
+        { board, queue, hold },
+        settings.boardSettings
+      );
+    });
+  }
+
+  /**
+   * AIの手を適用
+   * @param {Object} move - 適用する手
+   */
+  applyAIMove(move) {
     try {
-      // AIManagerWrapperをインポート
-      import('../modules/AIManagerWrapper.js').then(module => {
-        this.aiManager = new module.AIManagerWrapper();
-        this.aiStateManager = new AIStateManager();
-        this.aiModalManager = new AIModalManager(this.aiManager, this.aiStateManager);
+      // 現在の表示状態を記憶
+      const board = this.dom.board;
+      const isBoardHidden = board.getAttribute('data-visible') === 'false';
+      
+      // ボードを更新
+      if (move.suggestion && move.suggestion.board) {
+        BoardManager.applyAIBoard(
+          board,
+          move.suggestion.board,
+          this.currentWidth,
+          this.currentHeight
+        );
+      }
+      
+      // ネクストを更新
+      if (move.suggestion && move.suggestion.next) {
+        // 設定されたネクスト数を取得
+        const nextCountElement = document.querySelector('.next-count-value');
+        const nextCount = parseInt(nextCountElement?.textContent) || 5;
         
-        // AIマネージャーのイベントリスナーを設定
-        this.setupAIManagerListeners();
+        // ネクスト配列を作成
+        let nextArray = [...move.suggestion.next];
         
-        // ヘッダー部分のAI状態表示を初期化
-        this.initializeAIStateDisplay();
+        MinoManager.applyAINext(
+          this.dom.nextContainer,
+          nextArray,
+          nextCount
+        );
         
-        // AIマネージャーを初期化
-        this.aiManager.initialize();
-      }).catch(error => {
-        console.error('AIモジュールのロードに失敗しました:', error);
-        this.showNotification('AIモジュールのロードに失敗しました', 'danger');
-      });
+        // ホールドがある場合はホールド表示を更新
+        if (move.suggestion.hold) {
+          this.updateHoldDisplay(move.suggestion.hold);
+        }
+      }
+      
+      // 盤面が非表示状態だった場合は、更新後も非表示状態を維持
+      if (isBoardHidden) {
+        // 非表示状態を維持するため、セルを空の状態に戻す
+        const cells = board.querySelectorAll('.cell');
+        cells.forEach(cell => {
+          // 一時的にクラス情報を保存
+          cell.setAttribute('data-original-classes', cell.className);
+          // 背景色を保存
+          cell.setAttribute('data-original-bg', cell.style.backgroundColor || '');
+          
+          // セルを空の状態に変更
+          cell.className = 'cell';
+          cell.style.backgroundColor = '';
+          
+          // セル内部の要素を一時的に非表示
+          Array.from(cell.children).forEach(child => {
+            child.style.display = 'none';
+          });
+        });
+        
+        // 非表示状態を保持
+        board.setAttribute('data-visible', 'false');
+      }
     } catch (error) {
-      console.error('AI初期化エラー:', error);
+      console.error('AI手の適用エラー:', error);
+      this.showNotification('AIの手を適用できませんでした', 'danger');
     }
   }
 
@@ -114,20 +196,19 @@ export class TetrisApp {
    * ヘッダー部分のAI状態表示を初期化
    */
   initializeAIStateDisplay() {
-    // AIStateManagerの監視を開始
-    this.aiStateManager.addListener((state) => {
-      this.updateAIStateDisplay(state);
+    // AIの状態の監視を開始
+    this._globalState.addAIStateListener((state) => {
+      this.updateAIStateDisplay
+      (state);
     });
 
     // ボタンのイベントリスナーを設定
     this.dom.aiNextButton?.addEventListener('click', () => {
-      const move = this.aiStateManager.nextMove();
-      if (move) this.applyAIMove(move);
+		// TODO: 
     });
 
     this.dom.aiPrevButton?.addEventListener('click', () => {
-      const move = this.aiStateManager.previousMove();
-      if (move) this.applyAIMove(move);
+    	// TODO: 
     });
   }
 
@@ -136,12 +217,12 @@ export class TetrisApp {
    */
   updateAIStateDisplay(state) {
     if (this.dom.aiMoveText) {
-      this.dom.aiMoveText.textContent = state.currentMove?.description || '';
+      this.dom.aiMoveText.textContent = state.currentMove ? 
+        this._formatMove(state.currentMove) : '';
     }
     
     if (this.dom.aiNextButton) {
-      this.dom.aiNextButton.disabled = 
-        state.currentIndex >= state.moveHistory.length - 1;
+      this.dom.aiNextButton.disabled = state.currentIndex >= state.moves.length - 1;
     }
     
     if (this.dom.aiPrevButton) {
@@ -149,8 +230,21 @@ export class TetrisApp {
     }
 
     if (this.dom.aiStatusText) {
-      this.dom.aiStatusText.textContent = state.statusMessage || state.status;
+      this.dom.aiStatusText.textContent = this.aiModalManager._state.statusMessage || 
+                                        this.aiModalManager._state.status;
     }
+  }
+
+  /**
+   * 手の情報を文字列にフォーマット
+   * @param {Object} move - 手の情報
+   * @returns {string} - フォーマットされた文字列
+   * @private
+   */
+  _formatMove(move) {
+    if (!move) return '不明な手';
+    const { piece, rotation, x } = move;
+    return `${piece}を${rotation}度回転して${x}列目に配置`;
   }
 
   /**
@@ -258,7 +352,6 @@ export class TetrisApp {
     this.setupFillColumnButtonListener();
     this.setupClearColumnButtonListener();
     this.setupToggleBoardListener();
-    this.setupAskAIButtonListener();
   }
 
   /**
@@ -697,125 +790,6 @@ export class TetrisApp {
   }
 
   /**
-   * AIマネージャーのイベントリスナーを設定
-   */
-  setupAIManagerListeners() {
-    this.aiManager.on('initialized', () => {
-      console.log('AIマネージャーが初期化されました');
-      this.aiStateManager.updateSearchStatus(false, 'AI待機中');
-    });
-
-    this.aiManager.on('error', (errorMessage) => {
-      console.error('AIエラー:', errorMessage);
-      this.aiStateManager.setError(errorMessage);
-    });
-
-    this.aiManager.on('searchStarted', () => {
-      this.aiStateManager.updateSearchStatus(true, '探索中...');
-    });
-
-    this.aiManager.on('searchStopped', () => {
-      this.aiStateManager.updateSearchStatus(false, '探索停止');
-    });
-
-    this.aiManager.on('statusMessage', (message) => {
-      this.aiStateManager.updateStatusMessage(message);
-    });
-
-    this.aiManager.on('suggestion', (suggestion) => {
-      this.handleAISuggestion(suggestion);
-    });
-
-    this.aiManager.on('movesCalculated', (moves) => {
-      this.aiStateManager.updateState(moves);
-    });
-
-    this.aiManager.on('historyReset', () => {
-      this.aiStateManager.resetHistory();
-    });
-
-    this.aiManager.on('moveApplied', (move) => {
-      this.applyAIMove(move);
-    });
-  }
-
-  /**
-   * AI提案を処理
-   * @param {Object} suggestion - AI提案
-   */
-  handleAISuggestion(suggestion) {
-    console.log('AI提案を受信:', suggestion);
-  }
-
-  /**
-   * AI移動を適用
-   * @param {Object} move - 適用する手
-   */
-  applyAIMove(move) {
-    try {
-      // 現在の表示状態を記憶
-      const isBoardHidden = this.dom.board.getAttribute('data-visible') === 'false';
-      
-      // ボードを更新
-      if (move.suggestion && move.suggestion.board) {
-        BoardManager.applyAIBoard(
-          this.dom.board,
-          move.suggestion.board,
-          this.currentWidth,
-          this.currentHeight
-        );
-      }
-      
-      // ネクストを更新
-      if (move.suggestion && move.suggestion.next) {
-        // 設定されたネクスト数を取得
-        const nextCount = parseInt(this.dom.sliderValues.nextCount.textContent) || 5;
-        
-        // ネクスト配列を作成
-        let nextArray = [...move.suggestion.next];
-        
-        MinoManager.applyAINext(
-          this.dom.nextContainer,
-          nextArray,
-          nextCount
-        );
-        
-        // ホールドがある場合はホールド表示を更新
-        if (move.suggestion.hold) {
-          this.updateHoldDisplay(move.suggestion.hold);
-        }
-      }
-      
-      // 盤面が非表示状態だった場合は、更新後も非表示状態を維持
-      if (isBoardHidden) {
-        // 非表示状態を維持するため、セルを空の状態に戻す
-        const cells = this.dom.board.querySelectorAll('.cell');
-        cells.forEach(cell => {
-          // 一時的にクラス情報を保存
-          cell.setAttribute('data-original-classes', cell.className);
-          // 背景色を保存
-          cell.setAttribute('data-original-bg', cell.style.backgroundColor || '');
-          
-          // セルを空の状態に変更
-          cell.className = 'cell';
-          cell.style.backgroundColor = '';
-          
-          // セル内部の要素を一時的に非表示
-          Array.from(cell.children).forEach(child => {
-            child.style.display = 'none';
-          });
-        });
-        
-        // 非表示状態を保持
-        this.dom.board.setAttribute('data-visible', 'false');
-      }
-    } catch (error) {
-      console.error('AI手の適用エラー:', error);
-      this.showNotification('AIの手を適用できませんでした', 'danger');
-    }
-  }
-
-  /**
    * 通知を表示
    * @param {string} message - 通知メッセージ
    * @param {string} type - 通知タイプ
@@ -837,37 +811,6 @@ export class TetrisApp {
       // フォールバックとしてコンソールに出力
       console.log(`[${type}] ${message}`);
       alert(message);
-    }
-  }
-
-  /**
-   * AIボタンのイベントリスナーを設定
-   */
-  setupAskAIButtonListener() {
-    if (this.dom.askAIButton) {
-      this.dom.askAIButton.addEventListener('click', () => {
-        // 現在のゲーム状態を取得
-        const board = BoardManager.getCurrentBoard(
-          this.dom.board, 
-          this.currentWidth, 
-          this.currentHeight
-        );
-        
-        // MinoManagerからネクスト情報を取得
-        const queue = MinoManager.getQueueForAI();
-        
-        // 現バージョンではホールドは使用しない
-        const hold = null;
-
-        // 設定を取得
-        const settings = this.settingsManager.getSettings();
-        
-        // ゲーム状態とボード設定をAIモーダルに渡す
-        this.aiModalManager.openAIModal(
-          { board, queue, hold },
-          settings.boardSettings
-        );
-      });
     }
   }
 } 
