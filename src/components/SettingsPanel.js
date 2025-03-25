@@ -1,5 +1,3 @@
-import { config, defaultSettings } from '../utils/config.js';
-import { dispatchEvent } from '../utils/eventUtils.js';
 import { GlobalState } from '../modules/state/GlobalState.js';
 
 /**
@@ -10,21 +8,94 @@ export class SettingsPanel {
   _modalElement;
   _modal;
   _globalState;
+  _elements;
 
   constructor() {
     this._globalState = GlobalState.getInstance();
     
     // DOM要素の初期化
     this._modalElement = document.getElementById('settings-modal');
+    this._elements = this._initializeDOMElements();
     this._initializeModal();
     this._initializeEventListeners();
+  }
+
+  /**
+   * DOM要素の初期化
+   * @returns {Object} DOM要素オブジェクト
+   */
+  _initializeDOMElements() {
+    return {
+      width: document.getElementById('width'),
+      widthValue: document.getElementById('width-value'),
+      height: document.getElementById('height'),
+      heightValue: document.getElementById('height-value'),
+      nextCount: document.getElementById('next-count'),
+      nextCountValue: document.getElementById('next-count-value'),
+      blockRange: document.getElementById('block-range-slider'),
+      blockRangeValues: document.getElementById('block-range-values'),
+      minoMode: document.getElementById('mino-mode'),
+      seed: document.getElementById('seed-value'),
+      regenerateSeed: document.getElementById('regenerate-seed'),
+      searchTime: document.getElementById('ai-search-time'),
+      searchTimeValue: document.getElementById('ai-search-time-value'),
+      movesCount: document.getElementById('ai-moves-count'),
+      movesCountValue: document.getElementById('ai-moves-count-value'),
+    };
   }
 
   /**
    * 設定モーダルを開く
    */
   openModal() {
+    this._updateUIWithCurrentSettings();
     this._modal?.show();
+  }
+
+  /**
+   * 現在の設定値をUIに反映
+   */
+  _updateUIWithCurrentSettings() {
+    const settings = this._globalState.getSettings();
+    
+    // 盤面設定の反映
+    this._updateSliderValue('width', settings.boardSettings.width);
+    this._updateSliderValue('height', settings.boardSettings.height);
+    this._updateSliderValue('nextCount', settings.boardSettings.nextCount);
+    
+    // ブロック範囲スライダーの更新
+    if (this._elements.blockRange?.noUiSlider) {
+      this._elements.blockRange.noUiSlider.set([
+        settings.boardSettings.blockRange.min,
+        settings.boardSettings.blockRange.max
+      ]);
+      this._elements.blockRangeValues.textContent = 
+        `${settings.boardSettings.blockRange.min} - ${settings.boardSettings.blockRange.max}`;
+    }
+
+    // その他の設定値の更新
+    this._elements.minoMode.value = settings.boardSettings.minoMode;
+    this._elements.seed.value = settings.boardSettings.seed;
+    this._updateSliderValue('searchTime', settings.aiSettings.searchTime, parseFloat);
+    this._updateSliderValue('movesCount', settings.aiSettings.movesCount);
+  }
+
+  /**
+   * スライダー値の更新
+   * @param {string} key - 要素のキー
+   * @param {number} value - 設定値
+   * @param {Function} [parser=parseInt] - 値のパース関数
+   */
+  _updateSliderValue(key, value, parser = parseInt) {
+    const element = this._elements[key];
+    const valueElement = this._elements[`${key}Value`];
+    
+    if (element) {
+      element.value = value;
+      if (valueElement) {
+        valueElement.textContent = value;
+      }
+    }
   }
 
   /**
@@ -46,7 +117,6 @@ export class SettingsPanel {
       console.error('設定モーダルの要素が見つかりません');
       return;
     }
-
     this._modal = new bootstrap.Modal(this._modalElement);
   }
 
@@ -54,45 +124,60 @@ export class SettingsPanel {
    * イベントリスナーの初期化
    */
   _initializeEventListeners() {
-    // DOM要素の取得
-    const elements = {
-      width: document.getElementById('width'),
-      widthValue: document.getElementById('width-value'),
-      height: document.getElementById('height'),
-      heightValue: document.getElementById('height-value'),
-      nextCount: document.getElementById('next-count'),
-      nextCountValue: document.getElementById('next-count-value'),
-      blockRange: document.getElementById('block-range-slider'),
-      blockRangeValues: document.getElementById('block-range-values'),
-      minoMode: document.getElementById('mino-mode'),
-      seed: document.getElementById('seed-value'),
-      regenerateSeed: document.getElementById('regenerate-seed'),
-      searchTime: document.getElementById('ai-search-time'),
-      searchTimeValue: document.getElementById('ai-search-time-value'),
-      movesCount: document.getElementById('ai-moves-count'),
-      movesCountValue: document.getElementById('ai-moves-count-value'),
-    };
+    this._initializeBlockRangeSlider();
+    this._initializeSliders();
+    this._initializeButtons();
+  }
 
-    // ブロック範囲スライダーの初期化
-    if (elements.blockRange) {
-      noUiSlider.create(elements.blockRange, {
-        start: [this._globalState.getSettings().boardSettings.blockRange.min, 
-                this._globalState.getSettings().boardSettings.blockRange.max],
-        connect: true,
-        range: {
-          'min': config.BLOCKS.MIN_COUNT,
-          'max': config.BLOCKS.MAX_COUNT
-        },
-        step: 1,
-        format: {
-          to: value => Math.round(value),
-          from: value => Math.round(value)
-        }
-      });
-    }
+  /**
+   * ブロック範囲スライダーの初期化
+   */
+  _initializeBlockRangeSlider() {
+    if (!this._elements.blockRange) return;
 
-    // スライダー値の更新と通知の共通処理
-    const updateSliderAndNotify = (element, valueElement, path, parser = parseInt) => {
+    const settings = this._globalState.getSettings();
+    noUiSlider.create(this._elements.blockRange, {
+      start: [settings.boardSettings.blockRange.min, 
+              settings.boardSettings.blockRange.max],
+      connect: true,
+      range: {
+        'min': 0,
+        'max': 1
+      },
+      step: 1,
+      format: {
+        to: value => Math.round(value),
+        from: value => Math.round(value)
+      }
+    });
+
+    this._elements.blockRange.noUiSlider.on('update', () => {
+      const values = this._elements.blockRange.noUiSlider.get();
+      const min = Math.round(parseFloat(values[0]));
+      const max = Math.round(parseFloat(values[1]));
+      this._updateSettings('boardSettings.blockRange', { min, max });
+      if (this._elements.blockRangeValues) {
+        this._elements.blockRangeValues.textContent = `${min} - ${max}`;
+      }
+    });
+  }
+
+  /**
+   * スライダーの初期化
+   */
+  _initializeSliders() {
+    const sliderConfigs = [
+      { key: 'width', path: 'boardSettings.width', parser: parseInt },
+      { key: 'height', path: 'boardSettings.height', parser: parseInt },
+      { key: 'nextCount', path: 'boardSettings.nextCount', parser: parseInt },
+      { key: 'searchTime', path: 'aiSettings.searchTime', parser: parseFloat },
+      { key: 'movesCount', path: 'aiSettings.movesCount', parser: parseInt }
+    ];
+
+    sliderConfigs.forEach(({ key, path, parser = parseInt }) => {
+      const element = this._elements[key];
+      const valueElement = this._elements[`${key}Value`];
+      
       if (element) {
         element.addEventListener('input', () => {
           const value = parser(element.value, 10);
@@ -102,42 +187,22 @@ export class SettingsPanel {
           }
         });
       }
-    };
+    });
+  }
 
-    // 盤面設定のスライダー値の更新
-    updateSliderAndNotify(elements.width, elements.widthValue, 'boardSettings.width');
-    updateSliderAndNotify(elements.height, elements.heightValue, 'boardSettings.height');
-    updateSliderAndNotify(elements.nextCount, elements.nextCountValue, 'boardSettings.nextCount');
-
-    // AI設定のスライダー値の更新
-    updateSliderAndNotify(elements.searchTime, elements.searchTimeValue, 'aiSettings.searchTime', parseFloat);
-    updateSliderAndNotify(elements.movesCount, elements.movesCountValue, 'aiSettings.movesCount');
-
-    // ブロック範囲スライダーの更新
-    if (elements.blockRange?.noUiSlider) {
-      elements.blockRange.noUiSlider.on('update', () => {
-        const values = elements.blockRange.noUiSlider.get();
-        const min = Math.round(parseFloat(values[0]));
-        const max = Math.round(parseFloat(values[1]));
-        this._updateSettings('boardSettings.blockRange', {
-          min,
-          max,
-        });
-        if (elements.blockRangeValues) {
-          elements.blockRangeValues.textContent = `${min} - ${max}`;
-        }
-      });
-    }
-
+  /**
+   * ボタンの初期化
+   */
+  _initializeButtons() {
     // シード値の再生成
-    elements.regenerateSeed?.addEventListener('click', () => {
+    this._elements.regenerateSeed?.addEventListener('click', () => {
       const newSeed = Math.random().toString(36).substring(2, 6);
       this._updateSettings('boardSettings.seed', newSeed);
-      elements.seed.value = newSeed;
+      this._elements.seed.value = newSeed;
     });
 
     // ミノモードの変更
-    elements.minoMode?.addEventListener('change', (e) => {
+    this._elements.minoMode?.addEventListener('change', (e) => {
       this._updateSettings('boardSettings.minoMode', e.target.value);
     });
 
@@ -154,7 +219,6 @@ export class SettingsPanel {
     const settings = { ...this._globalState.getSettings() };
     const keys = path.split('.');
     
-    // パスの最後のキー以外のオブジェクトを辿る
     let target = settings;
     for (let i = 0; i < keys.length - 1; i++) {
       if (!target[keys[i]]) {
@@ -163,7 +227,6 @@ export class SettingsPanel {
       target = target[keys[i]];
     }
     
-    // 最後のキーで値を更新
     target[keys[keys.length - 1]] = value;
     this._globalState.updateSettings(settings);
   }
