@@ -1,4 +1,4 @@
-import { generateBaseSeed, createSeededGenerator, getSavedSeed, saveSeed, isValidSeed } from '../utils/random.js';
+import { createSeededGenerator } from '../utils/random.js';
 import { config, minoColors } from '../utils/config.js';
 import { SettingsPanel } from './SettingsPanel.js';
 import { BoardManager } from '../modules/BoardManager.js';
@@ -78,6 +78,11 @@ export class TetrisApp {
       
       // 初期状態では空のホールド表示を作成
       this.updateHoldDisplay(null);
+
+      // 設定変更のリスナーを追加
+      this._globalState.addSettingsListener((settings) => {
+        this.handleSettingsUpdate(settings);
+      });
       
     } catch (error) {
       console.error('初期化に失敗しました:', error);
@@ -242,13 +247,13 @@ export class TetrisApp {
    * ゲーム状態の初期化
    */
   initializeGameState() {
-    this.baseSeed = getSavedSeed();
+    const settings = this._globalState.getSettings();
+    this.baseSeed = settings.boardSettings.seed;
     this.currentProblemNumber = 1;
     this.randomGenerator = createSeededGenerator(
       this.baseSeed,
       this.currentProblemNumber
     );
-    saveSeed(this.baseSeed);
   }
 
   /**
@@ -258,11 +263,6 @@ export class TetrisApp {
     // SettingsPanelのインスタンス化
     this.settingsPanel = new SettingsPanel();
 
-    // 設定変更イベントのリスナーを追加
-    document.addEventListener('settingsChanged', (event) => {
-      this.handleSettingsChanged(event.detail.settings);
-    });
-
     // 設定ボタンのイベントリスナーを追加
     this.dom.settingsButton?.addEventListener('click', () => {
       this.settingsPanel.openModal();
@@ -270,27 +270,26 @@ export class TetrisApp {
   }
 
   /**
-   * 設定変更時の処理
+   * 設定更新時の処理
    * @param {Object} settings - 新しい設定
    */
-  handleSettingsChanged(settings) {
+  handleSettingsUpdate(settings) {
     const { boardSettings } = settings;
     
-    // シード値の更新
-    if (boardSettings.seed !== this.baseSeed) {
-      this.baseSeed = boardSettings.seed;
-      saveSeed(this.baseSeed);
-      this.goToFirstProblem();
+    // 盤面サイズの変更
+    if (boardSettings.width !== this.currentWidth || 
+        boardSettings.height !== this.currentHeight) {
+      this.currentWidth = boardSettings.width;
+      this.currentHeight = boardSettings.height;
+      this.generateProblem();
     }
 
-    // 幅が変更されたかチェック
-    const oldWidth = this.currentWidth;
-    const newWidth = boardSettings.width;
-    
-    // 幅が変更された場合はAskAIボタンの状態を更新
-    // if (oldWidth !== newWidth) {
-    //   this.updateAskAIButtonState();
-    // }
+    // ネクストキューの更新
+    MinoManager.updateNextPieces(
+      this.dom.nextContainer, 
+      boardSettings, 
+      this.randomGenerator
+    );
   }
 
   /**
