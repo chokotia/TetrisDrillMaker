@@ -1,8 +1,7 @@
 import { GlobalState } from '../modules/state/GlobalState.js';
 import { AIEngineController } from '../modules/AIEngineController.js';
-import { BoardManager } from '../modules/BoardManager.js';
-import { MinoManager } from '../modules/MinoManager.js';
 import { dispatchEvent } from '../utils/eventUtils.js';
+import { showNotification } from '../utils/notificationUtils.js';
 
 /**
  * AIモーダル管理クラス
@@ -10,7 +9,6 @@ import { dispatchEvent } from '../utils/eventUtils.js';
  */
 export class AISuggestionPanel {
   _state;
-  _modalElement;
   _modal;
   _aiEngine;
   _dom;
@@ -28,7 +26,6 @@ export class AISuggestionPanel {
     };
 
     this._globalState = GlobalState.getInstance();
-
     // DOM要素の初期化
     this._initializeDOMElements();
     this._initializeModal();
@@ -91,8 +88,7 @@ export class AISuggestionPanel {
       return;
     }
 
-    this._modal = new bootstrap.Modal(this._modalElement);
-
+    this._modal = new bootstrap.Modal(this._dom.modal);
   }
 
   /**
@@ -310,6 +306,9 @@ export class AISuggestionPanel {
     this._state.status = 'error';
     this._state.statusMessage = message;
     this._updateModalDisplay();
+    
+    // エラーメッセージを通知として表示
+    showNotification(message, 'danger');
   }
 
   /**

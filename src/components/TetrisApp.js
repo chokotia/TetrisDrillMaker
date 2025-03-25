@@ -7,6 +7,7 @@ import { EditManager } from '../modules/EditManager.js';
 import { GestureManager } from '../modules/GestureManager.js';
 import { AISuggestionPanel } from './AISuggestionPanel.js';
 import { GlobalState } from '../modules/state/GlobalState.js';
+import { showNotification } from '../utils/notificationUtils.js';
 
 /**
  * テトリスアプリケーションクラス
@@ -178,7 +179,7 @@ export class TetrisApp {
       }
     } catch (error) {
       console.error('AI手の適用エラー:', error);
-      this.showNotification('AIの手を適用できませんでした', 'danger');
+      showNotification('AIの手を適用できませんでした', 'danger');
     }
   }
 
@@ -262,16 +263,10 @@ export class TetrisApp {
       this.handleSettingsChanged(event.detail.settings);
     });
 
-    // 設定エラーイベントのリスナーを追加
-    document.addEventListener('settingsError', (event) => {
-      this.showNotification(event.detail.error, 'danger');
-    });
-
     // 設定ボタンのイベントリスナーを追加
     this.dom.settingsButton?.addEventListener('click', () => {
       this.settingsPanel.openModal();
     });
-  
   }
 
   /**
@@ -768,31 +763,6 @@ export class TetrisApp {
         // アイコンを変更（目に斜線を入れた表示に）
         this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye-slash"></i>';
       }
-    }
-  }
-
-  /**
-   * 通知を表示
-   * @param {string} message - 通知メッセージ
-   * @param {string} type - 通知タイプ
-   */
-  showNotification(message, type = 'info') {
-    // 通知ライブラリが実装されていれば使用
-    if (window.Toastify) {
-      window.Toastify({
-        text: message,
-        duration: 3000,
-        close: true,
-        gravity: 'top',
-        position: 'center',
-        backgroundColor: type === 'success' ? '#28a745' : 
-                        type === 'danger' ? '#dc3545' : 
-                        type === 'warning' ? '#ffc107' : '#17a2b8'
-      }).showToast();
-    } else {
-      // フォールバックとしてコンソールに出力
-      console.log(`[${type}] ${message}`);
-      alert(message);
     }
   }
 } 
