@@ -1,8 +1,8 @@
 /**
- * AIとの通信を管理するクラス
- * AIとのインターフェースを提供
+ * AIエンジン本体
+ * テトリスの探索と評価を行う核となるロジック
  */
-export class AIManager {
+export class AIEngine {
     constructor() {
         this.worker = null;
         this.lastSuggestion = null;
@@ -54,7 +54,7 @@ export class AIManager {
 
         return new Promise((resolve, reject) => {
             try {
-                this.worker = new Worker("src/modules/core/ai/bot/freybot.js");
+                this.worker = new Worker("src/modules/core/ai/bot/freybot.js", { type: "module" });
                 this.worker.onmessage = this._handleBotMessage.bind(this);
                 this.worker.onerror = (e) => {
                     this.emit('error', `エラー: ${e.message}`);
@@ -140,6 +140,7 @@ export class AIManager {
     /**
      * AIに開始メッセージを送信
      * @param {Object} initialGameState - 初期ゲーム状態
+     * @param {string} [initialGameState.weights_name="default"] - 使用する重み設定の名前
      */
     async start(initialGameState) {
         if (!this.isInitialized || !this.worker) {
@@ -281,5 +282,5 @@ export class AIManager {
 
 // Node.js環境でモジュールとしてエクスポート
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { AIManager };
+    module.exports = { AIEngine };
 }

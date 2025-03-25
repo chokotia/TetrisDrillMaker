@@ -13,75 +13,18 @@ export function mulberry32(a) {
 }
 
 /**
- * ベースシードを生成する
- * @returns {string} 生成されたシード文字列
+ * シード付きの乱数生成器を作成
+ * @param {string} seed - シード文字列
+ * @param {number} problemNumber - 問題番号
+ * @returns {Function} 乱数生成関数
  */
-export function generateBaseSeed() {
-  const chars = 'abcdefghijklmnopqrstuvwxyz';
-  let seed = '';
-  for (let i = 0; i < 4; i++) {
-    seed += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return seed;
-}
-
-/**
- * シード値が有効かどうかを検証する
- * @param {string} seed - 検証するシード値
- * @returns {boolean} 有効な場合はtrue、無効な場合はfalse
- */
-export function isValidSeed(seed) {
-  return seed && seed.trim().length > 0;
-}
-
-/**
- * 保存されたシードを取得する
- * @returns {string|null} 保存されたシード文字列、または新しく生成したシード
- */
-export function getSavedSeed() {
-  try {
-    const savedSeed = localStorage.getItem('tetrisSeed');
-    return savedSeed && isValidSeed(savedSeed) ? savedSeed : generateBaseSeed();
-  } catch (error) {
-    console.error('シードの読み込みに失敗しました:', error);
-    return generateBaseSeed();
-  }
-}
-
-/**
- * シードを保存する
- * @param {string} seed - 保存するシード文字列
- * @returns {boolean} 保存に成功した場合はtrue
- */
-export function saveSeed(seed) {
-  if (!isValidSeed(seed)) {
-    console.error('無効なシード値です:', seed);
-    return false;
-  }
-  
-  try {
-    localStorage.setItem('tetrisSeed', seed);
-    console.log('シードを保存しました:', seed);
-    return true;
-  } catch (error) {
-    console.error('シードの保存に失敗しました:', error);
-    return false;
-  }
-}
-
-/**
- * シード付き乱数生成器を作成する
- * @param {string} base - ベースシード
- * @param {number} number - 問題番号
- * @returns {function} 乱数生成関数
- */
-export function createSeededGenerator(base, number) {
-  const seedString = `${base}_${number}`;
-  let seed = 0;
+export function createSeededGenerator(seed, problemNumber) {
+  const seedString = `${seed}_${problemNumber}`;
+  let seedValue = 0;
   for (let i = 0; i < seedString.length; i++) {
-    seed += seedString.charCodeAt(i);
+    seedValue += seedString.charCodeAt(i);
   }
-  return mulberry32(seed);
+  return mulberry32(seedValue);
 }
 
 /**
