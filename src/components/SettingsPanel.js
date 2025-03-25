@@ -50,14 +50,14 @@ export class SettingsPanel {
   /**
    * 設定モーダルを開く
    */
-  openSettingsModal() {
+  openModal() {
     this._modal?.show();
   }
 
   /**
    * 設定モーダーを閉じる
    */
-  _closeSettingsModal() {
+  _closeModal() {
     this._modal?.hide();
   }
 
@@ -179,7 +179,7 @@ export class SettingsPanel {
     });
 
     // モーダルの閉じるボタン
-    document.getElementById('close-settings')?.addEventListener('click', () => this._closeSettingsModal());
+    document.getElementById('close-settings')?.addEventListener('click', () => this._closeModal());
   }
 
   /**

@@ -1,13 +1,13 @@
-import { GlobalState } from './state/GlobalState.js';
-import { AIEngineController } from './AIEngineController.js';
-import { BoardManager } from './BoardManager.js';
-import { MinoManager } from './MinoManager.js';
+import { GlobalState } from '../modules/state/GlobalState.js';
+import { AIEngineController } from '../modules/AIEngineController.js';
+import { BoardManager } from '../modules/BoardManager.js';
+import { MinoManager } from '../modules/MinoManager.js';
 
 /**
  * AIモーダル管理クラス
  * AIモーダルの表示、操作、状態管理を担当
  */
-export class AIModalManager {
+export class AISuggestionPanel {
   _state;
   _modalElement;
   _modal;
@@ -131,7 +131,7 @@ export class AIModalManager {
 
     // モーダルの閉じるボタン
     document.getElementById('close-ai-modal')?.addEventListener('click', () => {
-      this._closeAIModal();
+      this._closeModal();
     });
   }
 
@@ -140,7 +140,7 @@ export class AIModalManager {
    * @param {Object} gameState - 現在のゲーム状態（board, queue, holdを含む）
    * @param {Object} boardSettings - ボードの設定情報
    */
-  openAIModal(gameState, boardSettings) {
+  openModal(gameState, boardSettings) {
     // 幅が10でない場合は通知を表示して処理を中断
     if (boardSettings.width !== 10) {
       this.setError('AIは幅10のボードのみ対応しています');
@@ -171,7 +171,7 @@ export class AIModalManager {
   /**
    * AIモーダルを閉じる
    */
-  _closeAIModal() {
+  _closeModal() {
     this._modal?.hide();
   }
 
@@ -190,7 +190,7 @@ export class AIModalManager {
     const currentMove = this._globalState.getCurrentMove();
     if (currentMove) {
       this._dispatchEvent('aiMoveSelected', { move: currentMove });
-      this._closeAIModal();
+      this._closeModal();
     }
   }
 

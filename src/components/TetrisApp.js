@@ -5,7 +5,7 @@ import { BoardManager } from '../modules/BoardManager.js';
 import { MinoManager } from '../modules/MinoManager.js';
 import { EditManager } from '../modules/EditManager.js';
 import { GestureManager } from '../modules/GestureManager.js';
-import { AIModalManager } from '../modules/AIModalManager.js';
+import { AISuggestionPanel } from './AISuggestionPanel.js';
 import { GlobalState } from '../modules/state/GlobalState.js';
 
 /**
@@ -87,8 +87,8 @@ export class TetrisApp {
    * AIモーダルを初期化
    */
   async initializeAIModal() {
-    this.aiModalManager = new AIModalManager();
-    await this.aiModalManager.initialize();
+    this.aiPanel = new AISuggestionPanel();
+    await this.aiPanel.initialize();
 
     // AIモーダルが閉じられた時のイベントリスナーを追加
     document.addEventListener('aiModalClosed', () => {
@@ -115,7 +115,7 @@ export class TetrisApp {
       const hold = null;
       const settings = this.settingsPanel.getSettings();
       
-      this.aiModalManager.openAIModal(
+      this.aiPanel.openModal(
         { board, queue, hold },
         settings.boardSettings
       );
@@ -230,8 +230,8 @@ export class TetrisApp {
     }
 
     if (this.dom.aiStatusText) {
-      this.dom.aiStatusText.textContent = this.aiModalManager._state.statusMessage || 
-                                        this.aiModalManager._state.status;
+      this.dom.aiStatusText.textContent = this.aiPanel._state.statusMessage || 
+                                        this.aiPanel._state.status;
     }
   }
 
@@ -287,7 +287,7 @@ export class TetrisApp {
 
     // 設定ボタンのイベントリスナーを追加
     this.dom.settingsButton?.addEventListener('click', () => {
-      this.settingsPanel.openSettingsModal();
+      this.settingsPanel.openModal();
     });
   
   }
