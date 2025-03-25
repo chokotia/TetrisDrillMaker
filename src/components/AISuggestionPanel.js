@@ -2,6 +2,7 @@ import { GlobalState } from '../modules/state/GlobalState.js';
 import { AIEngineController } from '../modules/AIEngineController.js';
 import { BoardManager } from '../modules/BoardManager.js';
 import { MinoManager } from '../modules/MinoManager.js';
+import { dispatchEvent } from '../utils/eventUtils.js';
 
 /**
  * AIモーダル管理クラス
@@ -91,7 +92,7 @@ export class AISuggestionPanel {
     try {
       this._modal = new bootstrap.Modal(this._dom.modal);
       this._dom.modal.addEventListener('hidden.bs.modal', () => {
-        this._dispatchEvent('aiModalClosed', {});
+        dispatchEvent('aiModalClosed', {});
       });
     } catch (error) {
       console.error('モーダルの初期化に失敗しました:', error);
@@ -189,7 +190,7 @@ export class AISuggestionPanel {
   _applySelectedAIMove() {
     const currentMove = this._globalState.getCurrentMove();
     if (currentMove) {
-      this._dispatchEvent('aiMoveSelected', { move: currentMove });
+      dispatchEvent('aiMoveSelected', { move: currentMove });
       this._closeModal();
     }
   }
@@ -355,17 +356,5 @@ export class AISuggestionPanel {
       orientation,
       position
     };
-  }
-
-  /**
-   * イベントを発火する
-   * @param {string} eventName - イベント名
-   * @param {Object} detail - イベントの詳細データ
-   */
-  _dispatchEvent(eventName, detail) {
-    const event = new CustomEvent(eventName, {
-      detail: detail
-    });
-    document.dispatchEvent(event);
   }
 } 

@@ -1,4 +1,5 @@
 import { config, defaultSettings } from '../utils/config.js';
+import { dispatchEvent } from '../utils/eventUtils.js';
 
 /**
  * 設定管理クラス
@@ -71,7 +72,7 @@ export class SettingsPanel {
     }
 
     this._modalElement.addEventListener('hidden.bs.modal', () => {
-      this._dispatchEvent('settingsModalClosed', {});
+      dispatchEvent('settingsModalClosed', {});
     });
     this._modal = new bootstrap.Modal(this._modalElement);
   }
@@ -84,7 +85,7 @@ export class SettingsPanel {
     const updateAndNotify = () => {
       if (this._validateSettings(this._state)) {
         this._saveSettings(this._state);
-        this._dispatchEvent('settingsChanged', { settings: this._state });
+        dispatchEvent('settingsChanged', { settings: this._state });
       }
     };
 
@@ -210,7 +211,7 @@ export class SettingsPanel {
       localStorage.setItem('tetrisSettings', JSON.stringify(settings));
     } catch (error) {
       console.error('設定の保存に失敗しました:', error);
-      this._dispatchEvent('settingsError', { error: '設定の保存に失敗しました' });
+      dispatchEvent('settingsError', { error: '設定の保存に失敗しました' });
     }
   }
 
@@ -230,7 +231,7 @@ export class SettingsPanel {
       }
     } catch (error) {
       console.error('設定の読み込みに失敗しました:', error);
-      this._dispatchEvent('settingsError', { error: '設定の読み込みに失敗しました' });
+      dispatchEvent('settingsError', { error: '設定の読み込みに失敗しました' });
     }
   }
 
@@ -362,17 +363,5 @@ export class SettingsPanel {
       aiSettings.movesCount >= 1 &&
       aiSettings.movesCount <= 20
     );
-  }
-
-  /**
-   * イベントを発火する
-   * @param {string} eventName - イベント名
-   * @param {Object} detail - イベントの詳細データ
-   */
-  _dispatchEvent(eventName, detail) {
-    const event = new CustomEvent(eventName, {
-      detail: detail
-    });
-    document.dispatchEvent(event);
   }
 } 
