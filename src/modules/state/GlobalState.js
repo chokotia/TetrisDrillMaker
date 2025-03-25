@@ -303,4 +303,24 @@ export class GlobalState {
     const settings = this.getSettings();
     this._state.settingsListeners.forEach(listener => listener(settings));
   }
+
+  /**
+   * 次の手に移動
+   */
+  moveToNextAIMove() {
+    if (this._state.ai.currentIndex < this._state.ai.moves.length - 1) {
+      this._state.ai.currentIndex++;
+      this._notifyAIStateListeners();
+    }
+  }
+
+  /**
+   * 前の手に移動
+   */
+  moveToPreviousAIMove() {
+    if (this._state.ai.currentIndex > 0) {
+      this._state.ai.currentIndex--;
+      this._notifyAIStateListeners();
+    }
+  }
 } 

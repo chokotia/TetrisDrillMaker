@@ -57,7 +57,6 @@ export class TetrisApp {
       aiMoveText: document.getElementById('ai-move-text'),
       aiNextButton: document.getElementById('ai-next-button'),
       aiPrevButton: document.getElementById('ai-prev-button'),
-      aiStatusText: document.getElementById('ai-status-text')
     };
 
     return this.dom;
@@ -73,6 +72,7 @@ export class TetrisApp {
       this.initializeSettingsModal();
       this.initializeAIModal();
       this.initializeControls();
+      this.initializeAIStateDisplay();
       this.goToFirstProblem();
       this.logInitializationInfo();
       
@@ -194,17 +194,16 @@ export class TetrisApp {
   initializeAIStateDisplay() {
     // AIの状態の監視を開始
     this._globalState.addAIStateListener((state) => {
-      this.updateAIStateDisplay
-      (state);
+      this.updateAIStateDisplay(state);
     });
 
     // ボタンのイベントリスナーを設定
     this.dom.aiNextButton?.addEventListener('click', () => {
-		// TODO: 
+      this._globalState.moveToNextAIMove();
     });
 
     this.dom.aiPrevButton?.addEventListener('click', () => {
-    	// TODO: 
+      this._globalState.moveToPreviousAIMove();
     });
   }
 
@@ -213,8 +212,15 @@ export class TetrisApp {
    */
   updateAIStateDisplay(state) {
     if (this.dom.aiMoveText) {
-      this.dom.aiMoveText.textContent = state.currentMove ? 
-        this._formatMove(state.currentMove) : '';
+      if (state.currentMove) {
+        const formattedMove = this._formatMove(state.currentMove);
+        this.dom.aiMoveText.innerHTML = `
+          <span class="ai-piece-type ${formattedMove.minoType}">${formattedMove.minoType}</span>
+          <span>${state.currentIndex + 1}手目: ${formattedMove.orientation}, ${formattedMove.position}</span>
+        `;
+      } else {
+        this.dom.aiMoveText.textContent = '';
+      }
     }
     
     if (this.dom.aiNextButton) {
@@ -224,23 +230,33 @@ export class TetrisApp {
     if (this.dom.aiPrevButton) {
       this.dom.aiPrevButton.disabled = state.currentIndex <= 0;
     }
-
-    if (this.dom.aiStatusText) {
-      this.dom.aiStatusText.textContent = this.aiPanel._state.statusMessage || 
-                                        this.aiPanel._state.status;
-    }
   }
 
   /**
    * 手の情報を文字列にフォーマット
    * @param {Object} move - 手の情報
-   * @returns {string} - フォーマットされた文字列
+   * @returns {Object} - フォーマットされた手の情報
    * @private
    */
   _formatMove(move) {
-    if (!move) return '不明な手';
-    const { piece, rotation, x } = move;
-    return `${piece}を${rotation}度回転して${x}列目に配置`;
+    if (!move || !move.suggestion || !move.suggestion.move || !move.suggestion.move.location) {
+      return {
+        minoType: '不明',
+        orientation: '不明',
+        position: '不明'
+      };
+    }
+    
+    const moveLocation = move.suggestion.move.location;
+    const minoType = moveLocation.type;
+    const orientation = moveLocation.orientation;
+    const position = `x:${moveLocation.adjustedRange.x}, y:${moveLocation.adjustedRange.y}`;  
+
+    return {
+      minoType,
+      orientation,
+      position
+    };
   }
 
   /**

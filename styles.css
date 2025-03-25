@@ -364,7 +364,7 @@ body {
   cursor: not-allowed;
 }
 
-.ai-move-current {
+#ai-move-text {
   background: rgba(255, 255, 255, 0.3);
   font-weight: bold;
   color: #ffffff;
