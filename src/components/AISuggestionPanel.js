@@ -91,15 +91,8 @@ export class AISuggestionPanel {
       return;
     }
 
-    try {
-      this._modal = new bootstrap.Modal(this._dom.modal);
-      this._dom.modal.addEventListener('hidden.bs.modal', () => {
-        dispatchEvent('aiModalClosed', {});
-      });
-    } catch (error) {
-      console.error('モーダルの初期化に失敗しました:', error);
-      this._modal = null;
-    }
+    this._modal = new bootstrap.Modal(this._modalElement);
+
   }
 
   /**
@@ -176,6 +169,10 @@ export class AISuggestionPanel {
    * AIモーダルを閉じる
    */
   _closeModal() {
+    // モーダルを閉じる前にフォーカスを外す
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
     this._modal?.hide();
   }
 

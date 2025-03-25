@@ -90,14 +90,6 @@ export class TetrisApp {
     this.aiPanel = new AISuggestionPanel();
     await this.aiPanel.initialize();
 
-    // AIモーダルが閉じられた時のイベントリスナーを追加
-    document.addEventListener('aiModalClosed', () => {
-      // モーダル内の要素からフォーカスを外す
-      document.activeElement.blur();
-      // フォーカスをボディに移す
-      document.body.focus();
-    });
-
     // AIの手が選択された時のイベントリスナーを追加
     document.addEventListener('aiMoveSelected', (event) => {
       const move = event.detail.move;
@@ -273,14 +265,6 @@ export class TetrisApp {
     // 設定エラーイベントのリスナーを追加
     document.addEventListener('settingsError', (event) => {
       this.showNotification(event.detail.error, 'danger');
-    });
-
-    // 設定モーダルが閉じられた時のイベントリスナーを追加
-    document.addEventListener('settingsModalClosed', () => {
-      // モーダル内の要素からフォーカスを外す
-      document.activeElement.blur();
-      // フォーカスをボディに移す
-      document.body.focus();
     });
 
     // 設定ボタンのイベントリスナーを追加

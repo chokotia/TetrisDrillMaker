@@ -31,6 +31,10 @@ export class SettingsPanel {
    * 設定モーダーを閉じる
    */
   _closeModal() {
+    // モーダルを閉じる前にフォーカスを外す
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
     this._modal?.hide();
   }
 
@@ -43,9 +47,6 @@ export class SettingsPanel {
       return;
     }
 
-    this._modalElement.addEventListener('hidden.bs.modal', () => {
-      dispatchEvent('settingsModalClosed', {});
-    });
     this._modal = new bootstrap.Modal(this._modalElement);
   }
 
