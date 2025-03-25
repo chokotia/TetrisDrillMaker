@@ -1,6 +1,6 @@
 import { generateBaseSeed, createSeededGenerator, getSavedSeed, saveSeed, isValidSeed } from '../utils/random.js';
 import { config, minoColors } from '../utils/config.js';
-import { SettingsManager } from '../modules/SettingsManager.js';
+import { SettingsPanel } from './SettingsPanel.js';
 import { BoardManager } from '../modules/BoardManager.js';
 import { MinoManager } from '../modules/MinoManager.js';
 import { EditManager } from '../modules/EditManager.js';
@@ -24,7 +24,7 @@ export class TetrisApp {
     this.currentHeight = 0;
     this.editState = EditManager.initialize();
     this.dom = null;
-    this.settingsManager = null;
+    this.settingsPanel = null;
     this._globalState = GlobalState.getInstance();
 
     document.addEventListener('DOMContentLoaded', () => this.initializeApp());
@@ -113,7 +113,7 @@ export class TetrisApp {
       );
       const queue = MinoManager.getQueueForAI();
       const hold = null;
-      const settings = this.settingsManager.getSettings();
+      const settings = this.settingsPanel.getSettings();
       
       this.aiModalManager.openAIModal(
         { board, queue, hold },
@@ -264,8 +264,8 @@ export class TetrisApp {
    * 設定モーダルの初期化
    */
   initializeSettingsModal() {
-    // SettingsManagerのインスタンス化
-    this.settingsManager = new SettingsManager();
+    // SettingsPanelのインスタンス化
+    this.settingsPanel = new SettingsPanel();
 
     // 設定変更イベントのリスナーを追加
     document.addEventListener('settingsChanged', (event) => {
@@ -287,7 +287,7 @@ export class TetrisApp {
 
     // 設定ボタンのイベントリスナーを追加
     this.dom.settingsButton?.addEventListener('click', () => {
-      this.settingsManager.openSettingsModal();
+      this.settingsPanel.openSettingsModal();
     });
   
   }
@@ -535,7 +535,7 @@ export class TetrisApp {
    * 使用済みピースを削除
    */
   removeUsedPieces() {
-    const settings = SettingsManager.getSettings(this.dom);
+    const settings = SettingsPanel.getSettings(this.dom);
     MinoManager.removeUsedPieces(this.dom.nextContainer, settings);
   }
 
@@ -544,7 +544,7 @@ export class TetrisApp {
    */
   generateProblem() {
     // 保存されている設定を取得
-    const settings = this.settingsManager.getSettings();
+    const settings = this.settingsPanel.getSettings();
     const { boardSettings } = settings;
     
     let { min: blockCountMin, max: blockCountMax } = boardSettings.blockRange;

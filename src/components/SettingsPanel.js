@@ -4,7 +4,7 @@ import { config, defaultSettings } from '../utils/config.js';
  * 設定管理クラス
  * アプリケーション設定の読み込み、検証、保存を担当
  */
-export class SettingsManager {
+export class SettingsPanel {
   _state;
   _modalElement;
   _modal;
