@@ -73,7 +73,7 @@ export class TetrisApp {
       this.initializeSettingsModal();
       this.initializeAIModal();
       this.initializeControls();
-      this.generateFirstProblem();
+      this.goToFirstProblem();
       this.logInitializationInfo();
       
       // 初期状態では空のホールド表示を作成
@@ -281,7 +281,6 @@ export class TetrisApp {
         boardSettings.height !== this.currentHeight) {
       this.currentWidth = boardSettings.width;
       this.currentHeight = boardSettings.height;
-      this.generateProblem();
     }
 
     // ネクストキューの更新
@@ -290,6 +289,8 @@ export class TetrisApp {
       boardSettings, 
       this.randomGenerator
     );
+
+    this.goToFirstProblem();
   }
 
   /**
@@ -299,13 +300,6 @@ export class TetrisApp {
     this.setupAllEventListeners();
     this.setupGestureControls();
     this.setupEditButtons();
-  }
-
-  /**
-   * 最初の問題を生成
-   */
-  generateFirstProblem() {
-    this.generateProblem();
   }
 
   /**
