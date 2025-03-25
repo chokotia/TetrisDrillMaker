@@ -145,8 +145,9 @@ export class AIEngineController {
      * AI探索を開始
      * @param {Object} gameState - ゲームの現在状態
      * @param {number} grayColumnCount - 左端から連続して存在するグレーミノの列数
+     * @param {string} weights_name - 使用する重み設定の名前
      */
-    async startSearch(gameState, grayColumnCount = 0) {
+    async startSearch(gameState, grayColumnCount = 0, weights_name = "default") {
         if (this.isCalculating) {
             this.stopSearch();
         }
@@ -161,6 +162,9 @@ export class AIEngineController {
                 gameState.queue,
                 gameState.hold
             );
+            
+            // 重み設定名を追加
+            aiGameState.weights_name = weights_name;
             
             // AIにゲーム状態を送信
             await this.aiEngine.start(aiGameState);

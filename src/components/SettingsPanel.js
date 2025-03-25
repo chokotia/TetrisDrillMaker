@@ -41,6 +41,7 @@ export class SettingsPanel {
       searchTimeValue: document.getElementById('ai-search-time-value'),
       movesCount: document.getElementById('ai-moves-count'),
       movesCountValue: document.getElementById('ai-moves-count-value'),
+      weightsName: document.getElementById('ai-weights-name'),
     };
   }
 
@@ -78,6 +79,7 @@ export class SettingsPanel {
     this._elements.seed.value = settings.boardSettings.seed;
     this._updateSliderValue('searchTime', settings.aiSettings.searchTime, parseFloat);
     this._updateSliderValue('movesCount', settings.aiSettings.movesCount);
+    this._elements.weightsName.value = settings.aiSettings.weights_name;
   }
 
   /**
@@ -204,6 +206,11 @@ export class SettingsPanel {
     // ミノモードの変更
     this._elements.minoMode?.addEventListener('change', (e) => {
       this._updateSettings('boardSettings.minoMode', e.target.value);
+    });
+
+    // 重み設定の変更
+    this._elements.weightsName?.addEventListener('change', (e) => {
+      this._updateSettings('aiSettings.weights_name', e.target.value);
     });
 
     // モーダルの閉じるボタン

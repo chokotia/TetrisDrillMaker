@@ -54,7 +54,7 @@ export class AIEngine {
 
         return new Promise((resolve, reject) => {
             try {
-                this.worker = new Worker("src/modules/core/ai/bot/freybot.js");
+                this.worker = new Worker("src/modules/core/ai/bot/freybot.js", { type: "module" });
                 this.worker.onmessage = this._handleBotMessage.bind(this);
                 this.worker.onerror = (e) => {
                     this.emit('error', `エラー: ${e.message}`);
@@ -140,6 +140,7 @@ export class AIEngine {
     /**
      * AIに開始メッセージを送信
      * @param {Object} initialGameState - 初期ゲーム状態
+     * @param {string} [initialGameState.weights_name="default"] - 使用する重み設定の名前
      */
     async start(initialGameState) {
         if (!this.isInitialized || !this.worker) {

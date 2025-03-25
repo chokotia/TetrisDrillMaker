@@ -175,9 +175,23 @@ export class AISuggestionPanel {
   /**
    * AI探索を開始
    */
-  _startAISearch() {
-    if (!this._gameState) return;
-    this._aiEngine.startSearch(this._gameState);
+  async _startAISearch() {
+    if (!this._gameState) {
+      this.setError('ゲーム状態が設定されていません');
+      return;
+    }
+
+    try {
+      this.updateSearchStatus(true, '探索中...');
+      const settings = this._globalState.getSettings();
+      await this._aiEngine.startSearch(
+        this._gameState,
+        0,
+        settings.aiSettings.weights_name
+      );
+    } catch (error) {
+      this.setError(`探索エラー: ${error.message}`);
+    }
   }
 
   /**

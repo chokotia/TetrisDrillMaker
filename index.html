@@ -264,7 +264,15 @@
               <hr />
               <h3 class="fs-6 mb-3">AI設定</h3>
               <div class="mb-3">
-                <label for="ai-search-time" class="form-label">1手ごとの試行時間 (秒):</label>
+                <label for="ai-weights-name" class="form-label">重み設定:</label>
+                <select id="ai-weights-name" class="form-select">
+                  <option value="default">デフォルト</option>
+                  <option value="rightWellFlat">右端空け平積み</option>
+                  <option value="stableStack">安定積み（試験中）</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="ai-search-time" class="form-label">探索時間 (秒):</label>
                 <div class="d-flex align-items-center gap-2">
                   <input
                     id="ai-search-time"

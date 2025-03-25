@@ -1,3 +1,5 @@
+import { weights } from './weights.js';
+
 const jstrisToCenterX = [[1, 2, 2, 1], [1, 1, 2, 2], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]]
   , jstrisToCenterY = [[1, 1, 2, 2], [2, 1, 1, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
   , pIndex = ["I", "O", "T", "L", "J", "S", "Z"]
@@ -1377,6 +1379,12 @@ onmessage = function(t) {
         if (!validationResult.isValid) {
             aiLog("error: "+ validationResult.message);
             return;
+        }
+
+        // weights_nameが指定されている場合のみ、対応する重みを読み込む
+        if (e.weights_name && weights[e.weights_name]) {
+            aiLog(`重み設定: ${e.weights_name}`);
+            bot.loadWeights(weights[e.weights_name]);
         }
 
         let t = {

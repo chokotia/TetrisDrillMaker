@@ -32,6 +32,7 @@ export class GlobalState {
         aiSettings: {
           searchTime: 1.0,
           movesCount: 5,
+          weights_name: "default"
         }
       },
       settingsListeners: new Set()

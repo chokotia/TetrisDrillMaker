@@ -124,6 +124,11 @@ export class TetrisApp {
    */
   applyAIMove(move) {
     try {
+
+      if (move == null) {
+        return;
+      }
+
       // 現在の表示状態を記憶
       const board = this.dom.board;
       const isBoardHidden = board.getAttribute('data-visible') === 'false';
@@ -195,6 +200,7 @@ export class TetrisApp {
     // AIの状態の監視を開始
     this._globalState.addAIStateListener((state) => {
       this.updateAIStateDisplay(state);
+      this.applyAIMove(state.currentMove);
     });
 
     // ボタンのイベントリスナーを設定
