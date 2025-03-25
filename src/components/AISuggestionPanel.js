@@ -20,9 +20,11 @@ export class AISuggestionPanel {
   constructor() {
     this._aiEngine = new AIEngineController();
     this._state = {
-      isSearching: false,
-      status: 'waiting',
-      statusMessage: ''
+      status: 'idle',
+      statusMessage: '',
+      moves: [],
+      currentIndex: -1,
+      currentMove: null
     };
 
     this._globalState = GlobalState.getInstance();
@@ -139,9 +141,10 @@ export class AISuggestionPanel {
   /**
    * モーダルを開く
    * @param {Object} gameState - 現在のゲーム状態（board, queue, holdを含む）
-   * @param {Object} boardSettings - ボードの設定情報
    */
-  openModal(gameState, boardSettings) {
+  openModal(gameState) {
+    const boardSettings = this._globalState.getSettings().boardSettings;
+    
     // 幅が10でない場合は通知を表示して処理を中断
     if (boardSettings.width !== 10) {
       this.setError('AIは幅10のボードのみ対応しています');

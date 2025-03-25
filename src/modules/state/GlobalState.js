@@ -1,3 +1,5 @@
+import { config, defaultSettings } from '../../utils/config.js';
+
 /**
  * グローバルな状態管理クラス
  */
@@ -14,8 +16,29 @@ export class GlobalState {
         moves: [],
         currentIndex: -1,
         listeners: new Set()
-      }
+      },
+      settings: {
+        boardSettings: {
+          width: defaultSettings.width,
+          height: defaultSettings.height,
+          nextCount: defaultSettings.nextCount,
+          blockRange: {
+            min: defaultSettings.blockCountMin,
+            max: defaultSettings.blockCountMax,
+          },
+          minoMode: defaultSettings.minoMode,
+          seed: Math.random().toString(36).substring(2, 15),
+        },
+        aiSettings: {
+          searchTime: 1.0,
+          movesCount: 5,
+        }
+      },
+      settingsListeners: new Set()
     };
+    
+    // 設定の読み込み
+    this._loadSettings();
     
     GlobalState._instance = this;
   }
@@ -138,5 +161,146 @@ export class GlobalState {
     const index = this._state.ai.currentIndex;
     return index >= 0 && index < this._state.ai.moves.length ? 
       this._state.ai.moves[index] : null;
+  }
+
+  /**
+   * 設定の取得
+   * @returns {Object} 現在の設定
+   */
+  getSettings() {
+    return this._state.settings;
+  }
+
+  /**
+   * 設定の更新
+   * @param {Object} newSettings - 新しい設定
+   */
+  updateSettings(newSettings) {
+    if (this._validateSettings(newSettings)) {
+      this._state.settings = newSettings;
+      this._saveSettings(newSettings);
+      this._notifySettingsListeners();
+    }
+  }
+
+  /**
+   * 設定の変更を監視
+   * @param {Function} callback - 設定変更時に呼び出されるコールバック
+   */
+  addSettingsListener(callback) {
+    this._state.settingsListeners.add(callback);
+  }
+
+  /**
+   * 設定の監視を解除
+   * @param {Function} callback - 解除するコールバック
+   */
+  removeSettingsListener(callback) {
+    this._state.settingsListeners.delete(callback);
+  }
+
+  /**
+   * 設定の保存
+   * @private
+   */
+  _saveSettings(settings) {
+    try {
+      localStorage.setItem('tetrisSettings', JSON.stringify(settings));
+    } catch (error) {
+      console.error('設定の保存に失敗しました:', error);
+    }
+  }
+
+  /**
+   * 保存された設定の読み込み
+   * @private
+   */
+  _loadSettings() {
+    try {
+      const savedSettings = localStorage.getItem('tetrisSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        if (this._validateSettings(settings)) {
+          this._state.settings = settings;
+        } else {
+          console.warn('保存された設定が無効です。デフォルト設定を使用します。');
+        }
+      }
+    } catch (error) {
+      console.error('設定の読み込みに失敗しました:', error);
+    }
+  }
+
+  /**
+   * 設定の検証
+   * @private
+   */
+  _validateSettings(settings) {
+    if (!settings || typeof settings !== 'object') {
+      return false;
+    }
+
+    const { boardSettings, aiSettings } = settings;
+    
+    return (
+      this._validateBoardSettings(boardSettings) &&
+      this._validateAISettings(aiSettings)
+    );
+  }
+
+  /**
+   * 盤面設定の検証
+   * @private
+   */
+  _validateBoardSettings(boardSettings) {
+    if (!boardSettings || typeof boardSettings !== 'object') {
+      return false;
+    }
+
+    const isValidBoardSize = (
+      boardSettings.width >= config.BOARD.MIN_WIDTH &&
+      boardSettings.width <= config.BOARD.MAX_WIDTH &&
+      boardSettings.height >= config.BOARD.MIN_HEIGHT &&
+      boardSettings.height <= config.BOARD.MAX_HEIGHT
+    );
+
+    const isValidNextCount = (
+      boardSettings.nextCount >= config.NEXT.MIN_COUNT &&
+      boardSettings.nextCount <= config.NEXT.MAX_COUNT
+    );
+
+    const isValidBlockRange = (
+      boardSettings.blockRange?.min >= config.BLOCKS.MIN_COUNT &&
+      boardSettings.blockRange?.max <= config.BLOCKS.MAX_COUNT &&
+      boardSettings.blockRange?.min <= boardSettings.blockRange?.max
+    );
+
+    return isValidBoardSize && isValidNextCount && isValidBlockRange;
+  }
+
+  /**
+   * AI設定の検証
+   * @private
+   */
+  _validateAISettings(aiSettings) {
+    if (!aiSettings || typeof aiSettings !== 'object') {
+      return false;
+    }
+
+    return (
+      aiSettings.searchTime >= 0.5 &&
+      aiSettings.searchTime <= 10 &&
+      aiSettings.movesCount >= 1 &&
+      aiSettings.movesCount <= 20
+    );
+  }
+
+  /**
+   * 設定変更をリスナーに通知
+   * @private
+   */
+  _notifySettingsListeners() {
+    const settings = this.getSettings();
+    this._state.settingsListeners.forEach(listener => listener(settings));
   }
 } 

@@ -113,11 +113,9 @@ export class TetrisApp {
       );
       const queue = MinoManager.getQueueForAI();
       const hold = null;
-      const settings = this.settingsPanel.getSettings();
       
       this.aiPanel.openModal(
-        { board, queue, hold },
-        settings.boardSettings
+        { board, queue, hold }
       );
     });
   }
@@ -535,7 +533,7 @@ export class TetrisApp {
    * 使用済みピースを削除
    */
   removeUsedPieces() {
-    const settings = SettingsPanel.getSettings(this.dom);
+    const settings = this._globalState.getSettings();
     MinoManager.removeUsedPieces(this.dom.nextContainer, settings);
   }
 
@@ -544,7 +542,7 @@ export class TetrisApp {
    */
   generateProblem() {
     // 保存されている設定を取得
-    const settings = this.settingsPanel.getSettings();
+    const settings = this._globalState.getSettings();
     const { boardSettings } = settings;
     
     let { min: blockCountMin, max: blockCountMax } = boardSettings.blockRange;

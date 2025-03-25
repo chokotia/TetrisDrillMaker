@@ -1,51 +1,23 @@
 import { config, defaultSettings } from '../utils/config.js';
 import { dispatchEvent } from '../utils/eventUtils.js';
+import { GlobalState } from '../modules/state/GlobalState.js';
 
 /**
  * 設定管理クラス
- * アプリケーション設定の読み込み、検証、保存を担当
+ * アプリケーション設定のUI表示とユーザーインタラクションを担当
  */
 export class SettingsPanel {
-  _state;
   _modalElement;
   _modal;
+  _globalState;
 
   constructor() {
-    // 反応的なデータモデル
-    this._state = {
-      boardSettings: {
-        width: defaultSettings.width,
-        height: defaultSettings.height,
-        nextCount: defaultSettings.nextCount,
-        blockRange: {
-          min: defaultSettings.blockCountMin,
-          max: defaultSettings.blockCountMax,
-        },
-        minoMode: defaultSettings.minoMode,
-        seed: Math.random().toString(36).substring(2, 15),
-      },
-      aiSettings: {
-        searchTime: 1.0,
-        movesCount: 5,
-      }
-    };
-
-    // 設定の読み込み
-    this._loadSettings();
-
+    this._globalState = GlobalState.getInstance();
+    
     // DOM要素の初期化
     this._modalElement = document.getElementById('settings-modal');
     this._initializeModal();
     this._initializeEventListeners();
-    
-  }
-
-  /**
-   * 設定の取得
-   * @returns {Object} 現在の設定
-   */
-  getSettings() {
-    return this._state;
   }
 
   /**
@@ -81,14 +53,6 @@ export class SettingsPanel {
    * イベントリスナーの初期化
    */
   _initializeEventListeners() {
-    // 設定の更新とイベント発行の共通処理
-    const updateAndNotify = () => {
-      if (this._validateSettings(this._state)) {
-        this._saveSettings(this._state);
-        dispatchEvent('settingsChanged', { settings: this._state });
-      }
-    };
-
     // DOM要素の取得
     const elements = {
       width: document.getElementById('width'),
@@ -111,7 +75,8 @@ export class SettingsPanel {
     // ブロック範囲スライダーの初期化
     if (elements.blockRange) {
       noUiSlider.create(elements.blockRange, {
-        start: [this._state.boardSettings.blockRange.min, this._state.boardSettings.blockRange.max],
+        start: [this._globalState.getSettings().boardSettings.blockRange.min, 
+                this._globalState.getSettings().boardSettings.blockRange.max],
         connect: true,
         range: {
           'min': config.BLOCKS.MIN_COUNT,
@@ -130,11 +95,10 @@ export class SettingsPanel {
       if (element) {
         element.addEventListener('input', () => {
           const value = parser(element.value, 10);
-          this._updateState(path, value);
+          this._updateSettings(path, value);
           if (valueElement) {
             valueElement.textContent = value;
           }
-          updateAndNotify();
         });
       }
     };
@@ -154,29 +118,26 @@ export class SettingsPanel {
         const values = elements.blockRange.noUiSlider.get();
         const min = Math.round(parseFloat(values[0]));
         const max = Math.round(parseFloat(values[1]));
-        this._updateState('boardSettings.blockRange', {
+        this._updateSettings('boardSettings.blockRange', {
           min,
           max,
         });
         if (elements.blockRangeValues) {
           elements.blockRangeValues.textContent = `${min} - ${max}`;
         }
-        updateAndNotify();
       });
     }
 
     // シード値の再生成
     elements.regenerateSeed?.addEventListener('click', () => {
       const newSeed = Math.random().toString(36).substring(2, 6);
-      this._updateState('boardSettings.seed', newSeed);
+      this._updateSettings('boardSettings.seed', newSeed);
       elements.seed.value = newSeed;
-      updateAndNotify();
     });
 
     // ミノモードの変更
     elements.minoMode?.addEventListener('change', (e) => {
-      this._updateState('boardSettings.minoMode', e.target.value);
-      updateAndNotify();
+      this._updateSettings('boardSettings.minoMode', e.target.value);
     });
 
     // モーダルの閉じるボタン
@@ -184,184 +145,25 @@ export class SettingsPanel {
   }
 
   /**
-   * 状態の更新
-   * @param {string} path - 更新する状態のパス（例: 'boardSettings.width'）
+   * 設定の更新
+   * @param {string} path - 更新する設定のパス
    * @param {any} value - 新しい値
    */
-  _updateState(path, value) {
+  _updateSettings(path, value) {
+    const settings = { ...this._globalState.getSettings() };
     const keys = path.split('.');
-    let current = this._state;
     
+    // パスの最後のキー以外のオブジェクトを辿る
+    let target = settings;
     for (let i = 0; i < keys.length - 1; i++) {
-      current = current[keys[i]];
-      if (!current) {
+      if (!target[keys[i]]) {
         throw new Error(`Invalid path: ${path}`);
       }
+      target = target[keys[i]];
     }
     
-    current[keys[keys.length - 1]] = value;
-  }
-
-  /**
-   * 設定の保存
-   * @param {Object} settings - 保存する設定
-   */
-  _saveSettings(settings) {
-    try {
-      localStorage.setItem('tetrisSettings', JSON.stringify(settings));
-    } catch (error) {
-      console.error('設定の保存に失敗しました:', error);
-      dispatchEvent('settingsError', { error: '設定の保存に失敗しました' });
-    }
-  }
-
-  /**
-   * 保存された設定の読み込み
-   */
-  _loadSettings() {
-    try {
-      const savedSettings = localStorage.getItem('tetrisSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        if (this._validateSettings(settings)) {
-          this._applySettings(settings);
-        } else {
-          console.warn('保存された設定が無効です。デフォルト設定を使用します。');
-        }
-      }
-    } catch (error) {
-      console.error('設定の読み込みに失敗しました:', error);
-      dispatchEvent('settingsError', { error: '設定の読み込みに失敗しました' });
-    }
-  }
-
-  /**
-   * 設定の適用
-   * @param {Object} settings - 適用する設定
-   */
-  _applySettings(settings) {
-    // DOM要素の取得
-    const elements = {
-      width: document.getElementById('width'),
-      widthValue: document.getElementById('width-value'),
-      height: document.getElementById('height'),
-      heightValue: document.getElementById('height-value'),
-      nextCount: document.getElementById('next-count'),
-      nextCountValue: document.getElementById('next-count-value'),
-      blockRange: document.getElementById('block-range-slider'),
-      blockRangeValues: document.getElementById('block-range-values'),
-      minoMode: document.getElementById('mino-mode'),
-      seed: document.getElementById('seed-value'),
-      searchTime: document.getElementById('ai-search-time'),
-      searchTimeValue: document.getElementById('ai-search-time-value'),
-      movesCount: document.getElementById('ai-moves-count'),
-      movesCountValue: document.getElementById('ai-moves-count-value'),
-    };
-
-    // 盤面設定の適用
-    const { boardSettings } = settings;
-    
-    // 幅と高さの設定
-    elements.width.value = boardSettings.width;
-    elements.widthValue.textContent = boardSettings.width;
-    elements.height.value = boardSettings.height;
-    elements.heightValue.textContent = boardSettings.height;
-
-    // NEXT数の設定
-    elements.nextCount.value = boardSettings.nextCount;
-    elements.nextCountValue.textContent = boardSettings.nextCount;
-
-    // ブロック範囲の設定
-    elements.blockRange.noUiSlider?.set([
-      boardSettings.blockRange.min,
-      boardSettings.blockRange.max,
-    ]);
-    elements.blockRangeValues.textContent = `${boardSettings.blockRange.min} - ${boardSettings.blockRange.max}`;
-
-    // ミノモードの設定
-    elements.minoMode.value = boardSettings.minoMode;
-
-    // シード値の設定
-    elements.seed.value = boardSettings.seed;
-
-    // AI設定の適用
-    const { aiSettings } = settings;
-    // 検索時間の設定
-    elements.searchTime.value = aiSettings.searchTime;
-    elements.searchTimeValue.textContent = aiSettings.searchTime;
-
-    // 手数の設定
-    elements.movesCount.value = aiSettings.movesCount;
-    elements.movesCountValue.textContent = aiSettings.movesCount;
-
-    // 状態の更新
-    this._state = settings;
-  }
-
-  /**
-   * 設定の検証
-   * @param {Object} settings - 検証する設定
-   * @returns {boolean} 有効な場合はtrue
-   */
-  _validateSettings(settings) {
-    if (!settings || typeof settings !== 'object') {
-      return false;
-    }
-
-    const { boardSettings, aiSettings } = settings;
-    
-    return (
-      this._validateBoardSettings(boardSettings) &&
-      this._validateAISettings(aiSettings)
-    );
-  }
-
-  /**
-   * 盤面設定の検証
-   * @param {Object} boardSettings - 盤面設定
-   * @returns {boolean} 有効な場合はtrue
-   */
-  _validateBoardSettings(boardSettings) {
-    if (!boardSettings || typeof boardSettings !== 'object') {
-      return false;
-    }
-
-    const isValidBoardSize = (
-      boardSettings.width >= config.BOARD.MIN_WIDTH &&
-      boardSettings.width <= config.BOARD.MAX_WIDTH &&
-      boardSettings.height >= config.BOARD.MIN_HEIGHT &&
-      boardSettings.height <= config.BOARD.MAX_HEIGHT
-    );
-
-    const isValidNextCount = (
-      boardSettings.nextCount >= config.NEXT.MIN_COUNT &&
-      boardSettings.nextCount <= config.NEXT.MAX_COUNT
-    );
-
-    const isValidBlockRange = (
-      boardSettings.blockRange?.min >= config.BLOCKS.MIN_COUNT &&
-      boardSettings.blockRange?.max <= config.BLOCKS.MAX_COUNT &&
-      boardSettings.blockRange?.min <= boardSettings.blockRange?.max
-    );
-
-    return isValidBoardSize && isValidNextCount && isValidBlockRange;
-  }
-
-  /**
-   * AI設定の検証
-   * @param {Object} aiSettings - AI設定
-   * @returns {boolean} 有効な場合はtrue
-   */
-  _validateAISettings(aiSettings) {
-    if (!aiSettings || typeof aiSettings !== 'object') {
-      return false;
-    }
-
-    return (
-      aiSettings.searchTime >= 0.5 &&
-      aiSettings.searchTime <= 10 &&
-      aiSettings.movesCount >= 1 &&
-      aiSettings.movesCount <= 20
-    );
+    // 最後のキーで値を更新
+    target[keys[keys.length - 1]] = value;
+    this._globalState.updateSettings(settings);
   }
 } 
