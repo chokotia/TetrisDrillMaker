@@ -216,8 +216,7 @@ export class TetrisApp {
    * ボタンイベントリスナーの設定
    */
   setupButtonEventListeners() {
-    this.setupEditOptionListeners();
-
+    
     // 使用済みピース削除ボタンのリスナー
     this.dom.removeUsed?.addEventListener('click', () => this.removeUsedPieces());
 
@@ -227,23 +226,7 @@ export class TetrisApp {
     // 新しい問題生成ボタンのイベントリスナー
     this.dom.newProblemButton?.addEventListener('click', () => this.generateNewProblem());
 
-  }
-
-  /**
-   * 編集オプション関連のイベントリスナー
-   */
-  setupEditOptionListeners() {
-    // editOptionButtonsがない場合は再取得を試みる
-    if (!this.dom.editOptionButtons || this.dom.editOptionButtons.length === 0) {
-      this.dom.editOptionButtons = document.querySelectorAll('.edit-option');
-    }
-    
-    // それでもない場合はエラーログを出して処理を中断
-    if (!this.dom.editOptionButtons || this.dom.editOptionButtons.length === 0) {
-      console.error('編集オプションボタンが見つかりません');
-      return;
-    }
-    
+    // 編集ボタン(auto, del, gray)のイベントリスナー
     this.dom.editOptionButtons.forEach(button => {
       button.addEventListener('click', () => {
         const action = button.dataset.action;
@@ -251,6 +234,7 @@ export class TetrisApp {
         EditManager.updateEditButtonState(this.dom.editOptionButtons, action);
       });
     });
+    
   }
 
   /**
