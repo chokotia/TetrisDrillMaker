@@ -6,6 +6,7 @@ import { MinoManager } from '../modules/MinoManager.js';
 import { EditManager } from '../modules/EditManager.js';
 import { GestureManager } from '../modules/GestureManager.js';
 import { AISuggestionPanel } from './AISuggestionPanel.js';
+import { AIControlPanel } from './AIControlPanel.js';
 import { GlobalState } from '../store/GlobalState.js';
 import { showNotification } from '../utils/notificationUtils.js';
 
@@ -26,7 +27,8 @@ export class TetrisApp {
     // コンポーネントの管理
     this.components = {
       settingsPanel: new SettingsPanel(),
-      aiSuggestionPanel: new AISuggestionPanel()
+      aiSuggestionPanel: new AISuggestionPanel(),
+      aiControlPanel: new AIControlPanel()
     };
     this.initializeApp();
   }
@@ -42,7 +44,6 @@ export class TetrisApp {
       nextContainer: document.getElementById('next'),
       holdContainer: document.getElementById('hold'),
       editNav: document.getElementById('control-panel'),
-      toggleBoard: document.getElementById('toggle-board'),
       removeUsed: document.getElementById('remove-used'),
       fillColumnButton: document.getElementById('fill-column-button'),
       clearColumnButton: document.getElementById('clear-column-button'),
@@ -51,9 +52,6 @@ export class TetrisApp {
       delButton: document.getElementById('del-button'),
       grayButton: document.getElementById('gray-button'),
       editOptionButtons: document.querySelectorAll('.edit-option'),
-      aiMoveText: document.getElementById('ai-move-text'),
-      aiNextButton: document.getElementById('ai-next-button'),
-      aiPrevButton: document.getElementById('ai-prev-button'),
       newProblemButton: document.getElementById('new-problem-button'),
     };
 
@@ -73,7 +71,6 @@ export class TetrisApp {
       
       this.initializeAIModal();
       this.generateProblem();
-      this.initializeAIStateDisplay();      
       this.setupButtonEventListeners();
 
       // ジェスチャーコントロールのセットアップ
@@ -96,6 +93,12 @@ export class TetrisApp {
       this._globalState.addSettingsListener((settings) => {
         this.handleSettingsUpdate(settings);
       });
+
+      // 各コンポーネントを初期化させるためのイベントを発行
+      const currentIndex = this._globalState.getCurrentIndex();
+      if (currentIndex >= 1) {
+        this._globalState.selectAIMove(currentIndex);
+      }
       
     } catch (error) {
       console.error('初期化に失敗しました:', error);
@@ -106,7 +109,7 @@ export class TetrisApp {
    * AIモーダルを初期化
    */
   async initializeAIModal() {
-    await this.components.aiSuggestionPanel.initialize();
+    this.components.aiSuggestionPanel.initialize();
 
     // AIの状態の監視を開始
     this._globalState.addAIStateListener((state) => {
@@ -194,83 +197,6 @@ export class TetrisApp {
   }
 
   /**
-   * ヘッダー部分のAI状態表示を初期化
-   */
-  initializeAIStateDisplay() {
-    // AIの状態の監視を開始
-    this._globalState.addAIStateListener((state) => {
-      this.updateAIStateDisplay(state);
-      this.applyAIMove(state.currentMove);
-    });
-
-    // ボタンのイベントリスナーを設定
-    this.dom.aiNextButton?.addEventListener('click', () => {
-      this._globalState.moveToNextAIMove();
-    });
-
-    this.dom.aiPrevButton?.addEventListener('click', () => {
-      this._globalState.moveToPreviousAIMove();
-    });
-
-    // 初期状態の表示を更新
-    const initialState = this._globalState.getAIState();
-    this.updateAIStateDisplay(initialState);
-    this.applyAIMove(initialState.currentMove);
-  }
-
-  /**
-   * ヘッダー部分のAI状態表示を更新
-   */
-  updateAIStateDisplay(state) {
-    if (this.dom.aiMoveText) {
-      if (state.currentMove) {
-        const formattedMove = this._formatMove(state.currentMove);
-        this.dom.aiMoveText.innerHTML = `
-          <span class="ai-piece-type ${formattedMove.minoType}">${formattedMove.minoType}</span>
-          <span>${state.currentIndex + 1}手目: ${formattedMove.orientation}, ${formattedMove.position}</span>
-        `;
-      } else {
-        this.dom.aiMoveText.textContent = '';
-      }
-    }
-    
-    if (this.dom.aiNextButton) {
-      this.dom.aiNextButton.disabled = state.currentIndex >= state.moves.length - 1;
-    }
-    
-    if (this.dom.aiPrevButton) {
-      this.dom.aiPrevButton.disabled = state.currentIndex <= 0;
-    }
-  }
-
-  /**
-   * 手の情報を文字列にフォーマット
-   * @param {Object} move - 手の情報
-   * @returns {Object} - フォーマットされた手の情報
-   * @private
-   */
-  _formatMove(move) {
-    if (!move || !move.suggestion || !move.suggestion.move || !move.suggestion.move.location) {
-      return {
-        minoType: '不明',
-        orientation: '不明',
-        position: '不明'
-      };
-    }
-    
-    const moveLocation = move.suggestion.move.location;
-    const minoType = moveLocation.type;
-    const orientation = moveLocation.orientation;
-    const position = `x:${moveLocation.adjustedRange.x}, y:${moveLocation.adjustedRange.y}`;  
-
-    return {
-      minoType,
-      orientation,
-      position
-    };
-  }
-
-  /**
    * 設定更新時の処理
    * @param {Object} settings - 新しい設定
    */
@@ -306,9 +232,6 @@ export class TetrisApp {
     // 列クリアボタンのイベントリスナー
     this.dom.clearColumnButton?.addEventListener('click', () => this.clearColumn());
     
-    // ボード表示/非表示切り替えボタンのリスナーを設定
-    this.dom.toggleBoard?.addEventListener('click', () => this.toggleBoardVisibility());
-
     // 新しい問題生成ボタンのイベントリスナー
     this.dom.newProblemButton?.addEventListener('click', () => this.generateNewProblem());
 
@@ -597,35 +520,6 @@ export class TetrisApp {
     
     // ホールドコンテナに追加
     this.dom.holdContainer.appendChild(holdPieceContainer);
-  }
-
-  /**
-   * ボードの表示/非表示を切り替える
-   */
-  toggleBoardVisibility() {
-    const board = document.getElementById('board');
-    const dummyBoard = document.getElementById('dummy-board');
-    
-    if (board && dummyBoard) {
-      // 現在のボードの状態をチェック
-      const isMainBoardActive = !board.classList.contains('d-none');
-      
-      if (isMainBoardActive) {
-        // メインボードを非表示にしてダミーボードを表示
-        board.classList.add('d-none');
-        dummyBoard.classList.remove('d-none');
-        
-        // アイコンを変更（目の表示に）
-        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye"></i>';
-      } else {
-        // ダミーボードを非表示にしてメインボードを表示
-        dummyBoard.classList.add('d-none');
-        board.classList.remove('d-none');
-        
-        // アイコンを変更（目に斜線を入れた表示に）
-        this.dom.toggleBoard.innerHTML = '<i class="bi bi-eye-slash"></i>';
-      }
-    }
   }
 
   /**
