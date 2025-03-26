@@ -1,6 +1,7 @@
 import { GlobalState } from '../store/GlobalState.js';
 import { AIEngineController } from '../modules/AIEngineController.js';
-import { dispatchEvent } from '../utils/eventUtils.js';
+import { BoardManager } from '../modules/BoardManager.js';
+import { MinoManager } from '../modules/MinoManager.js';
 import { showNotification } from '../utils/notificationUtils.js';
 
 /**
@@ -31,6 +32,22 @@ export class AISuggestionPanel {
     this._initializeModal();
     this._initializeEventListeners();
     this._setupAIEngineListeners();
+
+    // AIボタンのイベントリスナーを追加
+    this._dom.openModalButton?.addEventListener('click', () => {
+      const settings = this._globalState.getSettings();
+      const { width, height } = settings.boardSettings;
+      
+      const board = BoardManager.getCurrentBoard(
+        document.getElementById('board'), 
+        width,
+        height
+      );
+      const queue = MinoManager.getQueueForAI();
+      const hold = null;
+      
+      this.openModal({ board, queue, hold });
+    });
   }
 
   /**
@@ -70,6 +87,7 @@ export class AISuggestionPanel {
   _initializeDOMElements() {
     this._dom = {
       modal: document.getElementById('ai-modal'),
+      openModalButton: document.getElementById('ask-ai-button'),
       searchButton: document.getElementById('ai-search-button'),
       applyButton: document.getElementById('ai-apply-button'),
       resetHistoryButton: document.getElementById('ai-reset-history-button'),

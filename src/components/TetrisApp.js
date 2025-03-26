@@ -51,7 +51,6 @@ export class TetrisApp {
       delButton: document.getElementById('del-button'),
       grayButton: document.getElementById('gray-button'),
       editOptionButtons: document.querySelectorAll('.edit-option'),
-      askAIButton: document.getElementById('ask-ai-button'),
       aiMoveText: document.getElementById('ai-move-text'),
       aiNextButton: document.getElementById('ai-next-button'),
       aiPrevButton: document.getElementById('ai-prev-button'),
@@ -313,23 +312,6 @@ export class TetrisApp {
     // 新しい問題生成ボタンのイベントリスナー
     this.dom.newProblemButton?.addEventListener('click', () => this.generateNewProblem());
 
-    // AIボタンのイベントリスナーを追加
-    this.dom.askAIButton?.addEventListener('click', () => {
-      const settings = this._globalState.getSettings();
-      const { width, height } = settings.boardSettings;
-      
-      const board = BoardManager.getCurrentBoard(
-        this.dom.board, 
-        width,
-        height
-      );
-      const queue = MinoManager.getQueueForAI();
-      const hold = null;
-      
-      this.components.aiSuggestionPanel.openModal(
-        { board, queue, hold }
-      );
-    });
   }
 
   /**
