@@ -334,7 +334,7 @@ export class TetrisApp {
       const queue = MinoManager.getQueueForAI();
       const hold = null;
       
-      this.aiPanel.openModal(
+      this.components.aiSuggestionPanel.openModal(
         { board, queue, hold }
       );
     });
