@@ -19,8 +19,6 @@ export class TetrisApp {
    */
   constructor() {
     this.randomGenerator = null;
-    this.currentWidth = 0;
-    this.currentHeight = 0;
     this.editState = EditManager.initialize();
     this.dom = null;
     this._globalState = GlobalState.getInstance();
@@ -76,8 +74,8 @@ export class TetrisApp {
       this.randomGenerator = createSeededGenerator(_seed);
       
       this.initializeAIModal();
-      this.initializeAIStateDisplay();
       this.generateProblem();
+      this.initializeAIStateDisplay();      
       this.setupButtonEventListeners();
 
       // ジェスチャーコントロールのセットアップ
@@ -126,7 +124,6 @@ export class TetrisApp {
    */
   applyAIMove(move) {
     try {
-
       if (move == null) {
         return;
       }
@@ -137,11 +134,14 @@ export class TetrisApp {
       
       // ボードを更新
       if (move.suggestion && move.suggestion.board) {
+        const settings = this._globalState.getSettings();
+        const { width, height } = settings.boardSettings;
+        
         BoardManager.applyAIBoard(
           board,
           move.suggestion.board,
-          this.currentWidth,
-          this.currentHeight
+          width,
+          height
         );
       }
       
@@ -213,6 +213,11 @@ export class TetrisApp {
     this.dom.aiPrevButton?.addEventListener('click', () => {
       this._globalState.moveToPreviousAIMove();
     });
+
+    // 初期状態の表示を更新
+    const initialState = this._globalState.getAIState();
+    this.updateAIStateDisplay(initialState);
+    this.applyAIMove(initialState.currentMove);
   }
 
   /**
@@ -274,13 +279,6 @@ export class TetrisApp {
   handleSettingsUpdate(settings) {
     const { boardSettings } = settings;
     
-    // 盤面サイズの変更
-    if (boardSettings.width !== this.currentWidth || 
-        boardSettings.height !== this.currentHeight) {
-      this.currentWidth = boardSettings.width;
-      this.currentHeight = boardSettings.height;
-    }
-
     // ネクストキューの更新
     MinoManager.updateNextPieces(
       this.dom.nextContainer, 
@@ -318,10 +316,13 @@ export class TetrisApp {
 
     // AIボタンのイベントリスナーを追加
     this.dom.askAIButton?.addEventListener('click', () => {
+      const settings = this._globalState.getSettings();
+      const { width, height } = settings.boardSettings;
+      
       const board = BoardManager.getCurrentBoard(
         this.dom.board, 
-        this.currentWidth, 
-        this.currentHeight
+        width,
+        height
       );
       const queue = MinoManager.getQueueForAI();
       const hold = null;
@@ -408,11 +409,14 @@ export class TetrisApp {
 
     const index = GestureManager.getCellIndex(this.dom.board, cell);
     if (index >= 0) {
+      const settings = this._globalState.getSettings();
+      const { width, height } = settings.boardSettings;
+      
       this.handleCellClick(
         cell,
         index,
-        this.currentWidth,
-        this.currentHeight
+        width,
+        height
       );
     }
   }
@@ -482,9 +486,6 @@ export class TetrisApp {
       dummyBoard.appendChild(fragment);
     }
     
-    this.currentWidth = boardSettings.width;
-    this.currentHeight = boardSettings.height;
-    
     // 新しい問題を生成するときにネクストピースをリセット
     MinoManager.currentPieces = [];
     MinoManager.usedPieces = {};
@@ -515,8 +516,8 @@ export class TetrisApp {
     const boardElement = this.dom.board;
     if (!boardElement) return;
     
-    const width = this.currentWidth;
-    const height = this.currentHeight;
+    const settings = this._globalState.getSettings();
+    const { width, height } = settings.boardSettings;
     const cells = boardElement.querySelectorAll('.cell');
     
     // 左から順にチェックして、グレーでない列を探す
@@ -558,8 +559,8 @@ export class TetrisApp {
     const boardElement = this.dom.board;
     if (!boardElement) return;
     
-    const width = this.currentWidth;
-    const height = this.currentHeight;
+    const settings = this._globalState.getSettings();
+    const { width, height } = settings.boardSettings;
     const cells = boardElement.querySelectorAll('.cell');
     
     // 右から順にチェックして、すべてグレーの列を探す
