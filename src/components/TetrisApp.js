@@ -45,8 +45,6 @@ export class TetrisApp {
       holdContainer: document.getElementById('hold'),
       editNav: document.getElementById('control-panel'),
       removeUsed: document.getElementById('remove-used'),
-      fillColumnButton: document.getElementById('fill-column-button'),
-      clearColumnButton: document.getElementById('clear-column-button'),
       clearBoard: document.getElementById('clear-board'),
       autoButton: document.getElementById('auto-button'),
       delButton: document.getElementById('del-button'),
@@ -225,12 +223,6 @@ export class TetrisApp {
 
     // クリアボタンのイベントリスナー  
     this.dom.clearBoard?.addEventListener('click', () => this.resetToInitialBoard());
-    
-    // 列グレー化ボタンのイベントリスナー
-    this.dom.fillColumnButton?.addEventListener('click', () => this.fillColumn());
-
-    // 列クリアボタンのイベントリスナー
-    this.dom.clearColumnButton?.addEventListener('click', () => this.clearColumn());
     
     // 新しい問題生成ボタンのイベントリスナー
     this.dom.newProblemButton?.addEventListener('click', () => this.generateNewProblem());
@@ -411,91 +403,6 @@ export class TetrisApp {
    */
   calculateRandomBlockCount(min, max) {
     return Math.floor(this.randomGenerator() * (max - min + 1)) + min;
-  }
-
-  /**
-   * 次の列をグレーで埋める
-   */
-  fillColumn() {
-    const boardElement = this.dom.board;
-    if (!boardElement) return;
-    
-    const settings = this._globalState.getSettings();
-    const { width, height } = settings.boardSettings;
-    const cells = boardElement.querySelectorAll('.cell');
-    
-    // 左から順にチェックして、グレーでない列を探す
-    for (let col = 0; col < width; col++) {
-      let allGray = true;
-      
-      // この列のすべてのセルをチェック
-      for (let row = 0; row < height; row++) {
-        const index = row * width + col;
-        const cell = cells[index];
-        
-        // グレーでないセルが見つかった場合
-        if (!cell.classList.contains('block') || 
-            !BoardManager.isGrayBlock(window.getComputedStyle(cell).backgroundColor)) {
-          allGray = false;
-          break;
-        }
-      }
-      
-      // グレーでない列が見つかった場合、その列をすべてグレーにする
-      if (!allGray) {
-        for (let row = 0; row < height; row++) {
-          const index = row * width + col;
-          const cell = cells[index];
-          
-          // セルをグレーに設定
-          cell.classList.add('block');
-          cell.style.backgroundColor = minoColors.gray;
-        }
-        return; // 1列処理したら終了
-      }
-    }
-  }
-
-  /**
-   * 全部灰色の列を右側から削除する
-   */
-  clearColumn() {
-    const boardElement = this.dom.board;
-    if (!boardElement) return;
-    
-    const settings = this._globalState.getSettings();
-    const { width, height } = settings.boardSettings;
-    const cells = boardElement.querySelectorAll('.cell');
-    
-    // 右から順にチェックして、すべてグレーの列を探す
-    for (let col = width - 1; col >= 0; col--) {
-      let allGray = true;
-      
-      // この列のすべてのセルをチェック
-      for (let row = 0; row < height; row++) {
-        const index = row * width + col;
-        const cell = cells[index];
-        
-        // グレーでないセルが見つかった場合
-        if (!cell.classList.contains('block') || 
-            !BoardManager.isGrayBlock(window.getComputedStyle(cell).backgroundColor)) {
-          allGray = false;
-          break;
-        }
-      }
-      
-      // すべてグレーの列が見つかった場合、その列を空にする
-      if (allGray) {
-        for (let row = 0; row < height; row++) {
-          const index = row * width + col;
-          const cell = cells[index];
-          
-          // セルをクリア
-          BoardManager.clearCell(cell);
-        }
-        return; // 1列処理したら終了
-      }
-    }
   }
 
   /**
