@@ -390,7 +390,7 @@ export class TetrisApp {
     if (!blockRangeSlider) return;
     
     noUiSlider.create(blockRangeSlider, {
-      start: [1, 3],
+      start: [config.BLOCKS.MIN_COUNT, config.BLOCKS.MAX_COUNT],
       connect: true,
       step: 1,
       range: {

@@ -1,4 +1,5 @@
 import { GlobalState } from '../modules/state/GlobalState.js';
+import { config } from '../utils/config.js';
 
 /**
  * 設定管理クラス
@@ -140,8 +141,8 @@ export class SettingsPanel {
               settings.boardSettings.blockRange.max],
       connect: true,
       range: {
-        'min': 0,
-        'max': 1
+        'min': config.BLOCKS.MIN_COUNT,
+        'max': config.BLOCKS.MAX_COUNT
       },
       step: 1,
       format: {
