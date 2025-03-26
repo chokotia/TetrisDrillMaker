@@ -49,6 +49,8 @@ export class GlobalState {
     this._loadSettings();
     // ボードの状態の読み込み
     this._loadBoardState();
+    // AIの状態の読み込み
+    this._loadAIState();
     
     GlobalState._instance = this;
   }
@@ -69,6 +71,7 @@ export class GlobalState {
    */
   addAIMoves(moves) {
     this._state.ai.moves.push(...moves);
+    this._saveAIState();
     this._notifyAIStateListeners();
   }
 
@@ -78,6 +81,7 @@ export class GlobalState {
   clearAIMoves() {
     this._state.ai.moves = [];
     this._state.ai.currentIndex = -1;
+    this._saveAIState();
     this._notifyAIStateListeners();
   }
 
@@ -89,6 +93,7 @@ export class GlobalState {
   selectAIMove(index) {
     if (index >= 0 && index < this._state.ai.moves.length) {
       this._state.ai.currentIndex = index;
+      this._saveAIState();
       this._notifyAIStateListeners();
       return this._state.ai.moves[index];
     }
@@ -465,5 +470,59 @@ export class GlobalState {
   _notifyBoardStateListeners() {
     const state = this.getBoardState();
     this._state.board.listeners.forEach(listener => listener(state));
+  }
+
+  /**
+   * AIの状態を保存
+   * @private
+   */
+  _saveAIState() {
+    try {
+      const aiState = {
+        moves: this._state.ai.moves,
+        currentIndex: this._state.ai.currentIndex
+      };
+      localStorage.setItem('tetrisAIState', JSON.stringify(aiState));
+    } catch (error) {
+      console.error('AIの状態の保存に失敗しました:', error);
+    }
+  }
+
+  /**
+   * 保存されたAIの状態を読み込み
+   * @private
+   */
+  _loadAIState() {
+    try {
+      const savedAIState = localStorage.getItem('tetrisAIState');
+      if (savedAIState) {
+        const aiState = JSON.parse(savedAIState);
+        if (this._validateAIState(aiState)) {
+          this._state.ai.moves = aiState.moves;
+          this._state.ai.currentIndex = aiState.currentIndex;
+        } else {
+          console.warn('保存されたAIの状態が無効です。デフォルト状態を使用します。');
+        }
+      }
+    } catch (error) {
+      console.error('AIの状態の読み込みに失敗しました:', error);
+    }
+  }
+
+  /**
+   * AIの状態の検証
+   * @private
+   */
+  _validateAIState(state) {
+    if (!state || typeof state !== 'object') {
+      return false;
+    }
+
+    return (
+      Array.isArray(state.moves) &&
+      typeof state.currentIndex === 'number' &&
+      state.currentIndex >= -1 &&
+      state.currentIndex < state.moves.length
+    );
   }
 } 
