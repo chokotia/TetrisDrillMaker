@@ -330,8 +330,7 @@ export class TetrisApp {
     this.setupGestureControls();
     this.setupFillColumnButtonListener();
     this.setupClearColumnButtonListener();
-    this.setupToggleBoardListener();
-    this.setupNewProblemButtonListener();
+    this.setupToggleBoardListener(); 
     
     // 新しい問題生成ボタンのイベントリスナー
     this.dom.newProblemButton?.addEventListener('click', () => {
