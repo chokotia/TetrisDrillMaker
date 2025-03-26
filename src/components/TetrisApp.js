@@ -44,7 +44,6 @@ export class TetrisApp {
       nextContainer: document.getElementById('next'),
       holdContainer: document.getElementById('hold'),
       editNav: document.getElementById('control-panel'),
-      removeUsed: document.getElementById('remove-used'),
       clearBoard: document.getElementById('clear-board'),
       autoButton: document.getElementById('auto-button'),
       delButton: document.getElementById('del-button'),
@@ -217,9 +216,6 @@ export class TetrisApp {
    */
   setupButtonEventListeners() {
     
-    // 使用済みピース削除ボタンのリスナー
-    this.dom.removeUsed?.addEventListener('click', () => this.removeUsedPieces());
-
     // クリアボタンのイベントリスナー  
     this.dom.clearBoard?.addEventListener('click', () => this.resetToInitialBoard());
     
@@ -287,14 +283,6 @@ export class TetrisApp {
   }
 
   /**
-   * 使用済みピースを削除
-   */
-  removeUsedPieces() {
-    const settings = this._globalState.getSettings();
-    MinoManager.removeUsedPieces(this.dom.nextContainer, settings);
-  }
-
-  /**
    * 問題の生成
    */
   generateProblem() {
@@ -344,7 +332,6 @@ export class TetrisApp {
     
     // 新しい問題を生成するときにネクストピースをリセット
     MinoManager.currentPieces = [];
-    MinoManager.usedPieces = {};
     MinoManager.displayStartIndex = 0;
     
     MinoManager.updateNextPieces(this.dom.nextContainer, boardSettings, this.randomGenerator);

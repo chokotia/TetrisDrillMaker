@@ -11,8 +11,6 @@
   --color-edit-selected-text: #333333;
   --color-modal-header: #ffffff;
   --color-button-focus: #ffbf00;
-  --color-used-piece-overlay: rgba(0, 0, 0, 0.5);
-  --color-used-mark: #ff0000;
   --color-ai-history-item: #f8f9fa;
   --color-ai-history-selected: #d1e7ff;
   --color-ai-history-hover: #e2e6ea;
@@ -190,34 +188,6 @@ html, body {
 
 .next-piece-container:hover {
   transform: scale(1.05);
-}
-
-/* 使用済みピースのスタイル */
-.next-piece-container.used-piece {
-  opacity: 0.6;
-  position: relative;
-}
-
-.next-piece-container.used-piece::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: var(--color-used-piece-overlay);
-  z-index: 1;
-}
-
-.next-piece-container .used-mark {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--color-used-mark);
-  font-size: 20px;
-  font-weight: bold;
-  z-index: 2;
 }
 
 .next-piece {
