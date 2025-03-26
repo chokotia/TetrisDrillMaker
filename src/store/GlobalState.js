@@ -24,6 +24,9 @@ export class GlobalState {
         grid: Array(20).fill().map(() => Array(10).fill(null)),
         listeners: new Set()
       },
+      editMode: {
+        selectedOption: 'Auto' // 'Auto', 'Del', 'Gray' のいずれか
+      },
       settings: {
         boardSettings: {
           width: defaultSettings.width,
@@ -524,5 +527,25 @@ export class GlobalState {
       state.currentIndex >= -1 &&
       state.currentIndex < state.moves.length
     );
+  }
+
+  /**
+   * 編集モードの状態を取得
+   * @returns {Object} 現在の編集モードの状態
+   */
+  getEditMode() {
+    return {
+      selectedOption: this._state.editMode.selectedOption
+    };
+  }
+
+  /**
+   * 編集モードの状態を更新
+   * @param {string} option - 新しい編集オプション ('Auto', 'Del', 'Gray' のいずれか)
+   */
+  updateEditMode(option) {
+    if (['Auto', 'Del', 'Gray'].includes(option)) {
+      this._state.editMode.selectedOption = option;
+    }
   }
 } 
