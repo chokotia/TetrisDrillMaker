@@ -101,26 +101,21 @@ export class AISuggestionPanel {
     });
 
     // 探索ボタン
-    if (this._dom.searchButton) {
-      this._dom.searchButton.addEventListener('click', () => {
-        this._startAISearch();
-      });
-    }
+    this._dom.searchButton?.addEventListener('click', () => {
+      this._startAISearch();
+    });
 
     // 適用ボタン
-    if (this._dom.applyButton) {
-      this._dom.applyButton.addEventListener('click', () => {
-        this._closeModal();
-      });
-    }
+    this._dom.applyButton?.addEventListener('click', () => {
+      this._closeModal();
+    });
+    
 
     // 履歴リセットボタン
-    if (this._dom.resetHistoryButton) {
-      this._dom.resetHistoryButton.addEventListener('click', () => {
-        this._confirmResetAIHistory();
-      });
-    }
-
+    this._dom.resetHistoryButton?.addEventListener('click', () => {
+      this._confirmResetAIHistory();
+    });
+    
     // モーダルの閉じるボタン
     document.getElementById('close-ai-modal')?.addEventListener('click', () => {
       this._closeModal();
