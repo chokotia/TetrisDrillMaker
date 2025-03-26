@@ -24,9 +24,14 @@
     <div class="tetris-app">
       <header class="tetris-app__header navbar navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
-          <h1 id="current-problem" class="tetris-app__problem-counter navbar-brand m-0">
-            問題 #1
-          </h1>
+          <button
+            id="new-problem-button"
+            class="btn btn-outline-light me-2"
+            type="button"
+            aria-label="新しい問題を生成する"
+          >
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
           <div class="d-flex align-items-center">
             <button
               id="ask-ai-button"
@@ -249,16 +254,6 @@
                   <option value="7bag-random">7種一巡（ランダムスタート）</option>
                   <option value="7bag-pure">7種一巡</option>
                 </select>
-              </div>
-              <div class="mb-3">
-                <label for="seed-value" class="form-label">シード値:</label>
-                <div class="input-group">
-                  <input type="text" id="seed-value" class="form-control">
-                  <button class="btn btn-outline-secondary" type="button" id="regenerate-seed">
-                    <i class="bi bi-arrow-repeat"></i> 再生成
-                  </button>
-                </div>
-                <small class="form-text text-muted">シード値は問題の再現性を保証します。同じシード値で同じ問題が生成されます。1文字以上入力してください。</small>
               </div>
 
               <hr />

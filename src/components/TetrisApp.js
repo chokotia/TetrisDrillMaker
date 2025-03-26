@@ -1,4 +1,4 @@
-import { createSeededGenerator } from '../utils/random.js';
+import { createSeededGenerator} from '../utils/random.js';
 import { config, minoColors } from '../utils/config.js';
 import { SettingsPanel } from './SettingsPanel.js';
 import { BoardManager } from '../modules/BoardManager.js';
@@ -18,8 +18,6 @@ export class TetrisApp {
    * コンストラクタ
    */
   constructor() {
-    this.baseSeed = '';
-    this.currentProblemNumber = 1;
     this.randomGenerator = null;
     this.currentWidth = 0;
     this.currentHeight = 0;
@@ -39,7 +37,6 @@ export class TetrisApp {
     this.dom = {
       app: document.getElementById('app'),
       board: document.getElementById('board'),
-      currentProblem: document.getElementById('current-problem'),
       nextContainer: document.getElementById('next'),
       holdContainer: document.getElementById('hold'),
       editNav: document.getElementById('control-panel'),
@@ -57,6 +54,7 @@ export class TetrisApp {
       aiMoveText: document.getElementById('ai-move-text'),
       aiNextButton: document.getElementById('ai-next-button'),
       aiPrevButton: document.getElementById('ai-prev-button'),
+      newProblemButton: document.getElementById('new-problem-button'),
     };
 
     return this.dom;
@@ -68,12 +66,16 @@ export class TetrisApp {
   initializeApp() {
     try {
       this.dom = this.initializeDOMElements();
-      this.initializeGameState();
+      
+      // 乱数生成器を生成
+      const _seed = this._globalState.getSeed();
+      this.randomGenerator = createSeededGenerator(_seed);
+      
       this.initializeSettingsModal();
       this.initializeAIModal();
       this.initializeControls();
       this.initializeAIStateDisplay();
-      this.goToFirstProblem();
+      this.generateProblem();
       this.logInitializationInfo();
       
       // 初期状態では空のホールド表示を作成
@@ -266,19 +268,6 @@ export class TetrisApp {
   }
 
   /**
-   * ゲーム状態の初期化
-   */
-  initializeGameState() {
-    const settings = this._globalState.getSettings();
-    this.baseSeed = settings.boardSettings.seed;
-    this.currentProblemNumber = 1;
-    this.randomGenerator = createSeededGenerator(
-      this.baseSeed,
-      this.currentProblemNumber
-    );
-  }
-
-  /**
    * 設定モーダルの初期化
    */
   initializeSettingsModal() {
@@ -312,7 +301,7 @@ export class TetrisApp {
       this.randomGenerator
     );
 
-    this.goToFirstProblem();
+    this.generateProblem();
   }
 
   /**
@@ -328,8 +317,6 @@ export class TetrisApp {
    * 初期化情報のログ出力
    */
   logInitializationInfo() {
-    console.log(`Base Seed: ${this.baseSeed}`);
-    console.log(`Starting at Problem #${this.currentProblemNumber}`);
     console.log(`App Version: ${config.VERSION}`);
   }
 
@@ -344,6 +331,12 @@ export class TetrisApp {
     this.setupFillColumnButtonListener();
     this.setupClearColumnButtonListener();
     this.setupToggleBoardListener();
+    this.setupNewProblemButtonListener();
+    
+    // 新しい問題生成ボタンのイベントリスナー
+    this.dom.newProblemButton?.addEventListener('click', () => {
+      this.generateNewProblem();
+    });
   }
 
   /**
@@ -422,8 +415,8 @@ export class TetrisApp {
     GestureManager.setupGestureControls(
       document.querySelector('.tetris-app__main'),
       document.getElementById('board-container'),
-      () => this.goToNextProblem(),
-      () => this.goToPreviousProblem(),
+      null,
+      null,
       (event) => this.handleCellPaint(event),
       this.editState
     );
@@ -473,48 +466,6 @@ export class TetrisApp {
   }
 
   /**
-   * 次の問題へ移動
-   */
-  goToNextProblem() {
-    console.log(`次の問題へ移動: 現在の問題番号 ${this.currentProblemNumber}`);
-    this.currentProblemNumber += 1;
-    this.randomGenerator = createSeededGenerator(
-      this.baseSeed,
-      this.currentProblemNumber
-    );
-    this.generateProblem();
-    console.log(`移動後の問題番号: ${this.currentProblemNumber}`);
-  }
-
-  /**
-   * 前の問題へ移動
-   */
-  goToPreviousProblem() {
-    console.log(`前の問題へ移動: 現在の問題番号 ${this.currentProblemNumber}`);
-    if (this.currentProblemNumber > 1) {
-      this.currentProblemNumber -= 1;
-      this.randomGenerator = createSeededGenerator(
-        this.baseSeed,
-        this.currentProblemNumber
-      );
-      this.generateProblem();
-      console.log(`移動後の問題番号: ${this.currentProblemNumber}`);
-    }
-  }
-
-  /**
-   * 最初の問題へ移動
-   */
-  goToFirstProblem() {   
-    this.currentProblemNumber = 1;
-    this.randomGenerator = createSeededGenerator(
-      this.baseSeed,
-      this.currentProblemNumber
-    );
-    this.generateProblem();
-    console.log(`移動後の問題番号: ${this.currentProblemNumber}`);
-  }
-
   /**
    * 初期状態にボードをリセット
    */
@@ -588,21 +539,12 @@ export class TetrisApp {
     MinoManager.displayStartIndex = 0;
     
     MinoManager.updateNextPieces(this.dom.nextContainer, boardSettings, this.randomGenerator);
-    this.updateProblemCounter();
     
     // Autoモードを選択状態にする
     this.editState = EditManager.setEditAction(this.editState, 'auto');
     EditManager.updateEditButtonState(this.dom.editOptionButtons, 'auto');
   }
 
-  /**
-   * 問題番号ラベル更新
-   */
-  updateProblemCounter() {
-    if (this.dom.currentProblem) {
-      this.dom.currentProblem.textContent = `問題 #${this.currentProblemNumber}`;
-    }
-  }
 
   /**
    * ブロック数をランダムに計算
@@ -780,4 +722,14 @@ export class TetrisApp {
       }
     }
   }
+
+  /**
+   * 新しい問題を生成
+   */
+  generateNewProblem() {
+    const seed = this._globalState.updateSeed();
+    this.randomGenerator = createSeededGenerator(seed);
+    this.generateProblem();
+  }
+
 } 

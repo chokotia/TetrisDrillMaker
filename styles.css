@@ -120,11 +120,6 @@ html, body {
   margin-left: 0;
 }
 
-/* 問題番号（ナビバー左端に表示） */
-.tetris-app__problem-counter {
-  font-size: 1rem;
-}
-
 /* テトリス盤面 */
 .tetris-board {
   background-color: var(--color-board-bg);

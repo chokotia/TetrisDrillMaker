@@ -1,4 +1,5 @@
 import { config, defaultSettings } from '../../utils/config.js';
+import { generateSeed } from '../../utils/random.js';
 
 /**
  * グローバルな状態管理クラス
@@ -26,8 +27,7 @@ export class GlobalState {
             min: defaultSettings.blockCountMin,
             max: defaultSettings.blockCountMax,
           },
-          minoMode: defaultSettings.minoMode,
-          seed: Math.random().toString(36).substring(2, 15),
+          minoMode: defaultSettings.minoMode
         },
         aiSettings: {
           searchTime: 1.0,
@@ -35,7 +35,8 @@ export class GlobalState {
           weights_name: "default"
         }
       },
-      settingsListeners: new Set()
+      settingsListeners: new Set(),
+      seed: null
     };
     
     // 設定の読み込み
@@ -323,5 +324,27 @@ export class GlobalState {
       this._state.ai.currentIndex--;
       this._notifyAIStateListeners();
     }
+  }
+
+  /**
+   * シード値を取得
+   * @returns {string} 現在のシード値
+   */
+  getSeed() {
+    if (!this._state.seed) {
+      this._state.seed = localStorage.getItem('tetrisSeed') || generateSeed();
+      localStorage.setItem('tetrisSeed', this._state.seed);
+    }
+    return this._state.seed;
+  }
+
+  /**
+   * シード値を更新
+   * @returns {string} 新しいシード値
+   */
+  updateSeed() {
+    this._state.seed = generateSeed();
+    localStorage.setItem('tetrisSeed', this._state.seed);
+    return this._state.seed;
   }
 } 

@@ -35,8 +35,6 @@ export class SettingsPanel {
       blockRange: document.getElementById('block-range-slider'),
       blockRangeValues: document.getElementById('block-range-values'),
       minoMode: document.getElementById('mino-mode'),
-      seed: document.getElementById('seed-value'),
-      regenerateSeed: document.getElementById('regenerate-seed'),
       searchTime: document.getElementById('ai-search-time'),
       searchTimeValue: document.getElementById('ai-search-time-value'),
       movesCount: document.getElementById('ai-moves-count'),
@@ -76,7 +74,6 @@ export class SettingsPanel {
 
     // その他の設定値の更新
     this._elements.minoMode.value = settings.boardSettings.minoMode;
-    this._elements.seed.value = settings.boardSettings.seed;
     this._updateSliderValue('searchTime', settings.aiSettings.searchTime, parseFloat);
     this._updateSliderValue('movesCount', settings.aiSettings.movesCount);
     this._elements.weightsName.value = settings.aiSettings.weights_name;
@@ -196,13 +193,6 @@ export class SettingsPanel {
    * ボタンの初期化
    */
   _initializeButtons() {
-    // シード値の再生成
-    this._elements.regenerateSeed?.addEventListener('click', () => {
-      const newSeed = Math.random().toString(36).substring(2, 6);
-      this._updateSettings('boardSettings.seed', newSeed);
-      this._elements.seed.value = newSeed;
-    });
-
     // ミノモードの変更
     this._elements.minoMode?.addEventListener('change', (e) => {
       this._updateSettings('boardSettings.minoMode', e.target.value);

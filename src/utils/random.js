@@ -15,14 +15,12 @@ export function mulberry32(a) {
 /**
  * シード付きの乱数生成器を作成
  * @param {string} seed - シード文字列
- * @param {number} problemNumber - 問題番号
  * @returns {Function} 乱数生成関数
  */
-export function createSeededGenerator(seed, problemNumber) {
-  const seedString = `${seed}_${problemNumber}`;
+export function createSeededGenerator(seed) {
   let seedValue = 0;
-  for (let i = 0; i < seedString.length; i++) {
-    seedValue += seedString.charCodeAt(i);
+  for (let i = 0; i < seed.length; i++) {
+    seedValue += seed.charCodeAt(i);
   }
   return mulberry32(seedValue);
 }
@@ -40,4 +38,13 @@ export function shuffle(array, random) {
     [result[i], result[j]] = [result[j], result[i]];
   }
   return result;
+}
+
+/**
+ * シード値を生成
+ * @param {number} [length=13] - 生成するシード値の長さ
+ * @returns {string} 生成されたシード値
+ */
+export function generateSeed(length = 13) {
+  return Math.random().toString(36).substring(2, 2 + length);
 } 
