@@ -18,6 +18,12 @@ export class GlobalState {
         currentIndex: -1,
         listeners: new Set()
       },
+      board: {
+        hold: null,
+        next: [],
+        grid: Array(20).fill().map(() => Array(10).fill(null)),
+        listeners: new Set()
+      },
       settings: {
         boardSettings: {
           width: defaultSettings.width,
@@ -41,6 +47,8 @@ export class GlobalState {
     
     // 設定の読み込み
     this._loadSettings();
+    // ボードの状態の読み込み
+    this._loadBoardState();
     
     GlobalState._instance = this;
   }
@@ -346,5 +354,116 @@ export class GlobalState {
     this._state.seed = generateSeed();
     localStorage.setItem('tetrisSeed', this._state.seed);
     return this._state.seed;
+  }
+
+  /**
+   * ボードの状態を取得
+   * @returns {Object} 現在のボードの状態
+   */
+  getBoardState() {
+    return {
+      hold: this._state.board.hold,
+      next: [...this._state.board.next],
+      grid: this._state.board.grid.map(row => [...row])
+    };
+  }
+
+  /**
+   * ボードの状態を更新
+   * @param {Object} newState - 新しいボードの状態
+   */
+  updateBoardState(newState) {
+    if (this._validateBoardState(newState)) {
+      this._state.board = {
+        ...this._state.board,
+        ...newState,
+        grid: newState.grid.map(row => [...row]),
+        next: [...newState.next]
+      };
+      this._saveBoardState();
+      this._notifyBoardStateListeners();
+    }
+  }
+
+  /**
+   * ボードの状態を保存
+   * @private
+   */
+  _saveBoardState() {
+    try {
+      const boardState = this.getBoardState();
+      localStorage.setItem('tetrisBoardState', JSON.stringify(boardState));
+    } catch (error) {
+      console.error('ボードの状態の保存に失敗しました:', error);
+    }
+  }
+
+  /**
+   * 保存されたボードの状態を読み込み
+   * @private
+   */
+  _loadBoardState() {
+    try {
+      const savedBoardState = localStorage.getItem('tetrisBoardState');
+      if (savedBoardState) {
+        const boardState = JSON.parse(savedBoardState);
+        if (this._validateBoardState(boardState)) {
+          this._state.board = {
+            ...this._state.board,
+            ...boardState,
+            grid: boardState.grid.map(row => [...row]),
+            next: [...boardState.next]
+          };
+        } else {
+          console.warn('保存されたボードの状態が無効です。デフォルト状態を使用します。');
+        }
+      }
+    } catch (error) {
+      console.error('ボードの状態の読み込みに失敗しました:', error);
+    }
+  }
+
+  /**
+   * ボードの状態変更を監視
+   * @param {Function} callback - 状態変更時に呼び出されるコールバック
+   */
+  addBoardStateListener(callback) {
+    this._state.board.listeners.add(callback);
+  }
+
+  /**
+   * ボードの状態の監視を解除
+   * @param {Function} callback - 解除するコールバック
+   */
+  removeBoardStateListener(callback) {
+    this._state.board.listeners.delete(callback);
+  }
+
+  /**
+   * ボードの状態の検証
+   * @private
+   */
+  _validateBoardState(state) {
+    if (!state || typeof state !== 'object') {
+      return false;
+    }
+
+    const { grid } = state;
+    const { width, height } = this._state.settings.boardSettings;
+    
+    return (
+      Array.isArray(grid) &&
+      grid.length === height &&
+      grid.every(row => Array.isArray(row) && row.length === width)
+    );
+  }
+
+  /**
+   * ボードの状態変更をリスナーに通知
+   * @private
+   */
+  _notifyBoardStateListeners() {
+    const state = this.getBoardState();
+    this._state.board.listeners.forEach(listener => listener(state));
   }
 } 
