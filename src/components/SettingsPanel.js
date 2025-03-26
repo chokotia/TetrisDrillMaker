@@ -19,6 +19,12 @@ export class SettingsPanel {
     this._elements = this._initializeDOMElements();
     this._initializeModal();
     this._initializeEventListeners();
+
+    // 設定ボタンのイベントリスナーを設定
+    const settingsButton = document.getElementById('settings-button');
+    settingsButton?.addEventListener('click', () => {
+      this.openModal();
+    });
   }
 
   /**

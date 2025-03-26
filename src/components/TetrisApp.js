@@ -23,8 +23,13 @@ export class TetrisApp {
     this.currentHeight = 0;
     this.editState = EditManager.initialize();
     this.dom = null;
-    this.settingsPanel = null;
     this._globalState = GlobalState.getInstance();
+
+    // コンポーネントの管理
+    this.components = {
+      settingsPanel: new SettingsPanel(),
+      aiSuggestionPanel: new AISuggestionPanel()
+    };
 
     document.addEventListener('DOMContentLoaded', () => this.initializeApp());
   }
@@ -45,7 +50,6 @@ export class TetrisApp {
       fillColumnButton: document.getElementById('fill-column-button'),
       clearColumnButton: document.getElementById('clear-column-button'),
       clearBoard: document.getElementById('clear-board'),
-      settingsButton: document.getElementById('settings-button'),
       autoButton: document.getElementById('auto-button'),
       delButton: document.getElementById('del-button'),
       grayButton: document.getElementById('gray-button'),
@@ -71,7 +75,6 @@ export class TetrisApp {
       const _seed = this._globalState.getSeed();
       this.randomGenerator = createSeededGenerator(_seed);
       
-      this.initializeSettingsModal();
       this.initializeAIModal();
       this.initializeAIStateDisplay();
       this.generateProblem();
@@ -109,8 +112,8 @@ export class TetrisApp {
    * AIモーダルを初期化
    */
   async initializeAIModal() {
-    this.aiPanel = new AISuggestionPanel();
-    await this.aiPanel.initialize();
+   
+    await this.components.aiSuggestionPanel.initialize();
 
     // AIの手が選択された時のイベントリスナーを追加
     document.addEventListener('aiMoveSelected', (event) => {
@@ -264,19 +267,6 @@ export class TetrisApp {
       orientation,
       position
     };
-  }
-
-  /**
-   * 設定モーダルの初期化
-   */
-  initializeSettingsModal() {
-    // SettingsPanelのインスタンス化
-    this.settingsPanel = new SettingsPanel();
-
-    // 設定ボタンのイベントリスナーを追加
-    this.dom.settingsButton?.addEventListener('click', () => {
-      this.settingsPanel.openModal();
-    });
   }
 
   /**
