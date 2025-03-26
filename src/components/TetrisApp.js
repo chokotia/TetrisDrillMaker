@@ -73,10 +73,24 @@ export class TetrisApp {
       
       this.initializeSettingsModal();
       this.initializeAIModal();
-      this.initializeControls();
       this.initializeAIStateDisplay();
       this.generateProblem();
       this.logInitializationInfo();
+
+      this.setupButtonEventListeners();
+
+      // ジェスチャーコントロールのセットアップ
+      GestureManager.setupGestureControls(
+        document.querySelector('.tetris-app__main'),
+        document.getElementById('board-container'),
+        null,
+        null,
+        (event) => this.handleCellPaint(event),
+        this.editState
+      );
+      
+      // 編集ボタンのセットアップ autoモードにする
+      EditManager.updateEditButtonState(this.dom.editOptionButtons, 'auto');
       
       // 初期状態では空のホールド表示を作成
       this.updateHoldDisplay(null);
@@ -102,21 +116,6 @@ export class TetrisApp {
     document.addEventListener('aiMoveSelected', (event) => {
       const move = event.detail.move;
       this.applyAIMove(move);
-    });
-
-    // AIボタンのイベントリスナーを追加
-    this.dom.askAIButton?.addEventListener('click', () => {
-      const board = BoardManager.getCurrentBoard(
-        this.dom.board, 
-        this.currentWidth, 
-        this.currentHeight
-      );
-      const queue = MinoManager.getQueueForAI();
-      const hold = null;
-      
-      this.aiPanel.openModal(
-        { board, queue, hold }
-      );
     });
   }
 
@@ -305,27 +304,6 @@ export class TetrisApp {
   }
 
   /**
-   * コントロールの初期化
-   */
-  initializeControls() {
-    this.setupEventListeners();
-
-    // ジェスチャーコントロールのセットアップ
-    GestureManager.setupGestureControls(
-      document.querySelector('.tetris-app__main'),
-      document.getElementById('board-container'),
-      null,
-      null,
-      (event) => this.handleCellPaint(event),
-      this.editState
-    );
-    
-    // 編集ボタンのセットアップ autoモードにする
-    EditManager.updateEditButtonState(this.dom.editOptionButtons, 'auto');
-
-  }
-
-  /**
    * 初期化情報のログ出力
    */
   logInitializationInfo() {
@@ -333,9 +311,9 @@ export class TetrisApp {
   }
 
   /**
-   * イベントリスナーの設定
+   * ボタンイベントリスナーの設定
    */
-  setupEventListeners() {
+  setupButtonEventListeners() {
     this.setupEditOptionListeners();
 
     // 使用済みピース削除ボタンのリスナー
@@ -355,6 +333,21 @@ export class TetrisApp {
 
     // 新しい問題生成ボタンのイベントリスナー
     this.dom.newProblemButton?.addEventListener('click', () => this.generateNewProblem());
+
+    // AIボタンのイベントリスナーを追加
+    this.dom.askAIButton?.addEventListener('click', () => {
+      const board = BoardManager.getCurrentBoard(
+        this.dom.board, 
+        this.currentWidth, 
+        this.currentHeight
+      );
+      const queue = MinoManager.getQueueForAI();
+      const hold = null;
+      
+      this.aiPanel.openModal(
+        { board, queue, hold }
+      );
+    });
   }
 
   /**
