@@ -28,8 +28,7 @@ export class TetrisApp {
       settingsPanel: new SettingsPanel(),
       aiSuggestionPanel: new AISuggestionPanel()
     };
-
-    document.addEventListener('DOMContentLoaded', () => this.initializeApp());
+    this.initializeApp();
   }
 
   /**
