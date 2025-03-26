@@ -45,9 +45,6 @@ export class TetrisApp {
       holdContainer: document.getElementById('hold'),
       editNav: document.getElementById('control-panel'),
       clearBoard: document.getElementById('clear-board'),
-      autoButton: document.getElementById('auto-button'),
-      delButton: document.getElementById('del-button'),
-      grayButton: document.getElementById('gray-button'),
       editOptionButtons: document.querySelectorAll('.edit-option'),
       newProblemButton: document.getElementById('new-problem-button'),
     };
@@ -80,8 +77,6 @@ export class TetrisApp {
         this.editState
       );
       
-      // 編集ボタンのセットアップ autoモードにする
-      EditManager.updateEditButtonState(this.dom.editOptionButtons, 'auto');
       
       // 初期状態では空のホールド表示を作成
       this.updateHoldDisplay(null);
@@ -222,7 +217,7 @@ export class TetrisApp {
     // 新しい問題生成ボタンのイベントリスナー
     this.dom.newProblemButton?.addEventListener('click', () => this.generateNewProblem());
 
-    // 編集ボタン(auto, del, gray)のイベントリスナー
+    // 編集ボタン(del, gray)のイベントリスナー
     this.dom.editOptionButtons.forEach(button => {
       button.addEventListener('click', () => {
         const action = button.dataset.action;
@@ -241,12 +236,9 @@ export class TetrisApp {
    * @param {number} width - ボードの幅
    * @param {number} height - ボードの高さ
    */
-  handleCellClick(cell, index, width, height) {
+  handleCellClick(cell) {
     this.editState = EditManager.handleEditCellClick(
       cell, 
-      index, 
-      width, 
-      height, 
       this.editState
     );
   }
@@ -260,16 +252,8 @@ export class TetrisApp {
     if (!cell) return;
 
     const index = GestureManager.getCellIndex(this.dom.board, cell);
-    if (index >= 0) {
-      const settings = this._globalState.getSettings();
-      const { width, height } = settings.boardSettings;
-      
-      this.handleCellClick(
-        cell,
-        index,
-        width,
-        height
-      );
+    if (index >= 0) {     
+      this.handleCellClick(cell);
     }
   }
 
@@ -304,7 +288,7 @@ export class TetrisApp {
       boardSettings.height, 
       blockCount, 
       this.randomGenerator,
-      (cell, index, width, height) => this.handleCellClick(cell, index, width, height)
+      (cell, index, width, height) => this.handleCellClick(cell)
     );
     
     // ダミーボードにも同じサイズの空のボードを作成（ブロックなし、クリックイベントなし）
@@ -336,9 +320,6 @@ export class TetrisApp {
     
     MinoManager.updateNextPieces(this.dom.nextContainer, boardSettings, this.randomGenerator);
     
-    // Autoモードを選択状態にする
-    this.editState = EditManager.setEditAction(this.editState, 'auto');
-    EditManager.updateEditButtonState(this.dom.editOptionButtons, 'auto');
   }
 
 

@@ -505,7 +505,6 @@ export class MinoManager {
     // 現在のネクスト情報を更新（現在の実装に合わせた形で）
     // this.currentPieces = displayPieces.map(type => ({ type }));
     this.currentPieces = displayPieces;
-    this.usedPieces = {}; // 使用済みピースをクリア
     
     // 設定されたネクスト数だけ表示
     this.renderVisibleNextPieces(nextContainer, nextCount);

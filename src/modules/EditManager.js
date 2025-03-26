@@ -1,6 +1,5 @@
 import { minoColors } from '../utils/config.js';
 import { BoardManager } from './BoardManager.js';
-import { MinoManager } from './MinoManager.js';
 
 /**
  * 編集モード管理クラス
@@ -13,9 +12,7 @@ export class EditManager {
    */
   static initialize() {
     return {
-      currentEditAction: 'auto',
-      autoCells: [],
-      isAutoInProgress: false,
+      currentEditAction: 'gray', // 編集モードの初期値 gray/delete
       isDragging: false
     };
   }
@@ -28,11 +25,7 @@ export class EditManager {
    */
   static setEditAction(state, action) {
     const newState = { ...state };
-    
-    if (action !== 'auto') {
-      this.resetAutoCells(newState);
-    }
-    
+        
     newState.currentEditAction = action;
     return newState;
   }
@@ -57,13 +50,10 @@ export class EditManager {
   /**
    * セルクリック時の編集処理
    * @param {HTMLElement} cell - クリックされたセル要素
-   * @param {number} index - セルのインデックス
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
    * @param {Object} state - 編集マネージャーの状態
    * @returns {Object} 更新された状態
    */
-  static handleEditCellClick(cell, index, width, height, state) {
+  static handleEditCellClick(cell, state) {
     if (cell.classList.contains('initial-block')) {
       return state;
     }
@@ -77,10 +67,8 @@ export class EditManager {
       case 'gray':
         this.handleGrayAction(cell);
         break;
-      case 'auto':
-        return this.handleAutoAction(cell, index, width, height, newState);
       default:
-        this.handleColorAction(cell, newState.currentEditAction, newState.isDragging);
+        // pass
         break;
     }
     
@@ -102,150 +90,7 @@ export class EditManager {
   static handleGrayAction(cell) {
     BoardManager.paintCell(cell, minoColors['gray']);
   }
-
-  /**
-   * 通常のカラーブロックアクション
-   * @param {HTMLElement} cell - セル要素
-   * @param {string} action - 編集アクション
-   * @param {boolean} isDragging - ドラッグ中かどうか
-   */
-  static handleColorAction(cell, action, isDragging) {
-    const oldColor = cell.style.backgroundColor;
-    const newColor = minoColors[action];
-    if (!newColor) return;
-
-    if (isDragging) {
-      BoardManager.paintCell(cell, newColor);
-    } else {
-      if (BoardManager.isSameColor(oldColor, newColor)) {
-        BoardManager.paintCell(cell, '');
-      } else {
-        BoardManager.paintCell(cell, newColor);
-      }
-    }
-  }
-
-  /**
-   * 自動配置アクション
-   * @param {HTMLElement} cell - セル要素
-   * @param {number} index - セルのインデックス
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
-   * @param {Object} state - 編集マネージャーの状態
-   * @returns {Object} 更新された状態
-   */
-  static handleAutoAction(cell, index, width, height, state) {
-    const newState = { ...state };
-    const oldColor = cell.style.backgroundColor;
-    
-    // 白ブロックの削除処理
-    if (BoardManager.isWhiteBlock(oldColor)) {
-      return this.removeWhiteBlock(cell, newState);
-    }
-
-    // 既存ブロックのチェック
-    if (BoardManager.isExistingBlock(cell, oldColor)) {
-      return newState;
-    }
-
-    // 新規ブロックの配置
-    if (this.canAddNewBlock(newState)) {
-      return this.addNewAutoBlock(cell, index, width, height, newState);
-    }
-    
-    return newState;
-  }
-
-  /**
-   * 白ブロックの削除
-   * @param {HTMLElement} cell - セル要素
-   * @param {Object} state - 編集マネージャーの状態
-   * @returns {Object} 更新された状態
-   */
-  static removeWhiteBlock(cell, state) {
-    const newState = { ...state };
-    BoardManager.clearCell(cell);
-    
-    const cellIndex = newState.autoCells.findIndex(c => c.cellEl === cell);
-    if (cellIndex !== -1) {
-      newState.autoCells.splice(cellIndex, 1);
-    }
-    
-    return newState;
-  }
-
-  /**
-   * 新規ブロック追加可能かどうかの判定
-   * @param {Object} state - 編集マネージャーの状態
-   * @returns {boolean} 追加可能な場合はtrue
-   */
-  static canAddNewBlock(state) {
-    return state.autoCells.length < 4;
-  }
-
-  /**
-   * 新規自動ブロックの追加
-   * @param {HTMLElement} cell - セル要素
-   * @param {number} index - セルのインデックス
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
-   * @param {Object} state - 編集マネージャーの状態
-   * @returns {Object} 更新された状態
-   */
-  static addNewAutoBlock(cell, index, width, height, state) {
-    const newState = { ...state };
-    BoardManager.paintCell(cell, minoColors['white']);
-    
-    const x = index % width;
-    const y = Math.floor(index / width);
-    newState.autoCells.push({ x, y, cellEl: cell });
-    newState.isAutoInProgress = true;
-
-    if (newState.autoCells.length === 4) {
-      return this.completeAutoPlacement(newState);
-    }
-    
-    return newState;
-  }
-
-  /**
-   * 自動配置の完了処理
-   * @param {Object} state - 編集マネージャーの状態
-   * @returns {Object} 更新された状態
-   */
-  static completeAutoPlacement(state) {
-    const newState = { ...state };
-    const positions = newState.autoCells.map(c => ({ x: c.x, y: c.y }));
-    const detectedMino = MinoManager.detectMinoShape(positions);
-    
-    if (detectedMino) {
-      const color = minoColors[detectedMino];
-      newState.autoCells.forEach(c => BoardManager.paintCell(c.cellEl, color));
-    } else {
-      this.resetAutoCells(newState);
-    }
-    
-    newState.autoCells = [];
-    newState.isAutoInProgress = false;
-    return newState;
-  }
-
-  /**
-   * 自動配置セルをリセット
-   * @param {Object} state - 編集マネージャーの状態
-   * @returns {Object} 更新された状態
-   */
-  static resetAutoCells(state) {
-    const newState = { ...state };
-    newState.autoCells.forEach(({ cellEl }) => {
-      BoardManager.clearCell(cellEl);
-    });
-    
-    newState.autoCells = [];
-    newState.isAutoInProgress = false;
-    return newState;
-  }
-
+  
   /**
    * パン開始時の処理
    * @param {Object} state - 編集マネージャーの状態
