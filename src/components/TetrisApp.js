@@ -78,8 +78,6 @@ export class TetrisApp {
       this.initializeAIModal();
       this.initializeAIStateDisplay();
       this.generateProblem();
-      this.logInitializationInfo();
-
       this.setupButtonEventListeners();
 
       // ジェスチャーコントロールのセットアップ
@@ -293,12 +291,6 @@ export class TetrisApp {
     this.generateProblem();
   }
 
-  /**
-   * 初期化情報のログ出力
-   */
-  logInitializationInfo() {
-    console.log(`App Version: ${config.VERSION}`);
-  }
 
   /**
    * ボタンイベントリスナーの設定
