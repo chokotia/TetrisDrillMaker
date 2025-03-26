@@ -13,7 +13,7 @@ export class GlobalState {
     }
     
     this._state = {
-      ai: {
+      aiSuggestion: {
         moves: [],
         currentIndex: -1,
         listeners: new Set()
@@ -70,7 +70,7 @@ export class GlobalState {
    * @param {Object} move - 追加する手の情報
    */
   addAIMoves(moves) {
-    this._state.ai.moves.push(...moves);
+    this._state.aiSuggestion.moves.push(...moves);
     this._saveAIState();
     this._notifyAIStateListeners();
   }
@@ -79,8 +79,8 @@ export class GlobalState {
    * AIの手の履歴をクリア
    */
   clearAIMoves() {
-    this._state.ai.moves = [];
-    this._state.ai.currentIndex = -1;
+    this._state.aiSuggestion.moves = [];
+    this._state.aiSuggestion.currentIndex = -1;
     this._saveAIState();
     this._notifyAIStateListeners();
   }
@@ -91,11 +91,11 @@ export class GlobalState {
    * @returns {Object|null} - 選択された手、または範囲外の場合はnull
    */
   selectAIMove(index) {
-    if (index >= 0 && index < this._state.ai.moves.length) {
-      this._state.ai.currentIndex = index;
+    if (index >= 0 && index < this._state.aiSuggestion.moves.length) {
+      this._state.aiSuggestion.currentIndex = index;
       this._saveAIState();
       this._notifyAIStateListeners();
-      return this._state.ai.moves[index];
+      return this._state.aiSuggestion.moves[index];
     }
     return null;
   }
@@ -105,8 +105,8 @@ export class GlobalState {
    * @returns {Object|null} - 次の手、または存在しない場合はnull
    */
   nextAIMove() {
-    if (this._state.ai.currentIndex < this._state.ai.moves.length - 1) {
-      return this.selectAIMove(this._state.ai.currentIndex + 1);
+    if (this._state.aiSuggestion.currentIndex < this._state.aiSuggestion.moves.length - 1) {
+      return this.selectAIMove(this._state.aiSuggestion.currentIndex + 1);
     }
     return null;
   }
@@ -116,8 +116,8 @@ export class GlobalState {
    * @returns {Object|null} - 前の手、または存在しない場合はnull
    */
   previousAIMove() {
-    if (this._state.ai.currentIndex > 0) {
-      return this.selectAIMove(this._state.ai.currentIndex - 1);
+    if (this._state.aiSuggestion.currentIndex > 0) {
+      return this.selectAIMove(this._state.aiSuggestion.currentIndex - 1);
     }
     return null;
   }
@@ -127,7 +127,7 @@ export class GlobalState {
    * @param {Function} callback - 状態変更時に呼び出されるコールバック
    */
   addAIStateListener(callback) {
-    this._state.ai.listeners.add(callback);
+    this._state.aiSuggestion.listeners.add(callback);
   }
 
   /**
@@ -135,7 +135,7 @@ export class GlobalState {
    * @param {Function} callback - 解除するコールバック
    */
   removeAIStateListener(callback) {
-    this._state.ai.listeners.delete(callback);
+    this._state.aiSuggestion.listeners.delete(callback);
   }
 
   /**
@@ -143,7 +143,7 @@ export class GlobalState {
    * @returns {number} 現在のインデックス
    */
   getCurrentIndex() {
-    return this._state.ai.currentIndex;
+    return this._state.aiSuggestion.currentIndex;
   }
 
   /**
@@ -152,10 +152,10 @@ export class GlobalState {
    */
   getAIState() {
     return {
-      moves: [...this._state.ai.moves],
-      currentIndex: this._state.ai.currentIndex,
-      currentMove: this._state.ai.currentIndex >= 0 ? 
-        this._state.ai.moves[this._state.ai.currentIndex] : null
+      moves: [...this._state.aiSuggestion.moves],
+      currentIndex: this._state.aiSuggestion.currentIndex,
+      currentMove: this._state.aiSuggestion.currentIndex >= 0 ? 
+        this._state.aiSuggestion.moves[this._state.aiSuggestion.currentIndex] : null
     };
   }
 
@@ -165,7 +165,7 @@ export class GlobalState {
    */
   _notifyAIStateListeners() {
     const state = this.getAIState();
-    this._state.ai.listeners.forEach(listener => listener(state));
+    this._state.aiSuggestion.listeners.forEach(listener => listener(state));
   }
 
   /**
@@ -173,9 +173,9 @@ export class GlobalState {
    * @returns {Object|null} 現在の手、または選択されていない場合はnull
    */
   getCurrentMove() {
-    const index = this._state.ai.currentIndex;
-    return index >= 0 && index < this._state.ai.moves.length ? 
-      this._state.ai.moves[index] : null;
+    const index = this._state.aiSuggestion.currentIndex;
+    return index >= 0 && index < this._state.aiSuggestion.moves.length ? 
+      this._state.aiSuggestion.moves[index] : null;
   }
 
   /**
@@ -323,8 +323,8 @@ export class GlobalState {
    * 次の手に移動
    */
   moveToNextAIMove() {
-    if (this._state.ai.currentIndex < this._state.ai.moves.length - 1) {
-      this._state.ai.currentIndex++;
+    if (this._state.aiSuggestion.currentIndex < this._state.aiSuggestion.moves.length - 1) {
+      this._state.aiSuggestion.currentIndex++;
       this._notifyAIStateListeners();
     }
   }
@@ -333,8 +333,8 @@ export class GlobalState {
    * 前の手に移動
    */
   moveToPreviousAIMove() {
-    if (this._state.ai.currentIndex > 0) {
-      this._state.ai.currentIndex--;
+    if (this._state.aiSuggestion.currentIndex > 0) {
+      this._state.aiSuggestion.currentIndex--;
       this._notifyAIStateListeners();
     }
   }
@@ -479,8 +479,8 @@ export class GlobalState {
   _saveAIState() {
     try {
       const aiState = {
-        moves: this._state.ai.moves,
-        currentIndex: this._state.ai.currentIndex
+        moves: this._state.aiSuggestion.moves,
+        currentIndex: this._state.aiSuggestion.currentIndex
       };
       localStorage.setItem('tetrisAIState', JSON.stringify(aiState));
     } catch (error) {
@@ -498,8 +498,8 @@ export class GlobalState {
       if (savedAIState) {
         const aiState = JSON.parse(savedAIState);
         if (this._validateAIState(aiState)) {
-          this._state.ai.moves = aiState.moves;
-          this._state.ai.currentIndex = aiState.currentIndex;
+          this._state.aiSuggestion.moves = aiState.moves;
+          this._state.aiSuggestion.currentIndex = aiState.currentIndex;
         } else {
           console.warn('保存されたAIの状態が無効です。デフォルト状態を使用します。');
         }
