@@ -107,13 +107,13 @@ export class TetrisApp {
    * AIモーダルを初期化
    */
   async initializeAIModal() {
-   
     await this.components.aiSuggestionPanel.initialize();
 
-    // AIの手が選択された時のイベントリスナーを追加
-    document.addEventListener('aiMoveSelected', (event) => {
-      const move = event.detail.move;
-      this.applyAIMove(move);
+    // AIの状態の監視を開始
+    this._globalState.addAIStateListener((state) => {
+      if (state.currentMove) {
+        this.applyAIMove(state.currentMove);
+      }
     });
   }
 

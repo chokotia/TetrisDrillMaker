@@ -110,7 +110,7 @@ export class AISuggestionPanel {
     // 適用ボタン
     if (this._dom.applyButton) {
       this._dom.applyButton.addEventListener('click', () => {
-        this._applySelectedAIMove();
+        this._closeModal();
       });
     }
 
@@ -191,17 +191,6 @@ export class AISuggestionPanel {
       );
     } catch (error) {
       this.setError(`探索エラー: ${error.message}`);
-    }
-  }
-
-  /**
-   * 選択された手を適用
-   */
-  _applySelectedAIMove() {
-    const currentMove = this._globalState.getCurrentMove();
-    if (currentMove) {
-      dispatchEvent('aiMoveSelected', { move: currentMove });
-      this._closeModal();
     }
   }
 
