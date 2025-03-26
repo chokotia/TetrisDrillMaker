@@ -237,30 +237,6 @@ export class TetrisApp {
     
   }
 
-  /**
-   * ブロック数レンジスライダーの初期化
-   */
-  initializeBlockRangeSlider() {
-    const blockRangeSlider = this.dom.blockRangeSlider;
-    if (!blockRangeSlider) return;
-    
-    noUiSlider.create(blockRangeSlider, {
-      start: [config.BLOCKS.MIN_COUNT, config.BLOCKS.MAX_COUNT],
-      connect: true,
-      step: 1,
-      range: {
-        min: config.BLOCKS.MIN_COUNT,
-        max: config.BLOCKS.MAX_COUNT,
-      },
-    });
-    
-    blockRangeSlider.noUiSlider.on('update', values => {
-      // 値は文字列なので数値に丸める
-      const minVal = Math.round(values[0]);
-      const maxVal = Math.round(values[1]);
-      this.dom.sliderValues.blockRange.textContent = `${minVal} - ${maxVal}`;
-    });
-  }
 
   /**
    * セルクリック時の処理
