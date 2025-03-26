@@ -1,4 +1,4 @@
-import { GlobalState } from '../modules/state/GlobalState.js';
+import { GlobalState } from '../store/GlobalState.js';
 import { AIEngineController } from '../modules/AIEngineController.js';
 import { dispatchEvent } from '../utils/eventUtils.js';
 import { showNotification } from '../utils/notificationUtils.js';

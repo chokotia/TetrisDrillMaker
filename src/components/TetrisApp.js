@@ -6,7 +6,7 @@ import { MinoManager } from '../modules/MinoManager.js';
 import { EditManager } from '../modules/EditManager.js';
 import { GestureManager } from '../modules/GestureManager.js';
 import { AISuggestionPanel } from './AISuggestionPanel.js';
-import { GlobalState } from '../modules/state/GlobalState.js';
+import { GlobalState } from '../store/GlobalState.js';
 import { showNotification } from '../utils/notificationUtils.js';
 
 /**

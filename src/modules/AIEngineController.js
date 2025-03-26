@@ -1,5 +1,5 @@
 import { AIEngine } from './core/ai/AIEngine.js';
-import { GlobalState } from './state/GlobalState.js';
+import { GlobalState } from '../store/GlobalState.js';
 
 /**
  * アプリのボード状態をAI用のフォーマットに変換

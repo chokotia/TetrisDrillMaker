@@ -1,5 +1,5 @@
-import { config, defaultSettings } from '../../utils/config.js';
-import { generateSeed } from '../../utils/random.js';
+import { config, defaultSettings } from '../utils/config.js';
+import { generateSeed } from '../utils/random.js';
 
 /**
  * グローバルな状態管理クラス

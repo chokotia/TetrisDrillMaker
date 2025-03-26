@@ -1,4 +1,4 @@
-import { GlobalState } from '../modules/state/GlobalState.js';
+import { GlobalState } from '../store/GlobalState.js';
 import { config } from '../utils/config.js';
 
 /**
