@@ -308,9 +308,21 @@ export class TetrisApp {
    * コントロールの初期化
    */
   initializeControls() {
-    this.setupAllEventListeners();
-    this.setupGestureControls();
-    this.setupEditButtons();
+    this.setupEventListeners();
+
+    // ジェスチャーコントロールのセットアップ
+    GestureManager.setupGestureControls(
+      document.querySelector('.tetris-app__main'),
+      document.getElementById('board-container'),
+      null,
+      null,
+      (event) => this.handleCellPaint(event),
+      this.editState
+    );
+    
+    // 編集ボタンのセットアップ autoモードにする
+    EditManager.updateEditButtonState(this.dom.editOptionButtons, 'auto');
+
   }
 
   /**
@@ -321,21 +333,28 @@ export class TetrisApp {
   }
 
   /**
-   * すべてのイベントリスナーの設定
+   * イベントリスナーの設定
    */
-  setupAllEventListeners() {
+  setupEventListeners() {
     this.setupEditOptionListeners();
-    this.setupClearButtonListener();
-    this.setupRemoveUsedButtonListener();
-    this.setupGestureControls();
-    this.setupFillColumnButtonListener();
-    this.setupClearColumnButtonListener();
-    this.setupToggleBoardListener(); 
+
+    // 使用済みピース削除ボタンのリスナー
+    this.dom.removeUsed?.addEventListener('click', () => this.removeUsedPieces());
+
+    // クリアボタンのイベントリスナー  
+    this.dom.clearBoard?.addEventListener('click', () => this.resetToInitialBoard());
     
+    // 列グレー化ボタンのイベントリスナー
+    this.dom.fillColumnButton?.addEventListener('click', () => this.fillColumn());
+
+    // 列クリアボタンのイベントリスナー
+    this.dom.clearColumnButton?.addEventListener('click', () => this.clearColumn());
+    
+    // ボード表示/非表示切り替えボタンのリスナーを設定
+    this.dom.toggleBoard?.addEventListener('click', () => this.toggleBoardVisibility());
+
     // 新しい問題生成ボタンのイベントリスナー
-    this.dom.newProblemButton?.addEventListener('click', () => {
-      this.generateNewProblem();
-    });
+    this.dom.newProblemButton?.addEventListener('click', () => this.generateNewProblem());
   }
 
   /**
@@ -363,26 +382,6 @@ export class TetrisApp {
   }
 
   /**
-   * クリアボタンのイベントリスナー
-   */
-  setupClearButtonListener() {
-    if (this.dom.clearBoard) {
-      this.dom.clearBoard.addEventListener('click', () => 
-        this.resetToInitialBoard()
-      );
-    }
-  }
-
-  /**
-   * 使用済みピース削除ボタンのリスナーを設定
-   */
-  setupRemoveUsedButtonListener() {
-    if (this.dom.removeUsed) {
-      this.dom.removeUsed.addEventListener('click', () => this.removeUsedPieces());
-    }
-  }
-
-  /**
    * ブロック数レンジスライダーの初期化
    */
   initializeBlockRangeSlider() {
@@ -405,27 +404,6 @@ export class TetrisApp {
       const maxVal = Math.round(values[1]);
       this.dom.sliderValues.blockRange.textContent = `${minVal} - ${maxVal}`;
     });
-  }
-
-  /**
-   * ジェスチャーコントロールのセットアップ
-   */
-  setupGestureControls() {
-    GestureManager.setupGestureControls(
-      document.querySelector('.tetris-app__main'),
-      document.getElementById('board-container'),
-      null,
-      null,
-      (event) => this.handleCellPaint(event),
-      this.editState
-    );
-  }
-
-  /**
-   * 編集ボタンのセットアップ
-   */
-  setupEditButtons() {
-    EditManager.updateEditButtonState(this.dom.editOptionButtons, 'auto');
   }
 
   /**
@@ -556,24 +534,6 @@ export class TetrisApp {
   }
 
   /**
-   * 列グレー化ボタンのイベントリスナー
-   */
-  setupFillColumnButtonListener() {
-    if (this.dom.fillColumnButton) {
-      this.dom.fillColumnButton.addEventListener('click', () => this.fillColumn());
-    }
-  }
-
-  /**
-   * 列クリアボタンのイベントリスナー
-   */
-  setupClearColumnButtonListener() {
-    if (this.dom.clearColumnButton) {
-      this.dom.clearColumnButton.addEventListener('click', () => this.clearColumn());
-    }
-  }
-
-  /**
    * 次の列をグレーで埋める
    */
   fillColumn() {
@@ -680,17 +640,6 @@ export class TetrisApp {
     
     // ホールドコンテナに追加
     this.dom.holdContainer.appendChild(holdPieceContainer);
-  }
-
-  /**
-   * ボード表示/非表示切り替えボタンのリスナーを設定
-   */
-  setupToggleBoardListener() {
-    if (this.dom.toggleBoard) {
-      this.dom.toggleBoard.addEventListener('click', () => {
-        this.toggleBoardVisibility();
-      });
-    }
   }
 
   /**
