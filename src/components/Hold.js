@@ -21,28 +21,9 @@ export class Hold {
       };
 
     // ボードの状態変更を監視
-    this._globalState.addBoardStateListener(this._onBoardStateChange.bind(this));
+    this._globalState.addBoardStateListener(() => this._updateDisplay());
 
     // 初期表示を更新
-    this._updateDisplay();
-  }
-
-  /**
-   * ホールドミノを更新
-   * @param {string|null} holdType - ホールドするミノのタイプ
-   */
-  updateHold(holdType) {
-    const currentState = this._globalState.getBoardState();
-    this._globalState.updateBoardState({
-      ...currentState,
-      hold: holdType
-    });
-  }
-
-  /**
-   * ボードの状態が変更されたときのコールバック
-   */
-  _onBoardStateChange(state) {
     this._updateDisplay();
   }
 
@@ -61,13 +42,11 @@ export class Hold {
     
     // ホールドミノを描画
     // const holdType = this._globalState.getBoardState().hold;
-    const holdType = "S";
+    const holdType = "T";
     
-    //this._drawMino(holdType, holdPieceContainer);
     drawMino(holdType, holdPieceContainer);
 
     // ホールドコンテナに追加
     this._dom.holdContainer.appendChild(holdPieceContainer);
   }
-
 }
