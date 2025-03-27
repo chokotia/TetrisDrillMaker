@@ -270,8 +270,6 @@ export class TetrisApp {
     const blockCount = Math.floor(this.randomGenerator() * (blockCountMax - blockCountMin + 1)) + blockCountMin;
     
     BoardManager.createBoard(
-      blockCount, 
-      this.randomGenerator,
       (cell, index, width, height) => this.handleCellClick(cell)
     );
 

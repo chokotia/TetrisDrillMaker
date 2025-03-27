@@ -7,12 +7,10 @@ import { GlobalState } from '../store/GlobalState.js';
 export class BoardManager {
   /**
    * ボードを作成する
-   * @param {number} blockCount - 初期ブロック数
-   * @param {Function} randomGenerator - 乱数生成関数
    * @param {Function} onCellClick - セルクリック時のコールバック
    * @returns {Object} 作成されたボード情報
    */
-  static createBoard(blockCount = 0, randomGenerator, onCellClick) {
+  static createBoard(onCellClick) {
     const boardElement = document.getElementById('board');
 
     const settings = GlobalState.getInstance().getSettings();
@@ -43,35 +41,8 @@ export class BoardManager {
 
     boardElement.appendChild(fragment);
     
-    if (blockCount > 0) {
-      const cells = Array.from(boardElement.children);
-      const columnIndices = Array.from({ length: width }, (_, i) => i);
-      const placedBlocks = new Set();
 
-      for (let i = 0; i < blockCount; i++) {
-        let column;
-        let attempts = 0;
-        const maxAttempts = 100;
-
-        do {
-          column = columnIndices[Math.floor(randomGenerator() * columnIndices.length)];
-          attempts++;
-          if (attempts > maxAttempts) break;
-        } while (placedBlocks.has(`${column}-${i}`));
-
-        for (let row = height - 1; row >= 0; row--) {
-          const index = row * width + column;
-          if (!cells[index].classList.contains('block')) {
-            cells[index].classList.add('block', 'initial-block');
-            cells[index].style.backgroundColor = minoColors['default'];
-            placedBlocks.add(`${column}-${i}`);
-            break;
-          }
-        }
-      }
-    }
-
-    return { width, height };
+    return;
   }
 
   /**
