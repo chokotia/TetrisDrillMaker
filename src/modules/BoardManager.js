@@ -1,4 +1,4 @@
-import { config, minoColors, hexToRgb } from '../utils/config.js';
+import { config, minoColors } from '../utils/config.js';
 
 /**
  * ボード管理クラス
