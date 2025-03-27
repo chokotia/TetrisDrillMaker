@@ -1,5 +1,5 @@
 import { createSeededGenerator} from '../utils/random.js';
-import { config, minoColors } from '../utils/config.js';
+import { config } from '../utils/config.js';
 import { SettingsPanel } from './SettingsPanel.js';
 import { BoardManager } from '../modules/BoardManager.js';
 import { MinoManager } from '../modules/MinoManager.js';
@@ -9,6 +9,7 @@ import { AISuggestionPanel } from './AISuggestionPanel.js';
 import { AIControlPanel } from './AIControlPanel.js';
 import { GlobalState } from '../store/GlobalState.js';
 import { showNotification } from '../utils/notificationUtils.js';
+import { Hold } from './Hold.js';
 
 /**
  * テトリスアプリケーションクラス
@@ -28,7 +29,8 @@ export class TetrisApp {
     this.components = {
       settingsPanel: new SettingsPanel(),
       aiSuggestionPanel: new AISuggestionPanel(),
-      aiControlPanel: new AIControlPanel()
+      aiControlPanel: new AIControlPanel(),
+      hold: new Hold(),
     };
     this.initializeApp();
   }
@@ -42,7 +44,6 @@ export class TetrisApp {
       app: document.getElementById('app'),
       board: document.getElementById('board'),
       nextContainer: document.getElementById('next'),
-      holdContainer: document.getElementById('hold'),
       editNav: document.getElementById('control-panel'),
       clearBoard: document.getElementById('clear-board'),
       editOptionButtons: document.querySelectorAll('.edit-option'),
@@ -79,7 +80,8 @@ export class TetrisApp {
       
       
       // 初期状態では空のホールド表示を作成
-      this.updateHoldDisplay(null);
+      this._globalState.updateHold(null);
+      
 
       // 設定変更のリスナーを追加
       this._globalState.addSettingsListener((settings) => {
@@ -154,9 +156,8 @@ export class TetrisApp {
         );
         
         // ホールドがある場合はホールド表示を更新
-        if (move.suggestion.hold) {
-          this.updateHoldDisplay(move.suggestion.hold);
-        }
+        this._globalState.updateHold(move.suggestion.hold);
+
       }
       
       // 盤面が非表示状態だった場合は、更新後も非表示状態を維持
@@ -290,6 +291,8 @@ export class TetrisApp {
       this.randomGenerator,
       (cell, index, width, height) => this.handleCellClick(cell)
     );
+
+    this._globalState.updateHold(null);
     
     // ダミーボードにも同じサイズの空のボードを作成（ブロックなし、クリックイベントなし）
     const dummyBoard = document.getElementById('dummy-board');
@@ -331,30 +334,6 @@ export class TetrisApp {
    */
   calculateRandomBlockCount(min, max) {
     return Math.floor(this.randomGenerator() * (max - min + 1)) + min;
-  }
-
-  /**
-   * ホールドミノを表示
-   * @param {String} holdType - ホールドミノのタイプ
-   */
-  updateHoldDisplay(holdType) {
-    if (!this.dom.holdContainer) return;
-    
-    // ホールドコンテナをクリア
-    this.dom.holdContainer.innerHTML = '';
-    
-    // ホールド用のコンテナを作成（ネクストと同じスタイルを使用）
-    const holdPieceContainer = document.createElement('div');
-    holdPieceContainer.className = 'next-piece-container';
-    
-    // holdTypeがあれば描画、なければ空のコンテナを表示
-    if (holdType) {
-      // MinoManagerのdrawMino関数を使ってミノを描画
-      MinoManager.drawMino(holdType, holdPieceContainer);
-    }
-    
-    // ホールドコンテナに追加
-    this.dom.holdContainer.appendChild(holdPieceContainer);
   }
 
   /**

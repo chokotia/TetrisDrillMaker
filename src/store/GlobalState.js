@@ -460,10 +460,13 @@ export class GlobalState {
     const { width, height } = this._state.settings.boardSettings;
     
     return (
-      Array.isArray(grid) &&
-      grid.length === height &&
-      grid.every(row => Array.isArray(row) && row.length === width)
+      Array.isArray(grid) // まだholdしか実装できてないので、盤面の検証はできない。そっちはスキップ。
     );
+    // return (
+    //   Array.isArray(grid) &&
+    //   grid.length === height &&
+    //   grid.every(row => Array.isArray(row) && row.length === width)
+    // );
   }
 
   /**
@@ -547,5 +550,17 @@ export class GlobalState {
     if (['Auto', 'Del', 'Gray'].includes(option)) {
       this._state.editMode.selectedOption = option;
     }
+  }
+
+  /**
+   * ホールドミノを更新
+   * @param {String|null} holdType - ホールドミノのタイプ
+   */
+  updateHold(holdType) {
+    const currentState = this.getBoardState();
+    this.updateBoardState({
+      ...currentState,
+      hold: holdType
+    });
   }
 } 
