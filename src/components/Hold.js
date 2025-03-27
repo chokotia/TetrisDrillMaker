@@ -61,65 +61,13 @@ export class Hold {
     
     // ホールドミノを描画
     // const holdType = this._globalState.getBoardState().hold;
-    const holdType = "J";
+    const holdType = "S";
     
     //this._drawMino(holdType, holdPieceContainer);
     drawMino(holdType, holdPieceContainer);
 
-    
     // ホールドコンテナに追加
     this._dom.holdContainer.appendChild(holdPieceContainer);
   }
 
-  /**
-   * ミノを描画
-   * @param {string} minoType - ミノタイプ
-   * @param {HTMLElement} container - コンテナ要素
-   */
-  _drawMino(minoType, container) {
-    const shape = minoShapes[minoType];
-    if (!shape) return;
-
-    const minoElement = this._createMinoElement(shape);
-    this._fillMinoShape(minoElement, shape, minoType);
-    container.appendChild(minoElement);
-  }
-
-  /**
-   * ミノの要素を作成
-   * @param {Array} shape - ミノの形状
-   * @returns {HTMLElement} 作成されたミノ要素
-   */
-  _createMinoElement(shape) {
-    const minoElement = document.createElement('div');
-    minoElement.classList.add('mino');
-    
-    // ミノのグリッドを作成
-    shape.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        if (cell) {
-          const cellElement = document.createElement('div');
-          cellElement.classList.add('cell');
-          cellElement.style.gridColumn = x + 1;
-          cellElement.style.gridRow = y + 1;
-          minoElement.appendChild(cellElement);
-        }
-      });
-    });
-    
-    return minoElement;
-  }
-
-  /**
-   * ミノの形状を塗りつぶす
-   * @param {HTMLElement} minoElement - ミノ要素
-   * @param {Array} shape - ミノの形状
-   * @param {string} minoType - ミノタイプ
-   */
-  _fillMinoShape(minoElement, shape, minoType) {
-    const cells = minoElement.querySelectorAll('.cell');
-    cells.forEach(cell => {
-      cell.style.backgroundColor = `var(--${minoType.toLowerCase()}-color)`;
-    });
-  }
 }
