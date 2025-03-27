@@ -252,4 +252,28 @@ export const defaultSettings = {
   blockCountMin: config.BLOCKS.MIN_COUNT,
   blockCountMax: config.BLOCKS.MAX_COUNT,
   minoMode: 'random',
-}; 
+};
+
+// ミノの種類
+export const MINO_TYPES = {
+  I: 'I',
+  O: 'O',
+  T: 'T',
+  S: 'S',
+  Z: 'Z',
+  J: 'J',
+  L: 'L'
+};
+
+// ミノの種類の配列
+export const MINO_ARRAY = Object.values(MINO_TYPES);
+
+// ミノ生成モード
+export const MINO_MODE = {
+  RANDOM: 'random',
+  SEVEN_BAG_RANDOM: '7bag-random',
+  SEVEN_BAG_PURE: '7bag-pure'
+};
+
+// ネクストピースの最大数
+export const TOTAL_NEXT_COUNT = 100; 

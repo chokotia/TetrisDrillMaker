@@ -1,7 +1,5 @@
 import { GlobalState } from '../store/GlobalState.js';
 import { AIEngineController } from '../modules/AIEngineController.js';
-import { BoardManager } from '../modules/BoardManager.js';
-import { MinoManager } from '../modules/MinoManager.js';
 import { showNotification } from '../utils/notificationUtils.js';
 
 /**
@@ -35,18 +33,7 @@ export class AISuggestionPanel {
 
     // AIボタンのイベントリスナーを追加
     this._dom.openModalButton?.addEventListener('click', () => {
-      const settings = this._globalState.getSettings();
-      const { width, height } = settings.boardSettings;
-      
-      const board = BoardManager.getCurrentBoard(
-        document.getElementById('board'), 
-        width,
-        height
-      );
-      const queue = MinoManager.getQueueForAI();
-      const hold = null;
-      
-      this.openModal({ board, queue, hold });
+      this.openModal();
     });
   }
 
@@ -142,9 +129,8 @@ export class AISuggestionPanel {
 
   /**
    * モーダルを開く
-   * @param {Object} gameState - 現在のゲーム状態（board, queue, holdを含む）
    */
-  openModal(gameState) {
+  openModal() {
     const boardSettings = this._globalState.getSettings().boardSettings;
     
     // 幅が10でない場合は通知を表示して処理を中断
@@ -162,8 +148,12 @@ export class AISuggestionPanel {
       }
     }
     
-    // ゲーム状態を保存
-    this._gameState = gameState;
+    // 現在のゲーム状態を取得
+    const boardState = this._globalState.getBoardState();
+    this._gameState = {
+      queue: boardState.next,
+      hold: boardState.hold
+    };
     
     // モーダルを表示
     try {

@@ -2,40 +2,29 @@ import { GlobalState } from '../store/GlobalState.js';
 import { minoShapes } from '../utils/config.js';
 
 /**
- * ホールドミノの表示を管理するクラス
- * ホールドミノのUI表示と状態管理を担当
+ * ネクストミノの表示を管理するクラス
+ * ネクストミノのUI表示のみを担当
  */
-export class Hold {
+export class Next {
   _globalState;
   _dom;
-  _state;
 
   constructor() {
     this._globalState = GlobalState.getInstance();
-    this._state = {};
 
     // DOM要素の初期化
     this._dom = {
-        holdContainer: document.getElementById('hold'),
-      };
+      nextContainer: document.getElementById('next'),
+    };
 
     // ボードの状態変更を監視
     this._globalState.addBoardStateListener(this._onBoardStateChange.bind(this));
 
+    // 設定変更を監視
+    this._globalState.addSettingsListener(this._onSettingsChange.bind(this));
+
     // 初期表示を更新
     this._updateDisplay();
-  }
-
-  /**
-   * ホールドミノを更新
-   * @param {string|null} holdType - ホールドするミノのタイプ
-   */
-  updateHold(holdType) {
-    const currentState = this._globalState.getBoardState();
-    this._globalState.updateBoardState({
-      ...currentState,
-      hold: holdType
-    });
   }
 
   /**
@@ -46,24 +35,49 @@ export class Hold {
   }
 
   /**
+   * 設定が変更されたときのコールバック
+   */
+  _onSettingsChange(settings) {
+    // 表示件数が変更された場合は表示を更新
+    this._updateDisplay();
+  }
+
+  /**
    * 表示の更新
    */
   _updateDisplay() {
-    if (!this._dom.holdContainer) return;
+    if (!this._dom.nextContainer) return;
     
-    // ホールドコンテナをクリア
-    this._dom.holdContainer.innerHTML = '';
+    // ネクストコンテナをクリア
+    this._dom.nextContainer.innerHTML = '';   
+    const fragment = document.createDocumentFragment();
     
-    // ホールド用のコンテナを作成（ネクストと同じスタイルを使用）
-    const holdPieceContainer = document.createElement('div');
-    holdPieceContainer.className = 'next-piece-container';
+    // 設定から表示件数を取得
+    const nextCount = this._globalState.getSettings().boardSettings.nextCount;
+
+    // ネクストピースを取得
+    const nextPieces = this._globalState.getBoardState().next;
+
+    // 表示件数分のピースをレンダリング
+    nextPieces.slice(0, nextCount).forEach(mino => {
+      if (mino) {
+        const container = this._createNextPieceContainer();
+        this._drawMino(mino, container);
+        fragment.appendChild(container);
+      }
+    });
     
-    // ホールドミノを描画
-    const holdType = this._globalState.getBoardState().hold;
-    this._drawMino(holdType, holdPieceContainer);
-    
-    // ホールドコンテナに追加
-    this._dom.holdContainer.appendChild(holdPieceContainer);
+    this._dom.nextContainer.appendChild(fragment);
+  }
+
+  /**
+   * ネクストピースのコンテナ作成
+   * @returns {HTMLElement} 作成されたコンテナ要素
+   */
+  _createNextPieceContainer() {
+    const container = document.createElement('div');
+    container.classList.add('next-piece-container');
+    return container;
   }
 
   /**

@@ -2,7 +2,6 @@ import { createSeededGenerator} from '../utils/random.js';
 import { config } from '../utils/config.js';
 import { SettingsPanel } from './SettingsPanel.js';
 import { BoardManager } from '../modules/BoardManager.js';
-import { MinoManager } from '../modules/MinoManager.js';
 import { EditManager } from '../modules/EditManager.js';
 import { GestureManager } from '../modules/GestureManager.js';
 import { AISuggestionPanel } from './AISuggestionPanel.js';
@@ -10,6 +9,8 @@ import { AIControlPanel } from './AIControlPanel.js';
 import { GlobalState } from '../store/GlobalState.js';
 import { showNotification } from '../utils/notificationUtils.js';
 import { Hold } from './Hold.js';
+import { Next } from './Next.js';
+import { generateNextPieces } from '../utils/minoUtils.js';
 
 /**
  * テトリスアプリケーションクラス
@@ -31,6 +32,7 @@ export class TetrisApp {
       aiSuggestionPanel: new AISuggestionPanel(),
       aiControlPanel: new AIControlPanel(),
       hold: new Hold(),
+      next: new Next(),
     };
     this.initializeApp();
   }
@@ -43,7 +45,6 @@ export class TetrisApp {
     this.dom = {
       app: document.getElementById('app'),
       board: document.getElementById('board'),
-      nextContainer: document.getElementById('next'),
       editNav: document.getElementById('control-panel'),
       clearBoard: document.getElementById('clear-board'),
       editOptionButtons: document.querySelectorAll('.edit-option'),
@@ -144,15 +145,11 @@ export class TetrisApp {
         // ネクスト配列を作成
         let nextArray = [...move.suggestion.next];
         
-        MinoManager.applyAINext(
-          this.dom.nextContainer,
-          nextArray,
-          nextCount
-        );
+        // ネクストを更新
+        this._globalState.updateNext(nextArray);
         
         // ホールドがある場合はホールド表示を更新
         this._globalState.updateHold(move.suggestion.hold);
-
       }
       
       // 盤面が非表示状態だった場合は、更新後も非表示状態を維持
@@ -191,13 +188,7 @@ export class TetrisApp {
   handleSettingsUpdate(settings) {
     const { boardSettings } = settings;
     
-    // ネクストキューの更新
-    MinoManager.updateNextPieces(
-      this.dom.nextContainer, 
-      boardSettings, 
-      this.randomGenerator
-    );
-
+    // 新しい問題を生成
     this.generateProblem();
   }
 
@@ -312,12 +303,11 @@ export class TetrisApp {
       dummyBoard.appendChild(fragment);
     }
     
-    // 新しい問題を生成するときにネクストピースをリセット
-    MinoManager.currentPieces = [];
-    MinoManager.displayStartIndex = 0;
+    // ネクストピースを生成して表示
+    const nextPieces = generateNextPieces(this.randomGenerator, settings.minoMode);
     
-    MinoManager.updateNextPieces(this.dom.nextContainer, boardSettings, this.randomGenerator);
-    
+    // ネクストを更新
+    this._globalState.updateNext(nextPieces);
   }
 
 

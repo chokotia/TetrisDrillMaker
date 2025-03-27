@@ -563,4 +563,16 @@ export class GlobalState {
       hold: holdType
     });
   }
+
+  /**
+   * ネクストミノを更新
+   * @param {Array} nextPieces - ネクストミノの配列
+   */
+  updateNext(nextPieces) {
+    const currentState = this.getBoardState();
+    this.updateBoardState({
+      ...currentState,
+      next: nextPieces
+    });
+  }
 } 
