@@ -28,27 +28,31 @@ export class BoardManager {
    * @returns {Object} 作成されたボード情報
    */
   static createBoard(onCellClick) {
-    this.updateDisplay(onCellClick);
+    this.onCellClick = onCellClick;
+    this.updateDisplay();
   }
 
   /**
    * 表示の更新
-   * @param {Function} onCellClick - セルクリック時のコールバック
    */
-  static updateDisplay(onCellClick) {
+  static updateDisplay() {
     const boardElement = document.getElementById('board');
     
+    const globalState = GlobalState.getInstance();
+    const boardState = globalState.getBoardState();
+    // const { grid } = boardState; 
+    
     // テスト用のダミーデータ
-    const grid = Array(10).fill().map(() => Array(5).fill(null));
-    grid[9] = ['I', 'J', 'L', 'O', 'S'];  // 最下段にミノを配置
-    grid[8] = ['T', 'Z', null, 'G', null];  // その上にミノとお邪魔ブロックを配置
-    grid[7] = ["W", 'G', 'I', null, 'J'];  // さらにその上にミノとお邪魔ブロックを配置
+    const _grid = Array(10).fill().map(() => Array(5).fill(null));
+    _grid[9] = ['I', 'J', 'T', 'O', 'S'];  // 最下段にミノを配置
+    _grid[8] = ['T', 'Z', null, 'G', null];  // その上にミノとお邪魔ブロックを配置
+    _grid[7] = ["W", 'G', 'I', null, 'J'];  // さらにその上にミノとお邪魔ブロックを配置
     
     // 既存のボードをクリア
     boardElement.innerHTML = '';
     
     // 新しいボードを描画
-    this._drawBoard(boardElement, grid, onCellClick);
+    this._drawBoard(boardElement, _grid, this.onCellClick);
   }
 
   /**
