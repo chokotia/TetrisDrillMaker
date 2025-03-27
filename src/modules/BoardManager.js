@@ -30,17 +30,12 @@ export class BoardManager {
       cell.style.width = `${config.CELL_SIZE}px`;
       cell.style.height = `${config.CELL_SIZE}px`;
 
-      if (onCellClick) {
-        cell.addEventListener('click', () => {
-          onCellClick(cell, i, width, height);
-        });
-      }
+      cell.addEventListener('click', () => {onCellClick(cell);});
 
       fragment.appendChild(cell);
     }
 
-    boardElement.appendChild(fragment);
-    
+    boardElement.appendChild(fragment);    
 
     return;
   }

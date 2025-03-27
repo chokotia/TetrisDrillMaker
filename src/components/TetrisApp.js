@@ -261,17 +261,7 @@ export class TetrisApp {
     const settings = this._globalState.getSettings();
     const { boardSettings } = settings;
     
-    let { min: blockCountMin, max: blockCountMax } = boardSettings.blockRange;
-    
-    if (blockCountMin > blockCountMax) {
-      [blockCountMin, blockCountMax] = [blockCountMax, blockCountMin];
-    }
-    
-    const blockCount = Math.floor(this.randomGenerator() * (blockCountMax - blockCountMin + 1)) + blockCountMin;
-    
-    BoardManager.createBoard(
-      (cell, index, width, height) => this.handleCellClick(cell)
-    );
+    BoardManager.createBoard((cell) => this.handleCellClick(cell));
 
     this._globalState.updateHold(null);
     
