@@ -18,151 +18,59 @@ export class BoardManager {
   static createBoard(boardElement, width, height, blockCount = 0, randomGenerator, onCellClick) {
     if (!boardElement) return null;
 
-    this.setupBoardStyles(boardElement, width, height);
-    this.createBoardCells(boardElement, width, height, onCellClick);
-    
-    if (blockCount > 0) {
-      this.placeInitialBlocks(boardElement, width, height, blockCount, randomGenerator);
-    }
-
-    return { width, height };
-  }
-
-  /**
-   * ボードのスタイル設定
-   * @param {HTMLElement} boardElement - ボード要素
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
-   */
-  static setupBoardStyles(boardElement, width, height) {
     boardElement.style.setProperty('--width', width);
     boardElement.style.setProperty('--height', height);
     boardElement.innerHTML = '';
-  }
-
-  /**
-   * ボードのセルを作成
-   * @param {HTMLElement} boardElement - ボード要素
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
-   * @param {Function} onCellClick - セルクリック時のコールバック
-   */
-  static createBoardCells(boardElement, width, height, onCellClick) {
+    
     const fragment = document.createDocumentFragment();
     const totalCells = width * height;
 
     for (let i = 0; i < totalCells; i++) {
-      const cell = this.createBoardCell(i, width, height, onCellClick);
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.style.width = `${config.CELL_SIZE}px`;
+      cell.style.height = `${config.CELL_SIZE}px`;
+
+      if (onCellClick) {
+        cell.addEventListener('click', () => {
+          onCellClick(cell, i, width, height);
+        });
+      }
+
       fragment.appendChild(cell);
     }
 
     boardElement.appendChild(fragment);
-  }
+    
+    if (blockCount > 0) {
+      const cells = Array.from(boardElement.children);
+      const columnIndices = Array.from({ length: width }, (_, i) => i);
+      const placedBlocks = new Set();
 
-  /**
-   * 個別のセルを作成
-   * @param {number} index - セルのインデックス
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
-   * @param {Function} onCellClick - セルクリック時のコールバック
-   * @returns {HTMLElement} 作成されたセル要素
-   */
-  static createBoardCell(index, width, height, onCellClick) {
-    const cell = document.createElement('div');
-    cell.classList.add('cell');
-    cell.style.width = `${config.CELL_SIZE}px`;
-    cell.style.height = `${config.CELL_SIZE}px`;
+      for (let i = 0; i < blockCount; i++) {
+        let column;
+        let attempts = 0;
+        const maxAttempts = 100;
 
-    if (onCellClick) {
-      cell.addEventListener('click', () => {
-        onCellClick(cell, index, width, height);
-      });
-    }
+        do {
+          column = columnIndices[Math.floor(randomGenerator() * columnIndices.length)];
+          attempts++;
+          if (attempts > maxAttempts) break;
+        } while (placedBlocks.has(`${column}-${i}`));
 
-    return cell;
-  }
-
-  /**
-   * 初期ブロックを配置
-   * @param {HTMLElement} boardElement - ボード要素
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
-   * @param {number} blockCount - 配置するブロック数
-   * @param {Function} randomGenerator - 乱数生成関数
-   */
-  static placeInitialBlocks(boardElement, width, height, blockCount, randomGenerator) {
-    if (blockCount <= 0) return;
-
-    const cells = Array.from(boardElement.children);
-    const columnIndices = Array.from({ length: width }, (_, i) => i);
-    const placedBlocks = new Set();
-
-    for (let i = 0; i < blockCount; i++) {
-      this.placeBlockInColumn(columnIndices, cells, width, height, placedBlocks, i, randomGenerator);
-    }
-  }
-
-  /**
-   * 列にブロックを配置
-   * @param {Array} columnIndices - 列インデックスの配列
-   * @param {Array} cells - セル要素の配列
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
-   * @param {Set} placedBlocks - 配置済みブロックの集合
-   * @param {number} blockIndex - ブロックのインデックス
-   * @param {Function} randomGenerator - 乱数生成関数
-   */
-  static placeBlockInColumn(columnIndices, cells, width, height, placedBlocks, blockIndex, randomGenerator) {
-    let column;
-    let attempts = 0;
-    const maxAttempts = 100;
-
-    do {
-      column = this.getRandomColumn(columnIndices, randomGenerator);
-      attempts++;
-      if (attempts > maxAttempts) break;
-    } while (placedBlocks.has(`${column}-${blockIndex}`));
-
-    this.placeBlockInFirstEmptyCell(column, cells, width, height, placedBlocks, blockIndex);
-  }
-
-  /**
-   * ランダムな列を取得
-   * @param {Array} columnIndices - 列インデックスの配列
-   * @param {Function} randomGenerator - 乱数生成関数
-   * @returns {number} ランダムな列インデックス
-   */
-  static getRandomColumn(columnIndices, randomGenerator) {
-    return columnIndices[Math.floor(randomGenerator() * columnIndices.length)];
-  }
-
-  /**
-   * 列の最初の空きセルにブロックを配置
-   * @param {number} column - 列インデックス
-   * @param {Array} cells - セル要素の配列
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
-   * @param {Set} placedBlocks - 配置済みブロックの集合
-   * @param {number} blockIndex - ブロックのインデックス
-   */
-  static placeBlockInFirstEmptyCell(column, cells, width, height, placedBlocks, blockIndex) {
-    for (let row = height - 1; row >= 0; row--) {
-      const index = row * width + column;
-      if (!cells[index].classList.contains('block')) {
-        this.createInitialBlock(cells[index]);
-        placedBlocks.add(`${column}-${blockIndex}`);
-        break;
+        for (let row = height - 1; row >= 0; row--) {
+          const index = row * width + column;
+          if (!cells[index].classList.contains('block')) {
+            cells[index].classList.add('block', 'initial-block');
+            cells[index].style.backgroundColor = minoColors['default'];
+            placedBlocks.add(`${column}-${i}`);
+            break;
+          }
+        }
       }
     }
-  }
 
-  /**
-   * 初期ブロックを作成
-   * @param {HTMLElement} cell - セル要素
-   */
-  static createInitialBlock(cell) {
-    cell.classList.add('block', 'initial-block');
-    cell.style.backgroundColor = minoColors['default'];
+    return { width, height };
   }
 
   /**
