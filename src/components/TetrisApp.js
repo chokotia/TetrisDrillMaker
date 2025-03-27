@@ -77,11 +77,6 @@ export class TetrisApp {
         (event) => this.handleCellPaint(event),
         this.editState
       );
-      
-      
-      // 初期状態では空のホールド表示を作成
-      this._globalState.updateHold(null);
-      
 
       // 設定変更のリスナーを追加
       this._globalState.addSettingsListener((settings) => {
@@ -340,6 +335,18 @@ export class TetrisApp {
    * 新しい問題を生成
    */
   generateNewProblem() {
+  	
+  	// AIの履歴があるか確認
+    const aiState = this._globalState.getAIState();
+    if (aiState.moves.length > 0) {
+      if (!confirm('AIの履歴があります。新しい問題を生成すると履歴が削除されますが、よろしいですか？')) {
+        return; // キャンセルされた場合は処理を中断
+      }
+      
+      // AIの履歴をクリア
+      this._globalState.clearAIMoves();
+    }
+
     const seed = this._globalState.updateSeed();
     this.randomGenerator = createSeededGenerator(seed);
     this.generateProblem();
