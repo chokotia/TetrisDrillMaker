@@ -267,12 +267,9 @@ export class TetrisApp {
       [blockCountMin, blockCountMax] = [blockCountMax, blockCountMin];
     }
     
-    const blockCount = this.calculateRandomBlockCount(blockCountMin, blockCountMax);
+    const blockCount = Math.floor(this.randomGenerator() * (blockCountMax - blockCountMin + 1)) + blockCountMin;
     
     BoardManager.createBoard(
-      this.dom.board, 
-      boardSettings.width, 
-      boardSettings.height, 
       blockCount, 
       this.randomGenerator,
       (cell, index, width, height) => this.handleCellClick(cell)
@@ -310,16 +307,6 @@ export class TetrisApp {
     this._globalState.updateNext(nextPieces);
   }
 
-
-  /**
-   * ブロック数をランダムに計算
-   * @param {number} min - 最小値
-   * @param {number} max - 最大値
-   * @returns {number} 計算されたブロック数
-   */
-  calculateRandomBlockCount(min, max) {
-    return Math.floor(this.randomGenerator() * (max - min + 1)) + min;
-  }
 
   /**
    * 新しい問題を生成

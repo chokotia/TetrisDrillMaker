@@ -1,5 +1,5 @@
 import { config, minoColors } from '../utils/config.js';
-
+import { GlobalState } from '../store/GlobalState.js';
 /**
  * ボード管理クラス
  * テトリスボードの作成と管理を担当
@@ -7,16 +7,17 @@ import { config, minoColors } from '../utils/config.js';
 export class BoardManager {
   /**
    * ボードを作成する
-   * @param {HTMLElement} boardElement - ボード要素
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
    * @param {number} blockCount - 初期ブロック数
    * @param {Function} randomGenerator - 乱数生成関数
    * @param {Function} onCellClick - セルクリック時のコールバック
    * @returns {Object} 作成されたボード情報
    */
-  static createBoard(boardElement, width, height, blockCount = 0, randomGenerator, onCellClick) {
-    if (!boardElement) return null;
+  static createBoard(blockCount = 0, randomGenerator, onCellClick) {
+    const boardElement = document.getElementById('board');
+
+    const settings = GlobalState.getInstance().getSettings();
+    const { width, height  } = settings.boardSettings;
+
 
     boardElement.style.setProperty('--width', width);
     boardElement.style.setProperty('--height', height);
