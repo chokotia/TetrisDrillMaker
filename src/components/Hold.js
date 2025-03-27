@@ -1,6 +1,5 @@
 import { GlobalState } from '../store/GlobalState.js';
-import { minoShapes } from '../utils/config.js';
-import { drawMino } from '../modules/MinoDrawer.js';
+import { minoShapes, minoColors } from '../utils/config.js';
 
 /**
  * ホールドミノの表示を管理するクラス
@@ -17,7 +16,7 @@ export class Hold {
 
     // DOM要素の初期化
     this._dom = {
-        holdContainer: document.getElementById('hold'),
+        holdArea: document.getElementById('hold'),
       };
 
     // ボードの状態変更を監視
@@ -31,22 +30,52 @@ export class Hold {
    * 表示の更新
    */
   _updateDisplay() {
-    if (!this._dom.holdContainer) return;
     
-    // ホールドコンテナをクリア
-    this._dom.holdContainer.innerHTML = '';
+    // ホールドエリアをクリア
+    this._dom.holdArea.innerHTML = '';
     
-    // ホールド用のコンテナを作成（ネクストと同じスタイルを使用）
-    const holdPieceContainer = document.createElement('div');
-    holdPieceContainer.className = 'next-piece-container';
+    // ホールドミノを描画した要素を作成
+    const holdType = this._globalState.getBoardState().hold;
+    const minoElement = this._drawMino(holdType);
     
-    // ホールドミノを描画
-    // const holdType = this._globalState.getBoardState().hold;
-    const holdType = "T";
+    // ホールドエリアに追加
+    this._dom.holdArea.appendChild(minoElement);
     
-    drawMino(holdType, holdPieceContainer);
-
-    // ホールドコンテナに追加
-    this._dom.holdContainer.appendChild(holdPieceContainer);
   }
+
+  /**
+   * ミノを描画
+   * @param {string} minoType - ミノタイプ
+   * @returns {HTMLElement|null} ミノ要素
+   */
+  _drawMino(minoType) {
+
+    // ミノ表示用のコンテナを作成（ネクストと同じスタイルを使用）
+    const minoDisplayContainer = document.createElement('div');
+    minoDisplayContainer.className = 'next-piece-container';
+
+    const shape = minoShapes[minoType];
+    if (!shape) return minoDisplayContainer;
+
+    const minoElement = document.createElement('div');
+    minoElement.classList.add('next-piece');
+    minoElement.style.display = 'grid';
+    minoElement.style.gridTemplateColumns = `repeat(${shape[0].length}, 1fr)`;
+
+    shape.forEach(row => {
+      row.forEach(cell => {
+        if (cell) {
+          const cellElement = document.createElement('div');
+          cellElement.classList.add('block');
+          cellElement.style.backgroundColor = minoColors[minoType];
+          minoElement.appendChild(cellElement);
+        } else {
+          minoElement.appendChild(document.createElement('div'));
+        }
+      });
+    });
+
+    minoDisplayContainer.appendChild(minoElement);
+    return minoDisplayContainer;
+  } 
 }
