@@ -27,9 +27,8 @@ export class Next {
 
 
   _renderVisibleNextPieces() {
-    const globalState = GlobalState.getInstance();
-    const boardState = globalState.getBoardState();
-    const settings = globalState.getSettings();
+    const boardState = this._globalState.getBoardState();
+    const settings = this._globalState.getSettings();
     
     let currentPieces = boardState.next;
     let visibleCount = settings.boardSettings.nextCount;
