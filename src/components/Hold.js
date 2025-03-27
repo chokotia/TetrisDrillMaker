@@ -1,5 +1,6 @@
 import { GlobalState } from '../store/GlobalState.js';
 import { minoShapes } from '../utils/config.js';
+import { drawMino } from '../modules/MinoDrawer.js';
 
 /**
  * ホールドミノの表示を管理するクラス
@@ -59,8 +60,12 @@ export class Hold {
     holdPieceContainer.className = 'next-piece-container';
     
     // ホールドミノを描画
-    const holdType = this._globalState.getBoardState().hold;
-    this._drawMino(holdType, holdPieceContainer);
+    // const holdType = this._globalState.getBoardState().hold;
+    const holdType = "J";
+    
+    //this._drawMino(holdType, holdPieceContainer);
+    drawMino(holdType, holdPieceContainer);
+
     
     // ホールドコンテナに追加
     this._dom.holdContainer.appendChild(holdPieceContainer);
