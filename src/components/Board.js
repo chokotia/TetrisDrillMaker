@@ -2,7 +2,6 @@ import { GlobalState } from '../store/GlobalState.js';
 import { config } from '../utils/config.js';
 import { BLOCK_COLORS } from '../utils/tetrisDef.js';
 
-
 /**
  * ホールドミノの表示を管理するクラス
  * ホールドミノのUI表示と状態管理を担当

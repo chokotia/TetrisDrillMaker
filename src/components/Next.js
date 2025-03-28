@@ -1,5 +1,5 @@
 import { GlobalState } from '../store/GlobalState.js';
-import { minoColors, minoShapes } from '../utils/tetrisDef.js';
+import { BLOCK_COLORS, minoShapes } from '../utils/tetrisDef.js';
 
 /**
  * ネクストミノの表示を管理するクラス
@@ -78,7 +78,7 @@ export class Next {
         if (cell) {
           const cellElement = document.createElement('div');
           cellElement.classList.add('block');
-          cellElement.style.backgroundColor = minoColors[minoType];
+          cellElement.style.backgroundColor = BLOCK_COLORS[minoType];
           minoElement.appendChild(cellElement);
         } else {
           minoElement.appendChild(document.createElement('div'));

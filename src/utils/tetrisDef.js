@@ -4,23 +4,6 @@ export const MINO_TYPES = ["I", "O", "T", "S", "Z", "J", "L"];
 // ブロックの種類
 export const BLOCK_TYPE = [...MINO_TYPES, "GRAY", "WHITE", null];
 
-// ミノとカラーの対応表
-export const minoColors = {
-  // 通常のミノの色
-  I: '#0F9BD7',
-  J: '#2141C6',
-  L: '#E35B02',
-  O: '#E39F02',
-  S: '#59B101',
-  T: '#AF298A',
-  Z: '#D70F37',
-  
-  // 特殊な状態の色
-  gray: '#CCCCCC',
-  white: '#FFFFFF',
-  default: '#B0C4DE',
-};
-
 // 編集モードのオプション
 export const EDIT_MODE = {
   // AUTO: 'Auto', 将来的に追加予定
