@@ -1,7 +1,6 @@
 import { createSeededGenerator} from '../utils/random.js';
 import { SettingsPanel } from './SettingsPanel.js';
 import { EditManager } from '../modules/EditManager.js';
-import { GestureManager } from '../modules/GestureManager.js';
 import { AISuggestionPanel } from './AISuggestionPanel.js';
 import { AIControlPanel } from './AIControlPanel.js';
 import { GlobalState } from '../store/GlobalState.js';
