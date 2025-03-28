@@ -23,7 +23,7 @@ export class AISuggestionPanel {
       currentMove: null
     };
 
-    this._globalState = GlobalState.getInstance();
+    this._g = GlobalState.getInstance();
     // DOM要素の初期化
     this._initializeDOMElements();
     this._initializeModal();
@@ -36,7 +36,7 @@ export class AISuggestionPanel {
     });
 
     // AIの状態の監視を開始
-    this._globalState.addAIStateListener((state) => {/* 実装予定 */});
+    this._g.addAIStateListener((state) => {/* 実装予定 */});
   }
 
   /**
@@ -103,7 +103,7 @@ export class AISuggestionPanel {
    */
   _initializeEventListeners() {
     // AIの状態の監視を開始
-    this._globalState.addAIStateListener((state) => {
+    this._g.addAIStateListener((state) => {
       this._updateModalDisplay();
     });
 
@@ -133,7 +133,7 @@ export class AISuggestionPanel {
    * モーダルを開く
    */
   openModal() {
-    const boardSettings = this._globalState.getSettings().boardSettings;
+    const boardSettings = this._g.getSettings().boardSettings;
     
     // 幅が10でない場合は通知を表示して処理を中断
     if (boardSettings.width !== 10) {
@@ -151,7 +151,7 @@ export class AISuggestionPanel {
     }
     
     // 現在のゲーム状態を取得
-    const boardState = this._globalState.getBoardState();
+    const boardState = this._g.getBoardState();
     this._gameState = {
       queue: boardState.next,
       hold: boardState.hold
@@ -188,7 +188,7 @@ export class AISuggestionPanel {
 
     try {
       this.updateSearchStatus(true, '探索中...');
-      const settings = this._globalState.getSettings();
+      const settings = this._g.getSettings();
       await this._aiEngine.startSearch(
         this._gameState,
         0,
@@ -204,7 +204,7 @@ export class AISuggestionPanel {
    */
   _confirmResetAIHistory() {
     if (confirm('AIの探索履歴をリセットしますか？')) {
-      this._globalState.clearAIMoves();
+      this._g.clearAIMoves();
     }
   }
 
@@ -214,7 +214,7 @@ export class AISuggestionPanel {
    * @private
    */
   _selectMove(index) {
-    const move = this._globalState.selectAIMove(index);
+    const move = this._g.selectAIMove(index);
     // 選択状態の更新のみを行い、イベントは発火しない
     this._updateModalDisplay();
   }
@@ -228,7 +228,7 @@ export class AISuggestionPanel {
       return;
     }
 
-    const aiState = this._globalState.getAIState();
+    const aiState = this._g.getAIState();
 
     // 表示用の状態を作成
     const displayState = {

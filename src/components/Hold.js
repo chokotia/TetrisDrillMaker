@@ -11,7 +11,7 @@ export class Hold {
   _state;
 
   constructor() {
-    this._globalState = GlobalState.getInstance();
+    this._g = GlobalState.getInstance();
     this._state = {};
 
     // DOM要素の初期化
@@ -20,7 +20,7 @@ export class Hold {
       };
 
     // ボードの状態変更を監視
-    this._globalState.addBoardStateListener(() => this._updateDisplay());
+    this._g.addBoardStateListener(() => this._updateDisplay());
 
     // 初期表示を更新
     this._updateDisplay();
@@ -35,7 +35,7 @@ export class Hold {
     this._dom.holdArea.innerHTML = '';
     
     // ホールドミノを描画した要素を作成
-    const holdType = this._globalState.getBoardState().hold;
+    const holdType = this._g.getBoardState().hold;
     const minoElement = this._drawMino(holdType);
     
     // ホールドエリアに追加

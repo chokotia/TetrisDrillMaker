@@ -15,7 +15,7 @@ export class Board {
     
     this.onCellClick = onCellClick;
     
-    this._globalState = GlobalState.getInstance();
+    this._g = GlobalState.getInstance();
     this._state = {};
 
     // DOM要素の初期化
@@ -24,7 +24,7 @@ export class Board {
       };
 
     // ボードの状態変更を監視
-    this._globalState.addBoardStateListener(() => this._updateDisplay());
+    this._g.addBoardStateListener(() => this._updateDisplay());
 
     // 初期表示を更新
     this._setInitialBoard();
@@ -34,9 +34,9 @@ export class Board {
    * ボードの初期化
    */
   _setInitialBoard() {
-    const {width, height} = this._globalState.getSettings().boardSettings;
+    const {width, height} = this._g.getSettings().boardSettings;
     let grid = Array(height).fill().map(() => Array(width).fill(null));
-    this._globalState.updateGridAll(grid);
+    this._g.updateGridAll(grid);
   }
 
   /**

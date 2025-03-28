@@ -10,7 +10,7 @@ export class Next {
   _dom;
 
   constructor() {
-    this._globalState = GlobalState.getInstance();
+    this._g = GlobalState.getInstance();
 
     // DOM要素の初期化
     this._dom = {
@@ -18,8 +18,8 @@ export class Next {
     };
 
     // ボードの状態変更と設定変更を監視
-    this._globalState.addBoardStateListener(() => this._renderVisibleNextPieces());
-    this._globalState.addSettingsListener(() => this._renderVisibleNextPieces());
+    this._g.addBoardStateListener(() => this._renderVisibleNextPieces());
+    this._g.addSettingsListener(() => this._renderVisibleNextPieces());
 
     // 初期表示を更新
     this._renderVisibleNextPieces();
@@ -27,8 +27,8 @@ export class Next {
 
 
   _renderVisibleNextPieces() {
-    const boardState = this._globalState.getBoardState();
-    const settings = this._globalState.getSettings();
+    const boardState = this._g.getBoardState();
+    const settings = this._g.getSettings();
     
     let currentPieces = boardState.next;
     let visibleCount = settings.boardSettings.nextCount;

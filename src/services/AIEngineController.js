@@ -82,7 +82,7 @@ export class AIEngineController {
 
         this.isCalculating = false;
         this.eventListeners = new Map();
-        this._globalState = GlobalState.getInstance();
+        this._g = GlobalState.getInstance();
     }
 
     /**
@@ -174,7 +174,7 @@ export class AIEngineController {
             
             // 指定された手数分の計算を依頼
             this.aiEngine.setRangeOffset(-grayColumnCount+1, 1);
-            const settings = this._globalState.getSettings();
+            const settings = this._g.getSettings();
             this.aiEngine.calculateMoves(
                 settings.aiSettings.movesCount,
                 settings.aiSettings.searchTime * 1000,
@@ -207,7 +207,7 @@ export class AIEngineController {
         if (!this.aiEngine || this.isCalculating) return false;
 
         try {
-            const state = this._globalState.getAIState();
+            const state = this._g.getAIState();
             if (!state.moves || state.moves.length === 0) {
                 this.emit('error', '探索履歴がありません');
                 return false;
@@ -229,7 +229,7 @@ export class AIEngineController {
      */
     handleMovesCalculated(moves) {
         // 計算された手を履歴に追加
-        this._globalState.addAIMoves(moves);
+        this._g.addAIMoves(moves);
         
         // 計算完了を通知
         this.isCalculating = false;

@@ -9,7 +9,7 @@ export class AIControlPanel {
   _dom;
 
   constructor() {
-    this._globalState = GlobalState.getInstance();
+    this._g = GlobalState.getInstance();
     this._initializeDOMElements();
     this._initializeEventListeners();
   }
@@ -31,17 +31,17 @@ export class AIControlPanel {
    */
   _initializeEventListeners() {
     // AIの状態の監視を開始
-    this._globalState.addAIStateListener((state) => {
+    this._g.addAIStateListener((state) => {
       this.updateAIStateDisplay(state);
     });
 
     // ボタンのイベントリスナーを設定
     this._dom.aiNextButton?.addEventListener('click', () => {
-      this._globalState.moveToNextAIMove();
+      this._g.moveToNextAIMove();
     });
 
     this._dom.aiPrevButton?.addEventListener('click', () => {
-      this._globalState.moveToPreviousAIMove();
+      this._g.moveToPreviousAIMove();
     });
 
     // ボード表示/非表示切り替えボタンのリスナー
@@ -50,7 +50,7 @@ export class AIControlPanel {
     });
 
     // 初期状態の表示を更新
-    const initialState = this._globalState.getAIState();
+    const initialState = this._g.getAIState();
     this.updateAIStateDisplay(initialState);
   }
 
@@ -84,8 +84,8 @@ export class AIControlPanel {
    * ボードの表示/非表示を切り替える
    */
   toggleBoardVisibility() {
-    const isGridHidden = this._globalState.isGridHidden();
-    this._globalState.setGridHidden(!isGridHidden);
+    const isGridHidden = this._g.isGridHidden();
+    this._g.setGridHidden(!isGridHidden);
   }
 
   /**

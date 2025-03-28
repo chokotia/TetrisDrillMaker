@@ -13,7 +13,7 @@ export class SettingsPanel {
   _elements;
 
   constructor() {
-    this._globalState = GlobalState.getInstance();
+    this._g = GlobalState.getInstance();
     
     // DOM要素の初期化
     this._modalElement = document.getElementById('settings-modal');
@@ -63,7 +63,7 @@ export class SettingsPanel {
    * 現在の設定値をUIに反映
    */
   _updateUIWithCurrentSettings() {
-    const settings = this._globalState.getSettings();
+    const settings = this._g.getSettings();
     
     // 盤面設定の反映
     this._updateSliderValue('width', settings.boardSettings.width);
@@ -142,7 +142,7 @@ export class SettingsPanel {
   _initializeBlockRangeSlider() {
     if (!this._elements.blockRange) return;
 
-    const settings = this._globalState.getSettings();
+    const settings = this._g.getSettings();
     noUiSlider.create(this._elements.blockRange, {
       start: [settings.boardSettings.blockRange.min, 
               settings.boardSettings.blockRange.max],
@@ -221,7 +221,7 @@ export class SettingsPanel {
    * @param {any} value - 新しい値
    */
   _updateSettings(path, value) {
-    const settings = { ...this._globalState.getSettings() };
+    const settings = { ...this._g.getSettings() };
     const keys = path.split('.');
     
     let target = settings;
@@ -233,6 +233,6 @@ export class SettingsPanel {
     }
     
     target[keys[keys.length - 1]] = value;
-    this._globalState.updateSettings(settings);
+    this._g.updateSettings(settings);
   }
 } 

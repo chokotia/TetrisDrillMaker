@@ -10,7 +10,7 @@ export class EditModePanel {
   _state;
 
   constructor() {
-    this._globalState = GlobalState.getInstance();
+    this._g = GlobalState.getInstance();
     this._state = {};
 
     // DOM要素の初期化
@@ -27,7 +27,7 @@ export class EditModePanel {
     });
 
     // グローバル状態の変更を監視
-    this._globalState.addEditModeListener(() => this._updateDisplay());
+    this._g.addEditModeListener(() => this._updateDisplay());
 
     // 初期表示を更新
     this._updateDisplay();
@@ -39,14 +39,14 @@ export class EditModePanel {
    */
   _handleEditOptionClick(action) {
     // グローバル状態を更新
-    this._globalState.updateEditMode(action);
+    this._g.updateEditMode(action);
   }
 
   /**
    * 表示の更新
    */
   _updateDisplay() {
-    const { selectedOption } = this._globalState.getEditMode();
+    const { selectedOption } = this._g.getEditMode();
     
     // 編集ボタンの状態を更新
     this._dom.editOptionButtons.forEach(button => {
