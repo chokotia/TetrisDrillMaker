@@ -1,4 +1,4 @@
-import { config, defaultSettings } from '../utils/config.js';
+import { config, defaultSettings, BLOCK_TYPE } from '../utils/config.js';
 import { generateSeed } from '../utils/random.js';
 
 /**
@@ -573,6 +573,62 @@ export class GlobalState {
     this.updateBoardState({
       ...currentState,
       next: nextPieces
+    });
+  }
+
+  /**
+   * グリッドの特定の座標を更新
+   * @param {number} x - x座標
+   * @param {number} y - y座標
+   * @param {string} blockType - ブロックタイプ
+   */
+  updateGrid(x, y, blockType) {
+    // BLOCK_TYPEに含まれているかチェック
+    if (!BLOCK_TYPE.includes(blockType)) {
+      console.warn('無効なブロックタイプです:', blockType);
+      return;
+    }
+
+    const currentState = this.getBoardState();
+    const newGrid = currentState.grid.map(row => [...row]);
+    
+    // 座標が有効な範囲内かチェック
+    if (y >= 0 && y < newGrid.length && x >= 0 && x < newGrid[0].length) {
+      newGrid[y][x] = blockType;
+      this.updateBoardState({
+        ...currentState,
+        grid: newGrid
+      });
+    } else {
+      console.warn('無効な座標です:', x, y);
+    }
+  }
+
+  /**
+   * グリッド全体を更新
+   * @param {Array<Array<string>>} newGrid - 新しいグリッドの状態
+   */
+  updateGridAll(newGrid) {
+    // グリッドの形式チェック
+    if (!Array.isArray(newGrid) || !newGrid.every(row => Array.isArray(row))) {
+      console.warn('無効なグリッド形式です');
+      return;
+    }
+
+    // 各セルのブロックタイプの検証
+    const isValidBlockTypes = newGrid.every(row => 
+      row.every(cell => BLOCK_TYPE.includes(cell))
+    );
+
+    if (!isValidBlockTypes) {
+      console.warn('無効なブロックタイプが含まれています');
+      return;
+    }
+
+    const currentState = this.getBoardState();
+    this.updateBoardState({
+      ...currentState,
+      grid: newGrid.map(row => [...row])
     });
   }
 } 

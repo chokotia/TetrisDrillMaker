@@ -42,6 +42,25 @@ export const minoColors = {
   default: '#B0C4DE',
 };
 
+export const BLOCK_TYPE = ["I", "J", "L", "O", "S", "T", "Z", "GRAY", "WHITE", null];
+
+// ミノとカラーの対応表
+export const BLOCK_COLORS = {
+  // 通常のミノの色
+  I: '#0F9BD7',
+  J: '#2141C6',
+  L: '#E35B02',
+  O: '#E39F02',
+  S: '#59B101',
+  T: '#AF298A',
+  Z: '#D70F37',
+  
+  // 特殊な状態の色
+  GRAY: '#CCCCCC', // gray お邪魔ブロック
+  WHITE: '#FFFFFF', // 編集途中の白いセル
+};
+
+
 /**
  * 16進数カラーコードをRGBカラー形式に変換
  * @param {string} hex - 16進数カラーコード (#RRGGBB または #RGB 形式)

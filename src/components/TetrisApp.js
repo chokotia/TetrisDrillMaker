@@ -10,6 +10,7 @@ import { GlobalState } from '../store/GlobalState.js';
 import { showNotification } from '../utils/notificationUtils.js';
 import { Hold } from './Hold.js';
 import { Next } from './Next.js';
+import { Board } from './Board.js';
 import { generateNextPieces } from '../utils/minoUtils.js';
 
 /**
@@ -33,6 +34,7 @@ export class TetrisApp {
       aiControlPanel: new AIControlPanel(),
       hold: new Hold(),
       next: new Next(),
+      board: new Board((cell, x, y) => this.handleCellClick(cell, x, y)),
     };
     this.initializeApp();
   }
@@ -223,9 +225,11 @@ export class TetrisApp {
    * @param {number} width - ボードの幅
    * @param {number} height - ボードの高さ
    */
-  handleCellClick(cell) {
+  handleCellClick(cell, x, y) {
     this.editState = EditManager.handleEditCellClick(
       cell, 
+      x,
+      y,
       this.editState
     );
   }
@@ -260,8 +264,6 @@ export class TetrisApp {
     // 保存されている設定を取得
     const settings = this._globalState.getSettings();
     const { boardSettings } = settings;
-    
-    BoardManager.createBoard((cell) => this.handleCellClick(cell));
 
     this._globalState.updateHold(null);
     

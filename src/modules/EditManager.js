@@ -53,7 +53,7 @@ export class EditManager {
    * @param {Object} state - 編集マネージャーの状態
    * @returns {Object} 更新された状態
    */
-  static handleEditCellClick(cell, state) {
+  static handleEditCellClick(cell, x, y, state) {
     if (cell.classList.contains('initial-block')) {
       return state;
     }
@@ -62,10 +62,10 @@ export class EditManager {
     
     switch (newState.currentEditAction) {
       case 'delete':
-        this.handleDeleteAction(cell);
+        this.handleDeleteAction(cell, x, y);
         break;
       case 'gray':
-        this.handleGrayAction(cell);
+        this.handleGrayAction(cell, x, y);
         break;
       default:
         // pass
@@ -79,16 +79,16 @@ export class EditManager {
    * 削除アクション
    * @param {HTMLElement} cell - セル要素
    */
-  static handleDeleteAction(cell) {
-    BoardManager.paintCell(cell, '');
+  static handleDeleteAction(cell, x, y) {
+    BoardManager.paintCell(cell, x, y, null);
   }
 
   /**
    * グレーブロックアクション
    * @param {HTMLElement} cell - セル要素
    */
-  static handleGrayAction(cell) {
-    BoardManager.paintCell(cell, minoColors['gray']);
+  static handleGrayAction(cell, x, y) {
+    BoardManager.paintCell(cell, x, y, "GRAY");
   }
   
   /**
