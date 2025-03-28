@@ -131,13 +131,6 @@ html, body {
   height: max-content;
 }
 
-.dummy-board {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
-}
-
 .active-board {
   z-index: 1;
 }
@@ -419,9 +412,4 @@ body {
     --size-next-piece-height: 35px;
     --size-next-piece-block-size: 12px;
   }
-}
-
-/* ボードの切り替え用 */
-.active-board, .dummy-board {
-  position: relative;
 }

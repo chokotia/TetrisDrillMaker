@@ -1,7 +1,5 @@
 import { createSeededGenerator} from '../utils/random.js';
-import { config } from '../utils/config.js';
 import { SettingsPanel } from './SettingsPanel.js';
-import { BoardManager } from '../modules/BoardManager.js';
 import { EditManager } from '../modules/EditManager.js';
 import { GestureManager } from '../modules/GestureManager.js';
 import { AISuggestionPanel } from './AISuggestionPanel.js';
@@ -201,7 +199,7 @@ export class TetrisApp {
   setupButtonEventListeners() {
     
     // クリアボタンのイベントリスナー  
-    this.dom.clearBoard?.addEventListener('click', () => this.resetToInitialBoard());
+    this.dom.clearBoard?.addEventListener('click', () => this.clearBoard());
     
     // 新しい問題生成ボタンのイベントリスナー
     this.dom.newProblemButton?.addEventListener('click', () => this.generateNewProblem());
@@ -252,9 +250,8 @@ export class TetrisApp {
   /**
    * 初期状態にボードをリセット
    */
-  resetToInitialBoard() {
-    //BoardManager.resetToInitialBoard(this.dom.board);
-    console.log('編集内容をクリアしました。初期ブロックのみ残っています。');
+  clearBoard() {
+    this.generateProblem();
   }
 
   /**
@@ -276,30 +273,9 @@ export class TetrisApp {
     // ネクストを更新
     const nextPieces = generateNextPieces(this.randomGenerator, settings.minoMode);
     this._globalState.updateNext(nextPieces);
-    
-    // ダミーボードにも同じサイズの空のボードを作成（ブロックなし、クリックイベントなし）
-    const dummyBoard = document.getElementById('dummy-board');
-    if (dummyBoard) {
-      // ダミーボードのスタイル設定
-      dummyBoard.style.setProperty('--width', width);
-      dummyBoard.style.setProperty('--height', height);
-      dummyBoard.innerHTML = '';
-      
-      // 空のセルを作成
-      const totalCells = width * height;
-      const fragment = document.createDocumentFragment();
-      
-      for (let i = 0; i < totalCells; i++) {
-        const cell = document.createElement('div');
-        cell.classList.add('cell');
-        cell.style.width = `${config.CELL_SIZE}px`;
-        cell.style.height = `${config.CELL_SIZE}px`;
-        fragment.appendChild(cell);
-      }
-      
-      dummyBoard.appendChild(fragment);
-    }
-    
+
+    // グリッドを表示
+    this._globalState.setGridHidden(false);
   }
 
 

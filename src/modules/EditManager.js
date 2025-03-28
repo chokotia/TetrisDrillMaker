@@ -1,5 +1,3 @@
-import { minoColors } from '../utils/config.js';
-import { BoardManager } from './BoardManager.js';
 import { GlobalState } from '../store/GlobalState.js';
 
 /**

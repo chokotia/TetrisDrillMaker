@@ -84,29 +84,8 @@ export class AIControlPanel {
    * ボードの表示/非表示を切り替える
    */
   toggleBoardVisibility() {
-    const board = document.getElementById('board');
-    const dummyBoard = document.getElementById('dummy-board');
-    
-    if (board && dummyBoard) {
-      // 現在のボードの状態をチェック
-      const isMainBoardActive = !board.classList.contains('d-none');
-      
-      if (isMainBoardActive) {
-        // メインボードを非表示にしてダミーボードを表示
-        board.classList.add('d-none');
-        dummyBoard.classList.remove('d-none');
-        
-        // アイコンを変更（目の表示に）
-        this._dom.toggleBoard.innerHTML = '<i class="bi bi-eye"></i>';
-      } else {
-        // ダミーボードを非表示にしてメインボードを表示
-        dummyBoard.classList.add('d-none');
-        board.classList.remove('d-none');
-        
-        // アイコンを変更（目に斜線を入れた表示に）
-        this._dom.toggleBoard.innerHTML = '<i class="bi bi-eye-slash"></i>';
-      }
-    }
+    const isGridHidden = this._globalState.isGridHidden();
+    this._globalState.setGridHidden(!isGridHidden);
   }
 
   /**

@@ -22,6 +22,7 @@ export class GlobalState {
         hold: null,
         next: [],
         grid: Array(20).fill().map(() => Array(10).fill(null)),
+        isGridHidden: false,
         listeners: new Set()
       },
       editMode: {
@@ -372,7 +373,8 @@ export class GlobalState {
     return {
       hold: this._state.board.hold,
       next: [...this._state.board.next],
-      grid: this._state.board.grid.map(row => [...row])
+      grid: this._state.board.grid.map(row => [...row]),
+      isGridHidden: this._state.board.isGridHidden,
     };
   }
 
@@ -629,6 +631,31 @@ export class GlobalState {
     this.updateBoardState({
       ...currentState,
       grid: newGrid.map(row => [...row])
+    });
+  }
+
+  /**
+   * グリッドの表示/非表示状態を取得
+   * @returns {boolean} グリッドが非表示の場合はtrue
+   */
+  isGridHidden() {
+    return this._state.board.isGridHidden;
+  }
+
+  /**
+   * グリッドの表示/非表示状態を設定
+   * @param {boolean} hidden - グリッドを非表示にする場合はtrue
+   */
+  setGridHidden(hidden) {
+    if (typeof hidden !== 'boolean') {
+      console.warn('無効な値です。boolean型を指定してください。');
+      return;
+    }
+
+    const currentState = this.getBoardState();
+    this.updateBoardState({
+      ...currentState,
+      isGridHidden: hidden
     });
   }
 } 

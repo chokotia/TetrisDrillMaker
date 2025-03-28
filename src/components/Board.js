@@ -33,13 +33,8 @@ export class Board {
    * ボードの初期化
    */
   _setInitialBoard() {
-
     const {width, height} = this._globalState.getSettings().boardSettings;
-    
     let grid = Array(height).fill().map(() => Array(width).fill(null));
-    grid[1][1] = 'I';
-    grid[2][1] = 'J';
-
     this._globalState.updateGridAll(grid);
   }
 
@@ -50,15 +45,15 @@ export class Board {
    
     const globalState = GlobalState.getInstance();
     const boardState = globalState.getBoardState();
-    const { grid } = boardState;   
+    const { grid, isGridHidden } = boardState;   
     
-    this._drawBoard(grid);
+    this._drawBoard(grid, isGridHidden);
   }
 
   /**
    * ボードを描画
    */
-  _drawBoard(grid) {
+  _drawBoard(grid, isGridHidden) {
     const width = grid[0].length;
     const height = grid.length;
 
@@ -77,13 +72,16 @@ export class Board {
         cell.style.width = `${config.CELL_SIZE}px`;
         cell.style.height = `${config.CELL_SIZE}px`;
 
-        cell.addEventListener('click', () => {this.onCellClick(cell, x, y);});
-
-        // グリッドの値に基づいて色を設定
-        const cellValue = grid[y][x];
-        if (cellValue) {
-          cell.style.backgroundColor = BLOCK_COLORS[cellValue];
-          cell.classList.add('block');
+        // グリッドが非表示の場合はクリックイベント、セルの色付け処理を無視
+        if (!isGridHidden) {
+          cell.addEventListener('click', () => {this.onCellClick(cell, x, y);});
+        
+          // グリッドの値に基づいて色を設定
+          const cellValue = grid[y][x];
+          if (cellValue) {
+            cell.style.backgroundColor = BLOCK_COLORS[cellValue];
+              cell.classList.add('block');
+          }
         }
 
         fragment.appendChild(cell);
