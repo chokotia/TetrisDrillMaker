@@ -199,10 +199,9 @@ export class TetrisApp {
   setupButtonEventListeners() {
     
     // クリアボタンのイベントリスナー  
-    this.dom.clearBoard?.addEventListener('click', () => this.clearBoard());
-    
+    this.dom.clearBoard?.addEventListener('click', () => this.generateProblem(false, false));
     // 新しい問題生成ボタンのイベントリスナー
-    this.dom.newProblemButton?.addEventListener('click', () => this.generateNewProblem());
+    this.dom.newProblemButton?.addEventListener('click', () => this.generateProblem());
 
     // 編集ボタン(del, gray)のイベントリスナー
     this.dom.editOptionButtons.forEach(button => {
@@ -246,18 +245,28 @@ export class TetrisApp {
     }
   }
 
-  /**
-  /**
-   * 初期状態にボードをリセット
-   */
-  clearBoard() {
-    this.generateProblem();
-  }
 
   /**
    * 問題の生成
    */
-  generateProblem() {
+  generateProblem(isUpdateSeed = true, isClearAIHistory = true) {
+
+  	// AIの履歴の削除
+    if (isClearAIHistory) {
+      const aiState = this._globalState.getAIState();
+      if (aiState.moves.length > 0) {
+        if (!confirm('AIの履歴があります。新しい問題を生成すると履歴が削除されますが、よろしいですか？')) {
+          return;  // キャンセルされた場合、ここで処理を中断する
+        }
+        // AIの履歴をクリア
+        this._globalState.clearAIMoves();
+      }
+    }
+
+    // シードの更新
+    const _seed = isUpdateSeed ? this._globalState.updateSeed() : this._globalState.getSeed();
+    this.randomGenerator = createSeededGenerator(_seed);
+
     // 保存されている設定を取得
     const settings = this._globalState.getSettings();
     const { width, height } = settings.boardSettings;
@@ -276,28 +285,6 @@ export class TetrisApp {
 
     // グリッドを表示
     this._globalState.setGridHidden(false);
-  }
-
-
-  /**
-   * 新しい問題を生成
-   */
-  generateNewProblem() {
-  	
-  	// AIの履歴があるか確認
-    const aiState = this._globalState.getAIState();
-    if (aiState.moves.length > 0) {
-      if (!confirm('AIの履歴があります。新しい問題を生成すると履歴が削除されますが、よろしいですか？')) {
-        return; // キャンセルされた場合は処理を中断
-      }
-      
-      // AIの履歴をクリア
-      this._globalState.clearAIMoves();
-    }
-
-    const seed = this._globalState.updateSeed();
-    this.randomGenerator = createSeededGenerator(seed);
-    this.generateProblem();
   }
 
 } 
