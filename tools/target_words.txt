@@ -1,0 +1,60 @@
+--color-bg
+--color-board-bg
+--color-board-border
+--color-cell-default
+--color-next-bg
+--color-next-border
+--color-next-piece-bg
+--color-edit-selected-bg
+--color-edit-selected-text
+--color-modal-header
+--color-button-focus
+--color-ai-history-item
+--color-ai-history-selected
+--color-ai-history-hover
+
+/* テトリスピースの色 */
+--color-piece-i
+--color-piece-o
+--color-piece-t
+--color-piece-l
+--color-piece-j
+--color-piece-s
+--color-piece-z
+--color-piece-g
+
+/* フォントサイズ */
+--font-size-small
+--font-size-base
+--font-size-large
+
+/* 間隔 */
+--spacing-xs
+--spacing-sm
+--spacing-md
+--spacing-lg
+
+/* モバイル用ベース設定 - すべてのサイズ関連変数をここで定義 */
+/* レイアウト変数 */
+--layout-header-height
+--layout-footer-height
+
+/* ゲーム要素のサイズ */
+--size-cell-size
+--size-next-piece-width
+--size-next-piece-height
+--size-next-piece-block-size
+
+/* パディングとマージン */
+--spacing-modal
+--spacing-container
+--spacing-button
+--font-size-button
+
+/* その他のサイズ */
+--size-ai-piece-type
+--font-size-ai-piece-type
+--font-size-ai-move
+--size-ai-drumroll-min-width
+--size-ai-move-max-width
+--size-ai-display-min-width
