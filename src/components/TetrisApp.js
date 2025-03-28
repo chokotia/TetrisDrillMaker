@@ -1,15 +1,15 @@
-import { createSeededGenerator} from '../utils/random.js';
-import { SettingsPanel } from './SettingsPanel.js';
-import { EditManager } from '../modules/EditManager.js';
-import { AISuggestionPanel } from './AISuggestionPanel.js';
-import { AIControlPanel } from './AIControlPanel.js';
-import { GlobalState } from '../store/GlobalState.js';
 import { Hold } from './Hold.js';
 import { Next } from './Next.js';
 import { Board } from './Board.js';
 import { EditModePanel } from './EditModePanel.js';
-import { generateNextPieces } from '../utils/minoUtils.js';
+import { SettingsPanel } from './SettingsPanel.js';
+import { AISuggestionPanel } from './AISuggestionPanel.js';
+import { AIControlPanel } from './AIControlPanel.js';
 
+import { GlobalState } from '../store/GlobalState.js';
+import { createSeededGenerator} from '../utils/random.js';
+import { generateNextPieces } from '../modules/GenerateNextPieces.js';
+import { handleEditCellClick } from '../modules/EditManager.js';
 
 /**
  * テトリスアプリケーションクラス
@@ -35,7 +35,7 @@ export class TetrisApp {
       aiControlPanel: new AIControlPanel(),
       hold: new Hold(),
       next: new Next(),
-      board: new Board((x, y) => EditManager.handleEditCellClick(x, y)),
+      board: new Board((x, y) => handleEditCellClick(x, y)),
       EditModePanel: new EditModePanel(),
     };
 

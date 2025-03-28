@@ -1,6 +1,6 @@
-import { shuffle } from './random.js';
-import { TOTAL_NEXT_COUNT }  from './config.js';
-import { MINO_TYPES, NEXT_QUEUE_GEN_MODE } from './tetrisDef.js';
+import { shuffle } from '../utils/random.js';
+import { TOTAL_NEXT_COUNT }  from '../utils/config.js';
+import { MINO_TYPES, NEXT_QUEUE_GEN_MODE } from '../utils/tetrisDef.js';
 
 /**
  * NEXTピースを生成

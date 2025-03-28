@@ -316,8 +316,8 @@ export class AISuggestionPanel {
     this._state.statusMessage = message;
     this._updateModalDisplay();
     
-    // エラーメッセージを通知として表示
-    showNotification(message, 'danger');
+    console.log(`[error] ${message}`);
+    alert(`[error] ${message}`);
   }
 
   /**
