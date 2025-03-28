@@ -8,8 +8,8 @@ import { AIControlPanel } from './AIControlPanel.js';
 
 import { GlobalState } from '../store/GlobalState.js';
 import { createSeededGenerator} from '../utils/random.js';
-import { generateNextPieces } from '../modules/GenerateNextPieces.js';
-import { handleEditCellClick } from '../modules/EditManager.js';
+import { generateNextPieces } from '../services/GenerateNextPieces.js';
+import { handleEditCellClick } from '../services/EditManager.js';
 
 /**
  * テトリスアプリケーションクラス

@@ -54,7 +54,7 @@ export class AIEngine {
 
         return new Promise((resolve, reject) => {
             try {
-                this.worker = new Worker("src/modules/core/ai/bot/freybot.js", { type: "module" });
+                this.worker = new Worker("src/services/core/ai/bot/freybot.js", { type: "module" });
                 this.worker.onmessage = this._handleBotMessage.bind(this);
                 this.worker.onerror = (e) => {
                     this.emit('error', `エラー: ${e.message}`);

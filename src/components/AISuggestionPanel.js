@@ -1,6 +1,5 @@
 import { GlobalState } from '../store/GlobalState.js';
-import { AIEngineController } from '../modules/AIEngineController.js';
-import { showNotification } from '../utils/notificationUtils.js';
+import { AIEngineController } from '../services/AIEngineController.js';
 
 /**
  * AIモーダル管理クラス
