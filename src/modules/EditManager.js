@@ -1,5 +1,6 @@
 import { minoColors } from '../utils/config.js';
 import { BoardManager } from './BoardManager.js';
+import { GlobalState } from '../store/GlobalState.js';
 
 /**
  * 編集モード管理クラス
@@ -80,7 +81,7 @@ export class EditManager {
    * @param {HTMLElement} cell - セル要素
    */
   static handleDeleteAction(cell, x, y) {
-    BoardManager.paintCell(cell, x, y, null);
+    GlobalState.getInstance().updateGrid(x, y, null);
   }
 
   /**
@@ -88,7 +89,7 @@ export class EditManager {
    * @param {HTMLElement} cell - セル要素
    */
   static handleGrayAction(cell, x, y) {
-    BoardManager.paintCell(cell, x, y, "GRAY");
+    GlobalState.getInstance().updateGrid(x, y, "GRAY");
   }
   
   /**

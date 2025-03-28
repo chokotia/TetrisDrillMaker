@@ -130,12 +130,12 @@ export class TetrisApp {
         const settings = this._globalState.getSettings();
         const { width, height } = settings.boardSettings;
         
-        BoardManager.applyAIBoard(
-          board,
-          move.suggestion.board,
-          width,
-          height
-        );
+        // BoardManager.applyAIBoard(
+        //   board,
+        //   move.suggestion.board,
+        //   width,
+        //   height
+        // );
       }
       
       // ネクストを更新
@@ -253,7 +253,7 @@ export class TetrisApp {
    * 初期状態にボードをリセット
    */
   resetToInitialBoard() {
-    BoardManager.resetToInitialBoard(this.dom.board);
+    //BoardManager.resetToInitialBoard(this.dom.board);
     console.log('編集内容をクリアしました。初期ブロックのみ残っています。');
   }
 
@@ -263,20 +263,30 @@ export class TetrisApp {
   generateProblem() {
     // 保存されている設定を取得
     const settings = this._globalState.getSettings();
-    const { boardSettings } = settings;
+    const { width, height } = settings.boardSettings;
 
-    this._globalState.updateHold(null);
+    // ボードを初期化
+    let grid = Array(height).fill().map(() => Array(width).fill(null));
+    grid[1][1] = 'I';    grid[2][1] = 'J'; // テスト用
+    this._globalState.updateGridAll(grid);
+
+    // ホールドをクリア
+    this._globalState.updateHold("T");
+
+    // ネクストを更新
+    const nextPieces = generateNextPieces(this.randomGenerator, settings.minoMode);
+    this._globalState.updateNext(nextPieces);
     
     // ダミーボードにも同じサイズの空のボードを作成（ブロックなし、クリックイベントなし）
     const dummyBoard = document.getElementById('dummy-board');
     if (dummyBoard) {
       // ダミーボードのスタイル設定
-      dummyBoard.style.setProperty('--width', boardSettings.width);
-      dummyBoard.style.setProperty('--height', boardSettings.height);
+      dummyBoard.style.setProperty('--width', width);
+      dummyBoard.style.setProperty('--height', height);
       dummyBoard.innerHTML = '';
       
       // 空のセルを作成
-      const totalCells = boardSettings.width * boardSettings.height;
+      const totalCells = width * height;
       const fragment = document.createDocumentFragment();
       
       for (let i = 0; i < totalCells; i++) {
@@ -290,11 +300,6 @@ export class TetrisApp {
       dummyBoard.appendChild(fragment);
     }
     
-    // ネクストピースを生成して表示
-    const nextPieces = generateNextPieces(this.randomGenerator, settings.minoMode);
-    
-    // ネクストを更新
-    this._globalState.updateNext(nextPieces);
   }
 
 

@@ -52,21 +52,11 @@ export class Board {
     const boardState = globalState.getBoardState();
     const { grid } = boardState;   
     
-    // // テスト用のダミーデータ
-    // const _grid = Array(10).fill().map(() => Array(5).fill(null));
-    // _grid[9] = ['I', 'J', 'T', 'O', 'S'];  // 最下段にミノを配置
-    // _grid[8] = ['T', 'Z', null, 'GRAY', null];  // その上にミノとお邪魔ブロックを配置
-    // _grid[7] = ["WHITE", 'GRAY', 'I', null, 'J'];  // さらにその上にミノとお邪魔ブロックを配置
-    
-    
-    // 新しいボードを描画
     this._drawBoard(grid);
   }
 
   /**
    * ボードを描画
-   * @private
-   * @param {Array} grid - グリッドデータ
    */
   _drawBoard(grid) {
     const width = grid[0].length;
