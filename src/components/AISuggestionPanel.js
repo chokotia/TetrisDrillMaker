@@ -35,6 +35,9 @@ export class AISuggestionPanel {
     this._dom.openModalButton?.addEventListener('click', () => {
       this.openModal();
     });
+
+    // AIの状態の監視を開始
+    this._globalState.addAIStateListener((state) => {/* 実装予定 */});
   }
 
   /**

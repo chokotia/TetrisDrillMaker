@@ -20,10 +20,14 @@ export class TetrisApp {
    * コンストラクタ
    */
   constructor() {
-    this.randomGenerator = null;
-    this.dom = null;
+    
     this._globalState = GlobalState.getInstance();
-
+    
+    this.dom = {
+      clearBoard: document.getElementById('clear-board'),
+      newProblemButton: document.getElementById('new-problem-button'),
+    };    
+  
     // コンポーネントの管理
     this.components = {
       settingsPanel: new SettingsPanel(),
@@ -34,107 +38,23 @@ export class TetrisApp {
       board: new Board((cell, x, y) => EditManager.handleEditCellClick(cell, x, y)),
       EditModePanel: new EditModePanel(),
     };
-    this.initializeApp();
-  }
 
-  /**
-   * DOMエレメントの初期化
-   * @returns {Object} DOM要素オブジェクト
-   */
-  initializeDOMElements() {
-    this.dom = {
-      app: document.getElementById('app'),
-      clearBoard: document.getElementById('clear-board'),
-      newProblemButton: document.getElementById('new-problem-button'),
-    };
-
-    return this.dom;
-  }
-
-  /**
-   * アプリケーションの初期化
-   */
-  initializeApp() {
-    try {
-      this.dom = this.initializeDOMElements();
-      
-      // 乱数生成器を生成
-      const _seed = this._globalState.getSeed();
-      this.randomGenerator = createSeededGenerator(_seed);
-      
-      this.initializeAIModal();
-      this.generateProblem();
-      this.setupButtonEventListeners();
-
-      // ジェスチャーコントロールのセットアップ
-      GestureManager.setupGestureControls(
-        document.querySelector('.tetris-app__main'),
-        document.getElementById('board-container'),
-        null,
-        null,
-        (event) => this.handleCellPaint(event)
-      );
-
-      // 設定変更のリスナーを追加
-      this._globalState.addSettingsListener((settings) => {
-        this.handleSettingsUpdate(settings);
-      });
-
-      // 各コンポーネントを初期化させるためのイベントを発行
-      const currentIndex = this._globalState.getCurrentIndex();
-      if (currentIndex >= 1) {
-        this._globalState.selectAIMove(currentIndex);
-      }
-      
-    } catch (error) {
-      console.error('初期化に失敗しました:', error);
-    }
-  }
-
-  /**
-   * AIモーダルを初期化
-   */
-  async initializeAIModal() {
+    // 乱数生成器を生成
+    const _seed = this._globalState.getSeed();
+    this.randomGenerator = createSeededGenerator(_seed);
+          
+    // TODO: この処理は非同期だが、このままでよいのかは要検討
     this.components.aiSuggestionPanel.initialize();
 
-    // AIの状態の監視を開始
-    this._globalState.addAIStateListener((state) => {
-      if (state.currentMove) {
-        this.applyAIMove(state.currentMove);
-      }
-    });
-  }
-
-  /**
-   * AIの手を適用
-   * @param {Object} move - 適用する手
-   */
-  applyAIMove(move) {
-    // TODO
-  }
-
-  /**
-   * 設定更新時の処理
-   * @param {Object} settings - 新しい設定
-   */
-  handleSettingsUpdate(settings) {
-    const { boardSettings } = settings;
-    
-    // 新しい問題を生成
     this.generateProblem();
-  }
-
-
-  /**
-   * ボタンイベントリスナーの設定
-   */
-  setupButtonEventListeners() {
-    // クリアボタンのイベントリスナー  
+    
+    // ボタンのイベントリスナー設定
     this.dom.clearBoard?.addEventListener('click', () => this.generateProblem(false, false));
-    // 新しい問題生成ボタンのイベントリスナー
     this.dom.newProblemButton?.addEventListener('click', () => this.generateProblem());   
-  }
 
+    // 設定変更のリスナーを追加
+    this._globalState.addSettingsListener((settings) => {this.generateProblem();});
+  }
 
   /**
    * 問題の生成
