@@ -37,19 +37,9 @@ export class AISuggestionPanel {
 
     // AIの状態の監視を開始
     this._g.addAIStateListener((state) => {/* 実装予定 */});
-  }
 
-  /**
-   * AIエンジンの初期化
-   */
-  async initialize() {
-    try {
-      await this._aiEngine.initialize();
-      this.updateSearchStatus(false, 'AI待機中');
-    } catch (error) {
-      this.setError('AIエンジンの初期化に失敗しました');
-      console.error('AI初期化エラー:', error);
-    }
+    this.updateSearchStatus(false, '初期化中');
+    this._aiEngine.initialize();
   }
 
   /**

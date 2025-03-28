@@ -37,15 +37,12 @@ export class TetrisApp {
       board: new Board((x, y) => handleEditCellClick(x, y)),
       EditModePanel: new EditModePanel(),
     };
-          
-    // TODO: この処理は非同期だが、このままでよいのかは要検討
-    this.components.aiSuggestionPanel.initialize();
     
     // ボタンのイベントリスナー設定
     this.dom.clearBoard?.addEventListener('click', () => generateProblem(false, false));
     this.dom.newProblemButton?.addEventListener('click', () => generateProblem());   
 
+    // 問題を生成
     generateProblem();
   }
-
 } 
