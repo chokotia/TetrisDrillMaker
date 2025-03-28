@@ -54,10 +54,8 @@
       </header>
 
       <main class="tetris-app__main d-flex flex-column justify-content-center overflow-y-auto">
-        <div id="board-container" class="d-flex flex-row justify-content-center align-items-start">
-          <div class="board-wrapper position-relative">
-            <div id="board" class="tetris-board active-board"></div>
-          </div>
+        <div class="board-container d-flex flex-row justify-content-center align-items-start">
+          <div id="board" class="tetris-board"></div>
           <div class="d-flex flex-column ms-3">
             <aside id="hold" class="next-container mb-3"></aside>
             <aside id="next" class="next-container"></aside>
@@ -65,7 +63,7 @@
         </div>
       </main>
 
-      <footer id="control-panel" class="navbar navbar-dark bg-dark fixed-bottom">
+      <footer class="control-panel navbar navbar-dark bg-dark fixed-bottom">
         <div class="container-fluid">
           <div class="d-flex justify-content-between w-100 mb-2">
             <div class="btn-group">

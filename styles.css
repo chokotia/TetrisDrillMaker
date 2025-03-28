@@ -25,17 +25,6 @@
   --color-piece-z: #f00000;
   --color-piece-g: #808080;
 
-  /* フォントサイズ */
-  --font-size-small: 0.8rem;
-  --font-size-base: 1rem;
-  --font-size-large: 1.25rem;
-
-  /* 間隔 */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-
   /* モバイル用ベース設定 - すべてのサイズ関連変数をここで定義 */
   /* レイアウト変数 */
   --layout-header-height: 50px;
@@ -57,8 +46,6 @@
   --size-ai-piece-type: 18px;
   --font-size-ai-piece-type: 0.8rem;
   --font-size-ai-move: 0.85em;
-  --size-ai-drumroll-min-width: 250px;
-  --size-ai-move-max-width: 100px;
   --size-ai-display-min-width: 150px;
 }
 
@@ -68,10 +55,6 @@ html, body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-}
-
-.btn-small {
-  font-size: var(--font-size-small);
 }
 
 /* 全体ラッパ */
@@ -93,10 +76,28 @@ html, body {
   z-index: 1030; /* Bootstrapのz-indexと同じ */
 }
 
-#control-panel {
+/* フッター */
+.control-panel {
   height: var(--layout-footer-height);
   min-height: var(--layout-footer-height);
   z-index: 1030; /* Bootstrapのz-indexと同じ */
+}
+
+/* フッターのコントロールパネル */
+.control-panel .btn {
+  padding: var(--spacing-button);
+  font-size: var(--font-size-button);
+}
+
+.control-panel .btn-group {
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.control-panel .container-fluid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* 子要素間に0.5remの間隔を設定 */
 }
 
 /* メインビュー */
@@ -107,13 +108,13 @@ html, body {
 }
 
 /* ボードコンテナ */
-#board-container {
+.board-container {
   flex-direction: column;
   align-items: center;
   position: relative;
 }
 
-#board-container > div:nth-child(2) {
+.board-container > div:nth-child(2) {
   margin-top: 1rem;
   margin-left: 0;
 }
@@ -128,21 +129,6 @@ html, body {
   border: 2px solid var(--color-board-border);
   width: max-content;
   max-width: 100%;
-  height: max-content;
-}
-
-.active-board {
-  z-index: 1;
-}
-
-/* 盤面の非表示状態 */
-.tetris-board.d-none {
-  display: none !important;
-}
-
-/* ボードラッパー */
-.board-wrapper {
-  width: max-content;
   height: max-content;
 }
 
@@ -179,9 +165,6 @@ html, body {
   transition: all 0.2s ease;
 }
 
-.next-piece-container:hover {
-  transform: scale(1.05);
-}
 
 .next-piece {
   display: grid;
@@ -218,12 +201,6 @@ html, body {
 .modal-footer {
   background-color: var(--color-bg);
   padding: 0.75rem var(--spacing-modal);
-}
-
-/* 追加のアクセシビリティとインタラクション向上 */
-button:focus {
-  outline: 2px dashed var(--color-button-focus);
-  outline-offset: 2px;
 }
 
 .modal-content {
@@ -364,23 +341,6 @@ body {
   min-width: 0;
 }
 
-/* フッターのコントロールパネル */
-#control-panel .btn {
-  padding: var(--spacing-button);
-  font-size: var(--font-size-button);
-}
-
-#control-panel .btn-group {
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-#control-panel .container-fluid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem; /* 子要素間に0.5remの間隔を設定 */
-}
-
 /* レスポンシブ対応 */
 
 /* タブレット向け */
@@ -393,12 +353,12 @@ body {
   }
   
   /* ボードコンテナの向きを変更 */
-  #board-container {
+  .board-container {
     flex-direction: row;
     align-items: flex-start;
   }
   
-  #board-container > div:nth-child(2) {
+  .board-container > div:nth-child(2) {
     margin-top: 0;
     margin-left: 1rem;
   }
