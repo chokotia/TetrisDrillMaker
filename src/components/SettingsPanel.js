@@ -1,6 +1,6 @@
 import { GlobalState } from '../store/GlobalState.js';
 import { config } from '../utils/config.js';
-
+import { generateProblem } from '../services/ProblemGenerator.js';
 
 /**
  * 設定管理クラス
@@ -26,6 +26,9 @@ export class SettingsPanel {
     settingsButton?.addEventListener('click', () => {
       this.openModal();
     });
+
+    // 設定変更のリスナーを追加
+    this._g.addSettingsListener((settings) => {generateProblem();});
   }
 
   /**
