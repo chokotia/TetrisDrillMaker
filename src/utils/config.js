@@ -44,6 +44,15 @@ export const minoColors = {
 
 export const BLOCK_TYPE = ["I", "J", "L", "O", "S", "T", "Z", "GRAY", "WHITE", null];
 
+/**
+ * 編集モードのオプション
+ */
+export const EDIT_MODE = {
+  // AUTO: 'Auto', 将来的に追加予定
+  DEL: 'Del',
+  GRAY: 'Gray'
+};
+
 // ミノとカラーの対応表
 export const BLOCK_COLORS = {
   // 通常のミノの色

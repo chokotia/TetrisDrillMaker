@@ -5,10 +5,10 @@ import { GestureManager } from '../modules/GestureManager.js';
 import { AISuggestionPanel } from './AISuggestionPanel.js';
 import { AIControlPanel } from './AIControlPanel.js';
 import { GlobalState } from '../store/GlobalState.js';
-import { showNotification } from '../utils/notificationUtils.js';
 import { Hold } from './Hold.js';
 import { Next } from './Next.js';
 import { Board } from './Board.js';
+import { EditModePanel } from './EditModePanel.js';
 import { generateNextPieces } from '../utils/minoUtils.js';
 
 /**
@@ -33,6 +33,7 @@ export class TetrisApp {
       hold: new Hold(),
       next: new Next(),
       board: new Board((cell, x, y) => this.handleCellClick(cell, x, y)),
+      EditModePanel: new EditModePanel(),
     };
     this.initializeApp();
   }
@@ -44,11 +45,10 @@ export class TetrisApp {
   initializeDOMElements() {
     this.dom = {
       app: document.getElementById('app'),
-      board: document.getElementById('board'),
-      editNav: document.getElementById('control-panel'),
       clearBoard: document.getElementById('clear-board'),
-      editOptionButtons: document.querySelectorAll('.edit-option'),
       newProblemButton: document.getElementById('new-problem-button'),
+
+      // editOptionButtons: document.querySelectorAll('.edit-option'),
     };
 
     return this.dom;
@@ -114,71 +114,7 @@ export class TetrisApp {
    * @param {Object} move - 適用する手
    */
   applyAIMove(move) {
-    try {
-      if (move == null) {
-        return;
-      }
-
-      // 現在の表示状態を記憶
-      const board = this.dom.board;
-      const isBoardHidden = board.getAttribute('data-visible') === 'false';
-      
-      // ボードを更新
-      if (move.suggestion && move.suggestion.board) {
-        const settings = this._globalState.getSettings();
-        const { width, height } = settings.boardSettings;
-        
-        // BoardManager.applyAIBoard(
-        //   board,
-        //   move.suggestion.board,
-        //   width,
-        //   height
-        // );
-      }
-      
-      // ネクストを更新
-      if (move.suggestion && move.suggestion.next) {
-        // 設定されたネクスト数を取得
-        const nextCountElement = document.querySelector('.next-count-value');
-        const nextCount = parseInt(nextCountElement?.textContent) || 5;
-        
-        // ネクスト配列を作成
-        let nextArray = [...move.suggestion.next];
-        
-        // ネクストを更新
-        this._globalState.updateNext(nextArray);
-        
-        // ホールドがある場合はホールド表示を更新
-        this._globalState.updateHold(move.suggestion.hold);
-      }
-      
-      // 盤面が非表示状態だった場合は、更新後も非表示状態を維持
-      if (isBoardHidden) {
-        // 非表示状態を維持するため、セルを空の状態に戻す
-        const cells = board.querySelectorAll('.cell');
-        cells.forEach(cell => {
-          // 一時的にクラス情報を保存
-          cell.setAttribute('data-original-classes', cell.className);
-          // 背景色を保存
-          cell.setAttribute('data-original-bg', cell.style.backgroundColor || '');
-          
-          // セルを空の状態に変更
-          cell.className = 'cell';
-          cell.style.backgroundColor = '';
-          
-          // セル内部の要素を一時的に非表示
-          Array.from(cell.children).forEach(child => {
-            child.style.display = 'none';
-          });
-        });
-        
-        // 非表示状態を保持
-        board.setAttribute('data-visible', 'false');
-      }
-    } catch (error) {
-      console.error('AI手の適用エラー:', error);
-      showNotification('AIの手を適用できませんでした', 'danger');
-    }
+    // TODO
   }
 
   /**
@@ -203,14 +139,14 @@ export class TetrisApp {
     // 新しい問題生成ボタンのイベントリスナー
     this.dom.newProblemButton?.addEventListener('click', () => this.generateProblem());
 
-    // 編集ボタン(del, gray)のイベントリスナー
-    this.dom.editOptionButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const action = button.dataset.action;
-        this.editState = EditManager.setEditAction(this.editState, action);
-        EditManager.updateEditButtonState(this.dom.editOptionButtons, action);
-      });
-    });
+    // // 編集ボタン(del, gray)のイベントリスナー
+    // this.dom.editOptionButtons.forEach(button => {
+    //   button.addEventListener('click', () => {
+    //     const action = button.dataset.action;
+    //     this.editState = EditManager.setEditAction(this.editState, action);
+    //     EditManager.updateEditButtonState(this.dom.editOptionButtons, action);
+    //   });
+    // });
     
   }
 
@@ -230,21 +166,6 @@ export class TetrisApp {
       this.editState
     );
   }
-
-  /**
-   * セル描画時の処理
-   * @param {Event} event - イベントオブジェクト
-   */
-  handleCellPaint(event) {
-    const cell = GestureManager.findCellUnderPointer(this.dom.board, event);
-    if (!cell) return;
-
-    const index = GestureManager.getCellIndex(this.dom.board, cell);
-    if (index >= 0) {     
-      this.handleCellClick(cell);
-    }
-  }
-
 
   /**
    * 問題の生成

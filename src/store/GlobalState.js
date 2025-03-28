@@ -1,4 +1,4 @@
-import { config, defaultSettings, BLOCK_TYPE } from '../utils/config.js';
+import { config, defaultSettings, BLOCK_TYPE, EDIT_MODE } from '../utils/config.js';
 import { generateSeed } from '../utils/random.js';
 
 /**
@@ -26,7 +26,8 @@ export class GlobalState {
         listeners: new Set()
       },
       editMode: {
-        selectedOption: 'Auto' // 'Auto', 'Del', 'Gray' のいずれか
+        selectedOption: EDIT_MODE.GRAY,
+        listeners: new Set()
       },
       settings: {
         boardSettings: {
@@ -546,12 +547,38 @@ export class GlobalState {
 
   /**
    * 編集モードの状態を更新
-   * @param {string} option - 新しい編集オプション ('Auto', 'Del', 'Gray' のいずれか)
+   * @param {string} option - 新しい編集オプション (EDIT_MODEのいずれか)
    */
   updateEditMode(option) {
-    if (['Auto', 'Del', 'Gray'].includes(option)) {
+    if (Object.values(EDIT_MODE).includes(option)) {
       this._state.editMode.selectedOption = option;
+      this._notifyEditModeListeners();
     }
+  }
+
+  /**
+   * 編集モードの状態変更を監視
+   * @param {Function} callback - 状態変更時に呼び出されるコールバック
+   */
+  addEditModeListener(callback) {
+    this._state.editMode.listeners.add(callback);
+  }
+
+  /**
+   * 編集モードの状態の監視を解除
+   * @param {Function} callback - 解除するコールバック
+   */
+  removeEditModeListener(callback) {
+    this._state.editMode.listeners.delete(callback);
+  }
+
+  /**
+   * 編集モードの状態変更をリスナーに通知
+   * @private
+   */
+  _notifyEditModeListeners() {
+    const state = this.getEditMode();
+    this._state.editMode.listeners.forEach(listener => listener(state));
   }
 
   /**
