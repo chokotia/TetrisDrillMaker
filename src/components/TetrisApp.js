@@ -23,7 +23,7 @@ export class TetrisApp {
     this._g = GlobalState.getInstance();
     
     this.dom = {
-      clearBoard: document.getElementById('clear-board'),
+      resetBoard: document.getElementById('reset-board'),
       newProblemButton: document.getElementById('new-problem-button'),
     };    
   
@@ -39,7 +39,7 @@ export class TetrisApp {
     };
     
     // ボタンのイベントリスナー設定
-    this.dom.clearBoard?.addEventListener('click', () => generateProblem(false, false));
+    this.dom.resetBoard?.addEventListener('click', () => generateProblem(false, false));
     this.dom.newProblemButton?.addEventListener('click', () => generateProblem());   
 
     // 問題を生成
