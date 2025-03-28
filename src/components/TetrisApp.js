@@ -21,7 +21,6 @@ export class TetrisApp {
    */
   constructor() {
     this.randomGenerator = null;
-    this.editState = EditManager.initialize();
     this.dom = null;
     this._globalState = GlobalState.getInstance();
 
@@ -32,7 +31,7 @@ export class TetrisApp {
       aiControlPanel: new AIControlPanel(),
       hold: new Hold(),
       next: new Next(),
-      board: new Board((cell, x, y) => this.handleCellClick(cell, x, y)),
+      board: new Board((cell, x, y) => EditManager.handleEditCellClick(cell, x, y)),
       EditModePanel: new EditModePanel(),
     };
     this.initializeApp();
@@ -47,8 +46,6 @@ export class TetrisApp {
       app: document.getElementById('app'),
       clearBoard: document.getElementById('clear-board'),
       newProblemButton: document.getElementById('new-problem-button'),
-
-      // editOptionButtons: document.querySelectorAll('.edit-option'),
     };
 
     return this.dom;
@@ -75,8 +72,7 @@ export class TetrisApp {
         document.getElementById('board-container'),
         null,
         null,
-        (event) => this.handleCellPaint(event),
-        this.editState
+        (event) => this.handleCellPaint(event)
       );
 
       // 設定変更のリスナーを追加
@@ -133,39 +129,12 @@ export class TetrisApp {
    * ボタンイベントリスナーの設定
    */
   setupButtonEventListeners() {
-    
     // クリアボタンのイベントリスナー  
     this.dom.clearBoard?.addEventListener('click', () => this.generateProblem(false, false));
     // 新しい問題生成ボタンのイベントリスナー
-    this.dom.newProblemButton?.addEventListener('click', () => this.generateProblem());
-
-    // // 編集ボタン(del, gray)のイベントリスナー
-    // this.dom.editOptionButtons.forEach(button => {
-    //   button.addEventListener('click', () => {
-    //     const action = button.dataset.action;
-    //     this.editState = EditManager.setEditAction(this.editState, action);
-    //     EditManager.updateEditButtonState(this.dom.editOptionButtons, action);
-    //   });
-    // });
-    
+    this.dom.newProblemButton?.addEventListener('click', () => this.generateProblem());   
   }
 
-
-  /**
-   * セルクリック時の処理
-   * @param {HTMLElement} cell - クリックされたセル要素
-   * @param {number} index - セルのインデックス
-   * @param {number} width - ボードの幅
-   * @param {number} height - ボードの高さ
-   */
-  handleCellClick(cell, x, y) {
-    this.editState = EditManager.handleEditCellClick(
-      cell, 
-      x,
-      y,
-      this.editState
-    );
-  }
 
   /**
    * 問題の生成

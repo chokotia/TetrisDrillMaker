@@ -18,7 +18,7 @@ export class GestureManager {
    * @param {Function} onCellPaint - セル描画時のコールバック
    * @param {Object} editState - 編集マネージャーの状態
    */
-  static setupGestureControls(mainView, boardContainer, onSwipeLeft, onSwipeRight, onCellPaint, editState) {
+  static setupGestureControls(mainView, boardContainer, onSwipeLeft, onSwipeRight, onCellPaint, editState=null) {
     if (!mainView) return;
     
     this.setupSwipeControls(mainView, onSwipeLeft, onSwipeRight);

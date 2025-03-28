@@ -1,50 +1,11 @@
 import { GlobalState } from '../store/GlobalState.js';
+import { EDIT_MODE } from '../utils/config.js';
 
 /**
  * 編集モード管理クラス
  * ボード編集機能を担当
  */
 export class EditManager {
-  /**
-   * 編集マネージャーを初期化
-   * @returns {Object} 編集マネージャーの状態
-   */
-  static initialize() {
-    return {
-      currentEditAction: 'gray', // 編集モードの初期値 gray/delete
-      isDragging: false
-    };
-  }
-
-  /**
-   * 編集アクションを設定
-   * @param {Object} state - 編集マネージャーの状態
-   * @param {string} action - 設定するアクション
-   * @returns {Object} 更新された状態
-   */
-  static setEditAction(state, action) {
-    const newState = { ...state };
-        
-    newState.currentEditAction = action;
-    return newState;
-  }
-
-  /**
-   * 編集ボタンの状態を更新
-   * @param {NodeList} buttons - 編集ボタン要素のリスト
-   * @param {string} selectedAction - 選択されたアクション
-   */
-  static updateEditButtonState(buttons, selectedAction) {
-    buttons.forEach(btn => {
-      if (btn.dataset.action === selectedAction) {
-        btn.classList.add('selected');
-        btn.setAttribute('aria-pressed', 'true');
-      } else {
-        btn.classList.remove('selected');
-        btn.setAttribute('aria-pressed', 'false');
-      }
-    });
-  }
 
   /**
    * セルクリック時の編集処理
@@ -52,26 +13,20 @@ export class EditManager {
    * @param {Object} state - 編集マネージャーの状態
    * @returns {Object} 更新された状態
    */
-  static handleEditCellClick(cell, x, y, state) {
-    if (cell.classList.contains('initial-block')) {
-      return state;
-    }
+  static handleEditCellClick(cell, x, y) {
 
-    const newState = { ...state };
-    
-    switch (newState.currentEditAction) {
-      case 'delete':
+    const { selectedOption } = GlobalState.getInstance().getEditMode();
+    switch (selectedOption) {
+      case EDIT_MODE.DEL:
         this.handleDeleteAction(cell, x, y);
         break;
-      case 'gray':
+      case EDIT_MODE.GRAY:
         this.handleGrayAction(cell, x, y);
         break;
       default:
         // pass
         break;
     }
-    
-    return newState;
   }
 
   /**
