@@ -1,5 +1,6 @@
 import { shuffle } from './random.js';
-import { MINO_ARRAY, MINO_MODE, TOTAL_NEXT_COUNT } from './config.js';
+import { TOTAL_NEXT_COUNT }  from './config.js';
+import { MINO_TYPES, NEXT_QUEUE_GEN_MODE } from './tetrisDef.js';
 
 /**
  * 7-bagシステムによるピース生成
@@ -15,13 +16,13 @@ function _generate7BagPieces(count, randomGenerator, useRandomOffset) {
     // ランダムなオフセットを計算（0-6の範囲）
     const offset = Math.floor(randomGenerator() * 7);
     // シャッフルされたバッグを生成し、オフセットを適用
-    let bag = shuffle([...MINO_ARRAY], randomGenerator).slice(offset);
+    let bag = shuffle([...MINO_TYPES], randomGenerator).slice(offset);
     pieces.push(...bag);
   }
 
   // 必要な数になるまで新しいバッグを追加
   while (pieces.length < count) {
-    pieces.push(...shuffle([...MINO_ARRAY], randomGenerator));
+    pieces.push(...shuffle([...MINO_TYPES], randomGenerator));
   }
 
   return pieces.slice(0, count);
@@ -35,8 +36,8 @@ function _generate7BagPieces(count, randomGenerator, useRandomOffset) {
  */
 function _generateRandomPieces(count, randomGenerator) {
   return Array.from({ length: count }, () => {
-    const randomIndex = Math.floor(randomGenerator() * MINO_ARRAY.length);
-    return MINO_ARRAY[randomIndex];
+    const randomIndex = Math.floor(randomGenerator() * MINO_TYPES.length);
+    return MINO_TYPES[randomIndex];
   });
 }
 
@@ -49,9 +50,9 @@ function _generateRandomPieces(count, randomGenerator) {
  */
 export function generateNextPieces(randomGenerator, minoMode, count = TOTAL_NEXT_COUNT) {
   switch (minoMode) {
-    case MINO_MODE.SEVEN_BAG_RANDOM:
+    case NEXT_QUEUE_GEN_MODE.SEVEN_BAG_RANDOM:
       return _generate7BagPieces(count, randomGenerator, true);
-    case MINO_MODE.SEVEN_BAG_PURE:
+    case NEXT_QUEUE_GEN_MODE.SEVEN_BAG_PURE:
       return _generate7BagPieces(count, randomGenerator, false);
     default:
       return _generateRandomPieces(count, randomGenerator);

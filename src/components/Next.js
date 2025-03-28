@@ -1,5 +1,5 @@
 import { GlobalState } from '../store/GlobalState.js';
-import { minoColors, minoShapes } from '../utils/config.js';
+import { minoColors, minoShapes } from '../utils/tetrisDef.js';
 
 /**
  * ネクストミノの表示を管理するクラス

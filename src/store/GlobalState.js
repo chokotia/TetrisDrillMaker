@@ -1,4 +1,5 @@
-import { config, defaultSettings, BLOCK_TYPE, EDIT_MODE } from '../utils/config.js';
+import { config, defaultSettings }  from '../utils/config.js';
+import { BLOCK_TYPE, EDIT_MODE } from '../utils/tetrisDef.js';
 import { generateSeed } from '../utils/random.js';
 
 /**

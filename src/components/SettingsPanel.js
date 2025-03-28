@@ -1,6 +1,7 @@
 import { GlobalState } from '../store/GlobalState.js';
 import { config } from '../utils/config.js';
 
+
 /**
  * 設定管理クラス
  * アプリケーション設定のUI表示とユーザーインタラクションを担当

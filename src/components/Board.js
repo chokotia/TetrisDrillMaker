@@ -1,5 +1,7 @@
 import { GlobalState } from '../store/GlobalState.js';
-import { config, BLOCK_COLORS } from '../utils/config.js';
+import { config } from '../utils/config.js';
+import { BLOCK_COLORS } from '../utils/tetrisDef.js';
+
 
 /**
  * ホールドミノの表示を管理するクラス
@@ -74,7 +76,7 @@ export class Board {
 
         // グリッドが非表示の場合はクリックイベント、セルの色付け処理を無視
         if (!isGridHidden) {
-          cell.addEventListener('click', () => {this.onCellClick(cell, x, y);});
+          cell.addEventListener('click', () => {this.onCellClick(x, y);});
         
           // グリッドの値に基づいて色を設定
           const cellValue = grid[y][x];

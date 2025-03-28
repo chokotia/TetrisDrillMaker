@@ -10,6 +10,7 @@ import { Board } from './Board.js';
 import { EditModePanel } from './EditModePanel.js';
 import { generateNextPieces } from '../utils/minoUtils.js';
 
+
 /**
  * テトリスアプリケーションクラス
  * アプリケーション全体の管理を担当
@@ -34,7 +35,7 @@ export class TetrisApp {
       aiControlPanel: new AIControlPanel(),
       hold: new Hold(),
       next: new Next(),
-      board: new Board((cell, x, y) => EditManager.handleEditCellClick(cell, x, y)),
+      board: new Board((x, y) => EditManager.handleEditCellClick(x, y)),
       EditModePanel: new EditModePanel(),
     };
 

@@ -1,5 +1,4 @@
 import { GlobalState } from '../store/GlobalState.js';
-import { minoShapes, minoColors } from '../utils/config.js';
 
 /**
  * ホールドミノの表示を管理するクラス
